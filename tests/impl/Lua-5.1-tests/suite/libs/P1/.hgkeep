@@ -1,0 +1,2 @@
+This file is not the part of the original suite, but its dir is used in tests.
+So it is here just to ensure proper tracking of the dir in hg.

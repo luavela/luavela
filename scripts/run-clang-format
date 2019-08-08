@@ -1,0 +1,261 @@
+#!/usr/bin/env perl
+#
+# Checker for Linux kernel style compliance.
+# This is simply a wrapper around clang-format that aims to work around some
+# uJIT-specific subtleties.
+#
+# Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+
+use 5.016;
+
+use File::Basename;
+use File::Find;
+use File::Spec;
+use Getopt::Long;
+
+use constant BIN => File::Basename::basename($0);
+
+use constant {
+	SCRIPT => "scripts/@{[BIN]}",
+	DEFAULTS => {
+		files => [ ],
+		force => 0,
+		pretend => 0,
+		verbose => 0,
+		clang_format => {
+			prefix => '/usr/bin/clang-format',
+			versions => [ qw(6.0) ],
+		},
+	},
+	EXCLUDE => {
+		files => [
+			'src/frontend/lj_bcread.c',
+			'src/frontend/lj_bcwrite.c',
+			'src/frontend/lj_lex.c',
+			'src/frontend/lj_lex.h',
+			'src/frontend/lj_parse.c',
+			'src/frontend/lj_parse.h',
+			'src/jit/emit/emit_gl.h',
+			'src/jit/emit/emit_iface.h',
+			'src/jit/emit/lj_emit.c',
+			'src/jit/emit/lj_emit_x86.h',
+			'src/jit/lj_asm.c',
+			'src/jit/lj_asm.h',
+			'src/jit/lj_asm_x86.h',
+			'src/jit/lj_ffrecord.c',
+			'src/jit/lj_ffrecord.h',
+			'src/jit/lj_ir.c',
+			'src/jit/lj_ir.h',
+			'src/jit/lj_ircall.h',
+			'src/jit/lj_iropt.h',
+			'src/jit/lj_jit.h',
+			'src/jit/lj_mcode.c',
+			'src/jit/lj_mcode.h',
+			'src/jit/lj_record.c',
+			'src/jit/lj_record.h',
+			'src/jit/lj_snap.c',
+			'src/jit/lj_snap.h',
+			'src/jit/lj_target.h',
+			'src/jit/lj_target_x86.h',
+			'src/jit/lj_trace.c',
+			'src/jit/lj_trace.h',
+			'src/jit/lj_traceerr.h',
+			'src/jit/opt/dce.c',
+			'src/jit/opt/fold.c',
+			'src/jit/opt/loop.c',
+			'src/jit/opt/mem.c',
+			'src/jit/opt/narrow.c',
+			'src/jit/opt/sink.c',
+			'src/jit/opt_x86/fold_ins.c',
+			'src/jit/opt_x86/opt_x86_iface.h',
+			'src/lauxlib.h',
+			'src/lextlib.h',
+			'src/lib/base.c',
+			'src/lib/bit.c',
+			'src/lib/debug.c',
+			'src/lib/ffi.c',
+			'src/lib/init.c',
+			'src/lib/io.c',
+			'src/lib/jit.c',
+			'src/lib/math.c',
+			'src/lib/os.c',
+			'src/lib/package.c',
+			'src/lib/string.c',
+			'src/lib/table.c',
+			'src/lj_arch.h',
+			'src/lj_bc.c',
+			'src/lj_bc.h',
+			'src/lj_bcdef.h',
+			'src/lj_bcdump.h',
+			'src/lj_bcins.h',
+			'src/lj_debug.c',
+			'src/lj_debug.h',
+			'src/lj_def.h',
+			'src/lj_ff.h',
+			'src/lj_ffdef.h',
+			'src/lj_folddef.h',
+			'src/lj_frame.h',
+			'src/lj_gc.c',
+			'src/lj_gc.h',
+			'src/lj_libdef.h',
+			'src/lj_obj.h',
+			'src/lj_recdef.h',
+			'src/lj_tab.c',
+			'src/lj_tab.h',
+			'src/lj_vm.h',
+			'src/lua.h',
+			'src/luaconf.h',
+			'src/luajit.c',
+			'src/luajit.h',
+			'src/lualib.h',
+			# Suppressed due to unfixable macro definition
+			'src/uj_errmsg.h',
+			# Suppressed due to unfixable macro definition
+			'src/uj_vmstate.h',
+			'src/ujit.c',
+			'src/ujit.h',
+			'src/utils/cpuinfo.c',
+			'src/utils/cpuinfo.h',
+			'src/utils/fp.c',
+			'src/utils/fp.h',
+			'src/utils/jemalloc.c',
+			'src/utils/leb128.c',
+			'src/utils/leb128.h',
+			'src/utils/lj_alloc.c',
+			'src/utils/lj_char.c',
+			'src/utils/lj_char.h',
+			'src/utils/random.c',
+			'src/utils/random.h',
+			'src/utils/str.c',
+			'src/utils/str.h',
+			'src/utils/strhash.h',
+			'src/utils/strhash/luajit2.c',
+			'src/utils/strhash/murmur3.c',
+			'src/utils/strscan.c',
+			'src/utils/strscan.h',
+			'src/utils/x86_inslen.c',
+			'src/utils/x86_inslen.h',
+			'tests/iponweb/perf/capi/test_table_traversal.c',
+			# Suppressed due to unfixable macro definition
+			'tests/impl/uJIT-tests-C/suite/test_common_lua.h',
+		],
+		patterns => sprintf '\A(?:%s)', join '|', qw(
+			3rdparty/
+			CMakeFiles/
+			doc/
+			dynasm/
+			src/ffi/
+			src/host/
+			tests/iponweb/unit/tests-run/
+			tests/impl/Lua-5\.1-tests/
+			tests/impl/LuaJIT-tests/
+		),
+	},
+};
+
+die 'Only *.c and *.h files can be listed as excluded'
+	unless grep m{\.[ch]$}, @{ EXCLUDE->{files} };
+
+my $options = { map { $_ => DEFAULTS->{ $_ } } qw(files force pretend verbose) };
+
+Getopt::Long::GetOptions(
+	'force' => \$options->{force},
+	'file|f=s@' => $options->{files},
+	'pretend|p' => \$options->{pretend},
+	'verbose|v' => \$options->{verbose},
+	'help|h' => sub {
+		say <<HELP and exit 0;
+@{[BIN]} - Run clang-format against the uJIT source tree
+
+SYNOPSIS
+
+@{[BIN]} [--file PATH] [--force] [--pretend] [--verbose] [--help]
+
+Supported options are:
+
+    -f PATH, --file PATH        Check certain file. May be specified multiple
+                                times
+                                Empty by default.
+
+    --force                     Do not apply blacklisting
+                                (see the sources of this tool)
+                                Off by default.
+
+    -p, --pretend               Do not apply changes, just print diffs. Exit
+                                status is 0 if there are no changes and 1
+                                otherwise.
+                                Off by default.
+
+    -v, --verbose               Verbose output.
+                                Off by default.
+
+    -h, --help                  Show this message and exit.
+HELP
+	},
+);
+
+my $env = {
+	pdir => File::Spec->rel2abs($0) =~ m{\A(.+)/@{[SCRIPT]}\Z},
+	files => $options->{files},
+	force => $options->{force},
+	pretend => $options->{pretend},
+	verbose => $options->{verbose},
+};
+
+for (@{ DEFAULTS->{clang_format}{versions} }) {
+	my $bin = join '-', DEFAULTS->{clang_format}{prefix}, $_;
+	$env->{clang_format} = $bin and last if -f $bin;
+}
+
+die "No clang-format found" unless defined $env->{clang_format};
+
+my $errors = 0;
+
+if (@{ $env->{files} }) {
+	$errors += ! blacklisted($env, $_) && run_clang_format($env, file => $_)
+		for @{ $env->{files} };
+} else {
+	File::Find::find(sub {
+		$errors += run_clang_format($env, file => $File::Find::name)
+			if m{\.[ch]$}
+				and not blacklisted($env, $File::Find::name)
+	}, $env->{pdir});
+}
+
+exit !!$errors;
+
+sub run_clang_format($$$) {
+	my ($env, $what, $file) = @_;
+
+	say "Invalid entity" and return 1 unless $what eq 'file';
+
+	my $cmd = "$env->{clang_format} $file -style=file " . (
+		$env->{pretend} ? "| diff -u $file -" : '-i'
+	);
+
+	local $| = 1;
+	local $/;
+	say join "\n", '=' x 60, "Running $cmd" if $env->{verbose};
+	open(my $pipe, '-|', "$cmd 2>&1") or die "Can't fork: $!";
+	my $buf = <$pipe>;
+	my $error = not close($pipe);
+	say $error ? 'FAILED' : 'PASSED' if $env->{verbose};
+	say $buf if $env->{pretend} and length $buf;
+	say '-' x 60 if $env->{verbose};
+
+	return $error;
+}
+
+sub blacklisted($$) {
+	my ($env, $file) = @_;
+
+	return 0 if $env->{force};
+
+	my $name = File::Spec->abs2rel($file, $env->{pdir});
+
+	return 0 unless grep { $name =~ m{\A\Q$_\E\Z} } @{ EXCLUDE->{files} }
+		or $name =~ m{@{[ EXCLUDE->{patterns} ]}};
+
+	say "$name is skipped, use --force to check" if $env->{check};
+	return 1;
+}

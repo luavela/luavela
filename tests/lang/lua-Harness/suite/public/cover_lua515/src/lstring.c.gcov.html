@@ -1,0 +1,191 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - Lua 5.1.5 - src/lstring.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">src</a> - lstring.c</td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">Lua 5.1.5</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">58</td>
+            <td class="headerCovTableEntry">61</td>
+            <td class="headerCovTableEntryHi">95.1 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2018-10-07 17:32:51</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="headerItem">Legend:</td>
+            <td class="headerValueLeg">            Lines:
+            <span class="coverLegendCov">hit</span>
+            <span class="coverLegendNoCov">not hit</span>
+</td>
+            <td></td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<span class="lineNum">       1 </span>            : /*
+<span class="lineNum">       2 </span>            : ** $Id: lstring.c,v 2.8.1.1 2007/12/27 13:02:25 roberto Exp $
+<span class="lineNum">       3 </span>            : ** String table (keeps all strings handled by Lua)
+<span class="lineNum">       4 </span>            : ** See Copyright Notice in lua.h
+<span class="lineNum">       5 </span>            : */
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : 
+<span class="lineNum">       8 </span>            : #include &lt;string.h&gt;
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #define lstring_c
+<span class="lineNum">      11 </span>            : #define LUA_CORE
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : #include &quot;lua.h&quot;
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #include &quot;lmem.h&quot;
+<span class="lineNum">      16 </span>            : #include &quot;lobject.h&quot;
+<span class="lineNum">      17 </span>            : #include &quot;lstate.h&quot;
+<span class="lineNum">      18 </span>            : #include &quot;lstring.h&quot;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span><span class="lineCov">        432 : void luaS_resize (lua_State *L, int newsize) {</span>
+<span class="lineNum">      23 </span>            :   GCObject **newhash;
+<span class="lineNum">      24 </span>            :   stringtable *tb;
+<span class="lineNum">      25 </span>            :   int i;
+<span class="lineNum">      26 </span><span class="lineCov">        432 :   if (G(L)-&gt;gcstate == GCSsweepstring)</span>
+<span class="lineNum">      27 </span><span class="lineNoCov">          0 :     return;  /* cannot resize during GC traverse */</span>
+<span class="lineNum">      28 </span><span class="lineCov">        432 :   newhash = luaM_newvector(L, newsize, GCObject *);</span>
+<span class="lineNum">      29 </span><span class="lineCov">        432 :   tb = &amp;G(L)-&gt;strt;</span>
+<span class="lineNum">      30 </span><span class="lineCov">        432 :   for (i=0; i&lt;newsize; i++) newhash[i] = NULL;</span>
+<span class="lineNum">      31 </span>            :   /* rehash */
+<span class="lineNum">      32 </span><span class="lineCov">      49616 :   for (i=0; i&lt;tb-&gt;size; i++) {</span>
+<span class="lineNum">      33 </span><span class="lineCov">      49184 :     GCObject *p = tb-&gt;hash[i];</span>
+<span class="lineNum">      34 </span><span class="lineCov">     147889 :     while (p) {  /* for each node in the list */</span>
+<span class="lineNum">      35 </span><span class="lineCov">      49521 :       GCObject *next = p-&gt;gch.next;  /* save next */</span>
+<span class="lineNum">      36 </span><span class="lineCov">      49521 :       unsigned int h = gco2ts(p)-&gt;hash;</span>
+<span class="lineNum">      37 </span><span class="lineCov">      49521 :       int h1 = lmod(h, newsize);  /* new position */</span>
+<span class="lineNum">      38 </span>            :       lua_assert(cast_int(h%newsize) == lmod(h, newsize));
+<span class="lineNum">      39 </span><span class="lineCov">      49521 :       p-&gt;gch.next = newhash[h1];  /* chain it */</span>
+<span class="lineNum">      40 </span><span class="lineCov">      49521 :       newhash[h1] = p;</span>
+<span class="lineNum">      41 </span><span class="lineCov">      49521 :       p = next;</span>
+<span class="lineNum">      42 </span>            :     }
+<span class="lineNum">      43 </span>            :   }
+<span class="lineNum">      44 </span><span class="lineCov">        432 :   luaM_freearray(L, tb-&gt;hash, tb-&gt;size, TString *);</span>
+<span class="lineNum">      45 </span><span class="lineCov">        432 :   tb-&gt;size = newsize;</span>
+<span class="lineNum">      46 </span><span class="lineCov">        432 :   tb-&gt;hash = newhash;</span>
+<span class="lineNum">      47 </span>            : }
+<span class="lineNum">      48 </span>            : 
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineCov">      47096 : static TString *newlstr (lua_State *L, const char *str, size_t l,</span>
+<span class="lineNum">      51 </span>            :                                        unsigned int h) {
+<span class="lineNum">      52 </span>            :   TString *ts;
+<span class="lineNum">      53 </span>            :   stringtable *tb;
+<span class="lineNum">      54 </span><span class="lineCov">      47096 :   if (l+1 &gt; (MAX_SIZET - sizeof(TString))/sizeof(char))</span>
+<span class="lineNum">      55 </span><span class="lineNoCov">          0 :     luaM_toobig(L);</span>
+<span class="lineNum">      56 </span><span class="lineCov">      47096 :   ts = cast(TString *, luaM_malloc(L, (l+1)*sizeof(char)+sizeof(TString)));</span>
+<span class="lineNum">      57 </span><span class="lineCov">      47096 :   ts-&gt;tsv.len = l;</span>
+<span class="lineNum">      58 </span><span class="lineCov">      47096 :   ts-&gt;tsv.hash = h;</span>
+<span class="lineNum">      59 </span><span class="lineCov">      47096 :   ts-&gt;tsv.marked = luaC_white(G(L));</span>
+<span class="lineNum">      60 </span><span class="lineCov">      47096 :   ts-&gt;tsv.tt = LUA_TSTRING;</span>
+<span class="lineNum">      61 </span><span class="lineCov">      47096 :   ts-&gt;tsv.reserved = 0;</span>
+<span class="lineNum">      62 </span><span class="lineCov">      47096 :   memcpy(ts+1, str, l*sizeof(char));</span>
+<span class="lineNum">      63 </span><span class="lineCov">      47096 :   ((char *)(ts+1))[l] = '\0';  /* ending 0 */</span>
+<span class="lineNum">      64 </span><span class="lineCov">      47096 :   tb = &amp;G(L)-&gt;strt;</span>
+<span class="lineNum">      65 </span><span class="lineCov">      47096 :   h = lmod(h, tb-&gt;size);</span>
+<span class="lineNum">      66 </span><span class="lineCov">      47096 :   ts-&gt;tsv.next = tb-&gt;hash[h];  /* chain new entry */</span>
+<span class="lineNum">      67 </span><span class="lineCov">      47096 :   tb-&gt;hash[h] = obj2gco(ts);</span>
+<span class="lineNum">      68 </span><span class="lineCov">      47096 :   tb-&gt;nuse++;</span>
+<span class="lineNum">      69 </span><span class="lineCov">      47096 :   if (tb-&gt;nuse &gt; cast(lu_int32, tb-&gt;size) &amp;&amp; tb-&gt;size &lt;= MAX_INT/2)</span>
+<span class="lineNum">      70 </span><span class="lineCov">        337 :     luaS_resize(L, tb-&gt;size*2);  /* too crowded */</span>
+<span class="lineNum">      71 </span><span class="lineCov">      47096 :   return ts;</span>
+<span class="lineNum">      72 </span>            : }
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">     216176 : TString *luaS_newlstr (lua_State *L, const char *str, size_t l) {</span>
+<span class="lineNum">      76 </span>            :   GCObject *o;
+<span class="lineNum">      77 </span><span class="lineCov">     216176 :   unsigned int h = cast(unsigned int, l);  /* seed */</span>
+<span class="lineNum">      78 </span><span class="lineCov">     216176 :   size_t step = (l&gt;&gt;5)+1;  /* if string is too long, don't hash all its chars */</span>
+<span class="lineNum">      79 </span>            :   size_t l1;
+<span class="lineNum">      80 </span><span class="lineCov">    1535314 :   for (l1=l; l1&gt;=step; l1-=step)  /* compute hash */</span>
+<span class="lineNum">      81 </span><span class="lineCov">    1319138 :     h = h ^ ((h&lt;&lt;5)+(h&gt;&gt;2)+cast(unsigned char, str[l1-1]));</span>
+<span class="lineNum">      82 </span><span class="lineCov">     513911 :   for (o = G(L)-&gt;strt.hash[lmod(h, G(L)-&gt;strt.size)];</span>
+<span class="lineNum">      83 </span>            :        o != NULL;
+<span class="lineNum">      84 </span><span class="lineCov">      81559 :        o = o-&gt;gch.next) {</span>
+<span class="lineNum">      85 </span><span class="lineCov">     250639 :     TString *ts = rawgco2ts(o);</span>
+<span class="lineNum">      86 </span><span class="lineCov">     250639 :     if (ts-&gt;tsv.len == l &amp;&amp; (memcmp(str, getstr(ts), l) == 0)) {</span>
+<span class="lineNum">      87 </span>            :       /* string may be dead */
+<span class="lineNum">      88 </span><span class="lineCov">     169080 :       if (isdead(G(L), o)) changewhite(o);</span>
+<span class="lineNum">      89 </span><span class="lineCov">     169080 :       return ts;</span>
+<span class="lineNum">      90 </span>            :     }
+<span class="lineNum">      91 </span>            :   }
+<span class="lineNum">      92 </span><span class="lineCov">      47096 :   return newlstr(L, str, l, h);  /* not found */</span>
+<span class="lineNum">      93 </span>            : }
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineCov">        358 : Udata *luaS_newudata (lua_State *L, size_t s, Table *e) {</span>
+<span class="lineNum">      97 </span>            :   Udata *u;
+<span class="lineNum">      98 </span><span class="lineCov">        358 :   if (s &gt; MAX_SIZET - sizeof(Udata))</span>
+<span class="lineNum">      99 </span><span class="lineNoCov">          0 :     luaM_toobig(L);</span>
+<span class="lineNum">     100 </span><span class="lineCov">        358 :   u = cast(Udata *, luaM_malloc(L, s + sizeof(Udata)));</span>
+<span class="lineNum">     101 </span><span class="lineCov">        358 :   u-&gt;uv.marked = luaC_white(G(L));  /* is not finalized */</span>
+<span class="lineNum">     102 </span><span class="lineCov">        358 :   u-&gt;uv.tt = LUA_TUSERDATA;</span>
+<span class="lineNum">     103 </span><span class="lineCov">        358 :   u-&gt;uv.len = s;</span>
+<span class="lineNum">     104 </span><span class="lineCov">        358 :   u-&gt;uv.metatable = NULL;</span>
+<span class="lineNum">     105 </span><span class="lineCov">        358 :   u-&gt;uv.env = e;</span>
+<span class="lineNum">     106 </span>            :   /* chain it on udata list (after main thread) */
+<span class="lineNum">     107 </span><span class="lineCov">        358 :   u-&gt;uv.next = G(L)-&gt;mainthread-&gt;next;</span>
+<span class="lineNum">     108 </span><span class="lineCov">        358 :   G(L)-&gt;mainthread-&gt;next = obj2gco(u);</span>
+<span class="lineNum">     109 </span><span class="lineCov">        358 :   return u;</span>
+<span class="lineNum">     110 </span>            : }
+<span class="lineNum">     111 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

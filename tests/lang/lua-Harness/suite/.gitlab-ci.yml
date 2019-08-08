@@ -1,0 +1,15 @@
+image: python:alpine
+
+before_script:
+  - apk --update add git
+  - pip install mkdocs
+
+pages:
+  script:
+  - mkdocs build -d public
+  - git reset --hard
+  artifacts:
+    paths:
+    - public
+  only:
+  - master

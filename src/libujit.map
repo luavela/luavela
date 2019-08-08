@@ -1,0 +1,10 @@
+{
+        global:
+                lua_*;
+                luaL_*;
+                luaE_*;
+                luaopen_*;
+                luaJIT_*;
+        local:
+                *;
+};

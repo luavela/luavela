@@ -1,0 +1,43 @@
+# Convenience bash aliases for uJIT.
+# Copyright (C) 2015-2019 IPONWEB Ltd. All rights reserved.
+#
+# Feel free to add to your .bash_profile or .profile.
+
+# In-source sequential build of Release and Debug configurations.
+# This approach allows to make sure that both release and debug builds
+# are working and internal tests pass on them:
+uj_build()
+{
+    local repo_root=$(git rev-parse --show-toplevel)
+
+    pushd $repo_root
+    cmake -DCMAKE_BUILD_TYPE=Release .      \
+        && make -j tests                    \
+        && make clean                       \
+        && cmake -DCMAKE_BUILD_TYPE=Debug . \
+        && make -j tests
+    popd
+}
+
+# Assuming in-source build, remove core binaries and re-run uj_build.
+uj_rebuild()
+{
+    local repo_root=$(git rev-parse --show-toplevel)
+
+    rm -rf $repo_root/src/libujit.{a,so*} $repo_root/src/ujit{,_dyn} 2>/dev/null
+    uj_build
+}
+
+# Quick performance measurment of Lua chunk(s):
+# uj_measure chunk.lua
+# uj_measure chunk1.lua,chunk2.lua
+uj_measure()
+{
+    local repo_root=$(git rev-parse --show-toplevel)
+
+    perl $repo_root/tests/perftest.pl \
+        --skip-jit-on                 \
+        --skip-jit-off                \
+        --interp $repo_root/src/ujit  \
+        --test $1
+}

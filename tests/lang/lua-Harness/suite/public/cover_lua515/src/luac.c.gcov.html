@@ -1,0 +1,280 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - Lua 5.1.5 - src/luac.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">src</a> - luac.c</td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">Lua 5.1.5</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">89</td>
+            <td class="headerCovTableEntry">93</td>
+            <td class="headerCovTableEntryHi">95.7 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2018-10-07 17:32:51</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="headerItem">Legend:</td>
+            <td class="headerValueLeg">            Lines:
+            <span class="coverLegendCov">hit</span>
+            <span class="coverLegendNoCov">not hit</span>
+</td>
+            <td></td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<span class="lineNum">       1 </span>            : /*
+<span class="lineNum">       2 </span>            : ** $Id: luac.c,v 1.54 2006/06/02 17:37:11 lhf Exp $
+<span class="lineNum">       3 </span>            : ** Lua compiler (saves bytecodes to files; also list bytecodes)
+<span class="lineNum">       4 </span>            : ** See Copyright Notice in lua.h
+<span class="lineNum">       5 </span>            : */
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #include &lt;errno.h&gt;
+<span class="lineNum">       8 </span>            : #include &lt;stdio.h&gt;
+<span class="lineNum">       9 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      10 </span>            : #include &lt;string.h&gt;
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #define luac_c
+<span class="lineNum">      13 </span>            : #define LUA_CORE
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #include &quot;lua.h&quot;
+<span class="lineNum">      16 </span>            : #include &quot;lauxlib.h&quot;
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &quot;ldo.h&quot;
+<span class="lineNum">      19 </span>            : #include &quot;lfunc.h&quot;
+<span class="lineNum">      20 </span>            : #include &quot;lmem.h&quot;
+<span class="lineNum">      21 </span>            : #include &quot;lobject.h&quot;
+<span class="lineNum">      22 </span>            : #include &quot;lopcodes.h&quot;
+<span class="lineNum">      23 </span>            : #include &quot;lstring.h&quot;
+<span class="lineNum">      24 </span>            : #include &quot;lundump.h&quot;
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #define PROGNAME        &quot;luac&quot;                /* default program name */
+<span class="lineNum">      27 </span>            : #define OUTPUT          PROGNAME &quot;.out&quot;       /* default output file */
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : static int listing=0;                   /* list bytecodes? */
+<span class="lineNum">      30 </span>            : static int dumping=1;                   /* dump bytecodes? */
+<span class="lineNum">      31 </span>            : static int stripping=0;                 /* strip debug information? */
+<span class="lineNum">      32 </span>            : static char Output[]={ OUTPUT };        /* default output file name */
+<span class="lineNum">      33 </span>            : static const char* output=Output;       /* actual output file name */
+<span class="lineNum">      34 </span>            : static const char* progname=PROGNAME;   /* actual program name */
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span><span class="lineCov">          1 : static void fatal(const char* message)</span>
+<span class="lineNum">      37 </span>            : {
+<span class="lineNum">      38 </span><span class="lineCov">          1 :  fprintf(stderr,&quot;%s: %s\n&quot;,progname,message);</span>
+<span class="lineNum">      39 </span><span class="lineCov">          1 :  exit(EXIT_FAILURE);</span>
+<span class="lineNum">      40 </span>            : }
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span><span class="lineNoCov">          0 : static void cannot(const char* what)</span>
+<span class="lineNum">      43 </span>            : {
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 :  fprintf(stderr,&quot;%s: cannot %s %s: %s\n&quot;,progname,what,output,strerror(errno));</span>
+<span class="lineNum">      45 </span><span class="lineNoCov">          0 :  exit(EXIT_FAILURE);</span>
+<span class="lineNum">      46 </span>            : }
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span><span class="lineCov">          2 : static void usage(const char* message)</span>
+<span class="lineNum">      49 </span>            : {
+<span class="lineNum">      50 </span><span class="lineCov">          2 :  if (*message=='-')</span>
+<span class="lineNum">      51 </span><span class="lineCov">          2 :   fprintf(stderr,&quot;%s: unrecognized option &quot; LUA_QS &quot;\n&quot;,progname,message);</span>
+<span class="lineNum">      52 </span>            :  else
+<span class="lineNum">      53 </span><span class="lineNoCov">          0 :   fprintf(stderr,&quot;%s: %s\n&quot;,progname,message);</span>
+<span class="lineNum">      54 </span><span class="lineCov">          2 :  fprintf(stderr,</span>
+<span class="lineNum">      55 </span>            :  &quot;usage: %s [options] [filenames].\n&quot;
+<span class="lineNum">      56 </span>            :  &quot;Available options are:\n&quot;
+<span class="lineNum">      57 </span>            :  &quot;  -        process stdin\n&quot;
+<span class="lineNum">      58 </span>            :  &quot;  -l       list\n&quot;
+<span class="lineNum">      59 </span>            :  &quot;  -o name  output to file &quot; LUA_QL(&quot;name&quot;) &quot; (default is \&quot;%s\&quot;)\n&quot;
+<span class="lineNum">      60 </span>            :  &quot;  -p       parse only\n&quot;
+<span class="lineNum">      61 </span>            :  &quot;  -s       strip debug information\n&quot;
+<span class="lineNum">      62 </span>            :  &quot;  -v       show version information\n&quot;
+<span class="lineNum">      63 </span>            :  &quot;  --       stop handling options\n&quot;,
+<span class="lineNum">      64 </span>            :  progname,Output);
+<span class="lineNum">      65 </span><span class="lineCov">          2 :  exit(EXIT_FAILURE);</span>
+<span class="lineNum">      66 </span>            : }
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : #define IS(s)   (strcmp(argv[i],s)==0)
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineCov">         16 : static int doargs(int argc, char* argv[])</span>
+<span class="lineNum">      71 </span>            : {
+<span class="lineNum">      72 </span>            :  int i;
+<span class="lineNum">      73 </span><span class="lineCov">         16 :  int version=0;</span>
+<span class="lineNum">      74 </span><span class="lineCov">         16 :  if (argv[0]!=NULL &amp;&amp; *argv[0]!=0) progname=argv[0];</span>
+<span class="lineNum">      75 </span><span class="lineCov">         35 :  for (i=1; i&lt;argc; i++)</span>
+<span class="lineNum">      76 </span>            :  {
+<span class="lineNum">      77 </span><span class="lineCov">         33 :   if (*argv[i]!='-')                    /* end of options; keep it */</span>
+<span class="lineNum">      78 </span><span class="lineCov">          9 :    break;</span>
+<span class="lineNum">      79 </span><span class="lineCov">         24 :   else if (IS(&quot;--&quot;))                  /* end of options; skip it */</span>
+<span class="lineNum">      80 </span>            :   {
+<span class="lineNum">      81 </span><span class="lineCov">          1 :    ++i;</span>
+<span class="lineNum">      82 </span><span class="lineCov">          1 :    if (version) ++version;</span>
+<span class="lineNum">      83 </span><span class="lineCov">          1 :    break;</span>
+<span class="lineNum">      84 </span>            :   }
+<span class="lineNum">      85 </span><span class="lineCov">         23 :   else if (IS(&quot;-&quot;))                   /* end of options; use stdin */</span>
+<span class="lineNum">      86 </span><span class="lineCov">          2 :    break;</span>
+<span class="lineNum">      87 </span><span class="lineCov">         21 :   else if (IS(&quot;-l&quot;))                  /* list */</span>
+<span class="lineNum">      88 </span><span class="lineCov">          8 :    ++listing;</span>
+<span class="lineNum">      89 </span><span class="lineCov">         13 :   else if (IS(&quot;-o&quot;))                  /* output file */</span>
+<span class="lineNum">      90 </span>            :   {
+<span class="lineNum">      91 </span><span class="lineCov">          3 :    output=argv[++i];</span>
+<span class="lineNum">      92 </span><span class="lineCov">          3 :    if (output==NULL || *output==0) usage(LUA_QL(&quot;-o&quot;) &quot; needs argument&quot;);</span>
+<span class="lineNum">      93 </span><span class="lineCov">          3 :    if (IS(&quot;-&quot;)) output=NULL;</span>
+<span class="lineNum">      94 </span>            :   }
+<span class="lineNum">      95 </span><span class="lineCov">         10 :   else if (IS(&quot;-p&quot;))                  /* parse only */</span>
+<span class="lineNum">      96 </span><span class="lineCov">          3 :    dumping=0;</span>
+<span class="lineNum">      97 </span><span class="lineCov">          7 :   else if (IS(&quot;-s&quot;))                  /* strip debug information */</span>
+<span class="lineNum">      98 </span><span class="lineCov">          2 :    stripping=1;</span>
+<span class="lineNum">      99 </span><span class="lineCov">          5 :   else if (IS(&quot;-v&quot;))                  /* show version */</span>
+<span class="lineNum">     100 </span><span class="lineCov">          3 :    ++version;</span>
+<span class="lineNum">     101 </span>            :   else                                  /* unknown option */
+<span class="lineNum">     102 </span><span class="lineCov">          2 :    usage(argv[i]);</span>
+<span class="lineNum">     103 </span>            :  }
+<span class="lineNum">     104 </span><span class="lineCov">         14 :  if (i==argc &amp;&amp; (listing || !dumping))</span>
+<span class="lineNum">     105 </span>            :  {
+<span class="lineNum">     106 </span><span class="lineCov">          1 :   dumping=0;</span>
+<span class="lineNum">     107 </span><span class="lineCov">          1 :   argv[--i]=Output;</span>
+<span class="lineNum">     108 </span>            :  }
+<span class="lineNum">     109 </span><span class="lineCov">         14 :  if (version)</span>
+<span class="lineNum">     110 </span>            :  {
+<span class="lineNum">     111 </span><span class="lineCov">          3 :   printf(&quot;%s  %s\n&quot;,LUA_RELEASE,LUA_COPYRIGHT);</span>
+<span class="lineNum">     112 </span><span class="lineCov">          3 :   if (version==argc-1) exit(EXIT_SUCCESS);</span>
+<span class="lineNum">     113 </span>            :  }
+<span class="lineNum">     114 </span><span class="lineCov">         12 :  return i;</span>
+<span class="lineNum">     115 </span>            : }
+<span class="lineNum">     116 </span>            : 
+<span class="lineNum">     117 </span>            : #define toproto(L,i) (clvalue(L-&gt;top+(i))-&gt;l.p)
+<span class="lineNum">     118 </span>            : 
+<span class="lineNum">     119 </span><span class="lineCov">         11 : static const Proto* combine(lua_State* L, int n)</span>
+<span class="lineNum">     120 </span>            : {
+<span class="lineNum">     121 </span><span class="lineCov">         11 :  if (n==1)</span>
+<span class="lineNum">     122 </span><span class="lineCov">         10 :   return toproto(L,-1);</span>
+<span class="lineNum">     123 </span>            :  else
+<span class="lineNum">     124 </span>            :  {
+<span class="lineNum">     125 </span>            :   int i,pc;
+<span class="lineNum">     126 </span><span class="lineCov">          1 :   Proto* f=luaF_newproto(L);</span>
+<span class="lineNum">     127 </span><span class="lineCov">          1 :   setptvalue2s(L,L-&gt;top,f); incr_top(L);</span>
+<span class="lineNum">     128 </span><span class="lineCov">          1 :   f-&gt;source=luaS_newliteral(L,&quot;=(&quot; PROGNAME &quot;)&quot;);</span>
+<span class="lineNum">     129 </span><span class="lineCov">          1 :   f-&gt;maxstacksize=1;</span>
+<span class="lineNum">     130 </span><span class="lineCov">          1 :   pc=2*n+1;</span>
+<span class="lineNum">     131 </span><span class="lineCov">          1 :   f-&gt;code=luaM_newvector(L,pc,Instruction);</span>
+<span class="lineNum">     132 </span><span class="lineCov">          1 :   f-&gt;sizecode=pc;</span>
+<span class="lineNum">     133 </span><span class="lineCov">          1 :   f-&gt;p=luaM_newvector(L,n,Proto*);</span>
+<span class="lineNum">     134 </span><span class="lineCov">          1 :   f-&gt;sizep=n;</span>
+<span class="lineNum">     135 </span><span class="lineCov">          1 :   pc=0;</span>
+<span class="lineNum">     136 </span><span class="lineCov">          3 :   for (i=0; i&lt;n; i++)</span>
+<span class="lineNum">     137 </span>            :   {
+<span class="lineNum">     138 </span><span class="lineCov">          2 :    f-&gt;p[i]=toproto(L,i-n-1);</span>
+<span class="lineNum">     139 </span><span class="lineCov">          2 :    f-&gt;code[pc++]=CREATE_ABx(OP_CLOSURE,0,i);</span>
+<span class="lineNum">     140 </span><span class="lineCov">          2 :    f-&gt;code[pc++]=CREATE_ABC(OP_CALL,0,1,1);</span>
+<span class="lineNum">     141 </span>            :   }
+<span class="lineNum">     142 </span><span class="lineCov">          1 :   f-&gt;code[pc++]=CREATE_ABC(OP_RETURN,0,1,0);</span>
+<span class="lineNum">     143 </span><span class="lineCov">          1 :   return f;</span>
+<span class="lineNum">     144 </span>            :  }
+<span class="lineNum">     145 </span>            : }
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineCov">        407 : static int writer(lua_State* L, const void* p, size_t size, void* u)</span>
+<span class="lineNum">     148 </span>            : {
+<span class="lineNum">     149 </span>            :  UNUSED(L);
+<span class="lineNum">     150 </span><span class="lineCov">        407 :  return (fwrite(p,size,1,(FILE*)u)!=1) &amp;&amp; (size!=0);</span>
+<span class="lineNum">     151 </span>            : }
+<span class="lineNum">     152 </span>            : 
+<span class="lineNum">     153 </span>            : struct Smain {
+<span class="lineNum">     154 </span>            :  int argc;
+<span class="lineNum">     155 </span>            :  char** argv;
+<span class="lineNum">     156 </span>            : };
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineCov">         12 : static int pmain(lua_State* L)</span>
+<span class="lineNum">     159 </span>            : {
+<span class="lineNum">     160 </span><span class="lineCov">         12 :  struct Smain* s = (struct Smain*)lua_touserdata(L, 1);</span>
+<span class="lineNum">     161 </span><span class="lineCov">         12 :  int argc=s-&gt;argc;</span>
+<span class="lineNum">     162 </span><span class="lineCov">         12 :  char** argv=s-&gt;argv;</span>
+<span class="lineNum">     163 </span>            :  const Proto* f;
+<span class="lineNum">     164 </span>            :  int i;
+<span class="lineNum">     165 </span><span class="lineCov">         12 :  if (!lua_checkstack(L,argc)) fatal(&quot;too many input files&quot;);</span>
+<span class="lineNum">     166 </span><span class="lineCov">         24 :  for (i=0; i&lt;argc; i++)</span>
+<span class="lineNum">     167 </span>            :  {
+<span class="lineNum">     168 </span><span class="lineCov">         13 :   const char* filename=IS(&quot;-&quot;) ? NULL : argv[i];</span>
+<span class="lineNum">     169 </span><span class="lineCov">         13 :   if (luaL_loadfile(L,filename)!=0) fatal(lua_tostring(L,-1));</span>
+<span class="lineNum">     170 </span>            :  }
+<span class="lineNum">     171 </span><span class="lineCov">         11 :  f=combine(L,argc);</span>
+<span class="lineNum">     172 </span><span class="lineCov">         11 :  if (listing) luaU_print(f,listing&gt;1);</span>
+<span class="lineNum">     173 </span><span class="lineCov">         11 :  if (dumping)</span>
+<span class="lineNum">     174 </span>            :  {
+<span class="lineNum">     175 </span><span class="lineCov">          8 :   FILE* D= (output==NULL) ? stdout : fopen(output,&quot;wb&quot;);</span>
+<span class="lineNum">     176 </span><span class="lineCov">          8 :   if (D==NULL) cannot(&quot;open&quot;);</span>
+<span class="lineNum">     177 </span>            :   lua_lock(L);
+<span class="lineNum">     178 </span><span class="lineCov">          8 :   luaU_dump(L,f,writer,D,stripping);</span>
+<span class="lineNum">     179 </span>            :   lua_unlock(L);
+<span class="lineNum">     180 </span><span class="lineCov">          8 :   if (ferror(D)) cannot(&quot;write&quot;);</span>
+<span class="lineNum">     181 </span><span class="lineCov">          8 :   if (fclose(D)) cannot(&quot;close&quot;);</span>
+<span class="lineNum">     182 </span>            :  }
+<span class="lineNum">     183 </span><span class="lineCov">         11 :  return 0;</span>
+<span class="lineNum">     184 </span>            : }
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span><span class="lineCov">         16 : int main(int argc, char* argv[])</span>
+<span class="lineNum">     187 </span>            : {
+<span class="lineNum">     188 </span>            :  lua_State* L;
+<span class="lineNum">     189 </span>            :  struct Smain s;
+<span class="lineNum">     190 </span><span class="lineCov">         16 :  int i=doargs(argc,argv);</span>
+<span class="lineNum">     191 </span><span class="lineCov">         12 :  argc-=i; argv+=i;</span>
+<span class="lineNum">     192 </span><span class="lineCov">         12 :  if (argc&lt;=0) usage(&quot;no input files given&quot;);</span>
+<span class="lineNum">     193 </span><span class="lineCov">         12 :  L=lua_open();</span>
+<span class="lineNum">     194 </span><span class="lineCov">         12 :  if (L==NULL) fatal(&quot;not enough memory for state&quot;);</span>
+<span class="lineNum">     195 </span><span class="lineCov">         12 :  s.argc=argc;</span>
+<span class="lineNum">     196 </span><span class="lineCov">         12 :  s.argv=argv;</span>
+<span class="lineNum">     197 </span><span class="lineCov">         12 :  if (lua_cpcall(L,pmain,&amp;s)!=0) fatal(lua_tostring(L,-1));</span>
+<span class="lineNum">     198 </span><span class="lineCov">         11 :  lua_close(L);</span>
+<span class="lineNum">     199 </span><span class="lineCov">         11 :  return EXIT_SUCCESS;</span>
+<span class="lineNum">     200 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

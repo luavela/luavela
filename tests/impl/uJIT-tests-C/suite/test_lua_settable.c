@@ -1,0 +1,68 @@
+/*
+ * This is a part of uJIT's testing suite.
+ * Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+ */
+
+#include "test_common_lua.h"
+
+static int __newindex(lua_State *L)
+{
+	lua_gc(L, LUA_GCCOLLECT, 0);
+	return 0;
+}
+
+static void test_lua_settable(void **state)
+{
+	UNUSED_STATE(state);
+
+	lua_State *L = luaL_newstate();
+
+	lua_newtable(L);
+
+	lua_pushstring(L, "key1");
+	lua_pushstring(L, "myval");
+	lua_settable(L, -3);
+	assert_stack_size(L, 1);
+
+	lua_getfield(L, -1, "key1");
+	assert_true(lua_isstring(L, -1));
+	lua_pop(L, 1);
+	assert_stack_size(L, 1);
+
+	lua_pushstring(L, "key1");
+	lua_pushstring(L, "myval");
+	lua_settable(L, -3);
+	assert_stack_size(L, 1);
+
+	lua_getfield(L, -1, "key1");
+	assert_true(lua_isstring(L, -1));
+	lua_pop(L, 1);
+	assert_stack_size(L, 1);
+
+	lua_newtable(L);
+
+	lua_pushstring(L, "__newindex");
+	lua_pushcfunction(L, __newindex);
+	lua_settable(L, -3);
+	lua_setmetatable(L, -2);
+
+	lua_pushstring(L, "key2");
+	lua_pushstring(L, "myval");
+	lua_settable(L, -3);
+
+	lua_getfield(L, -1, "key2");
+	assert_true(lua_isnil(L, -1));
+	lua_pop(L, 1);
+	assert_stack_size(L, 1);
+
+	lua_close(L);
+}
+
+int main(void)
+{
+	const struct CMUnitTest tests[] = {
+		cmocka_unit_test(test_lua_settable),
+	};
+	cmocka_set_message_output(CM_OUTPUT_TAP);
+	return cmocka_run_group_tests(tests, NULL, NULL);
+}

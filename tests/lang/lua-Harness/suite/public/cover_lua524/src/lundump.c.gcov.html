@@ -1,0 +1,338 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - Lua 5.2.4 - src/lundump.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">src</a> - lundump.c</td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">Lua 5.2.4</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">122</td>
+            <td class="headerCovTableEntry">128</td>
+            <td class="headerCovTableEntryHi">95.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2018-10-07 17:32:52</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="headerItem">Legend:</td>
+            <td class="headerValueLeg">            Lines:
+            <span class="coverLegendCov">hit</span>
+            <span class="coverLegendNoCov">not hit</span>
+</td>
+            <td></td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<span class="lineNum">       1 </span>            : /*
+<span class="lineNum">       2 </span>            : ** $Id: lundump.c,v 2.22.1.1 2013/04/12 18:48:47 roberto Exp $
+<span class="lineNum">       3 </span>            : ** load precompiled Lua chunks
+<span class="lineNum">       4 </span>            : ** See Copyright Notice in lua.h
+<span class="lineNum">       5 </span>            : */
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #include &lt;string.h&gt;
+<span class="lineNum">       8 </span>            : 
+<span class="lineNum">       9 </span>            : #define lundump_c
+<span class="lineNum">      10 </span>            : #define LUA_CORE
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : #include &quot;lua.h&quot;
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #include &quot;ldebug.h&quot;
+<span class="lineNum">      15 </span>            : #include &quot;ldo.h&quot;
+<span class="lineNum">      16 </span>            : #include &quot;lfunc.h&quot;
+<span class="lineNum">      17 </span>            : #include &quot;lmem.h&quot;
+<span class="lineNum">      18 </span>            : #include &quot;lobject.h&quot;
+<span class="lineNum">      19 </span>            : #include &quot;lstring.h&quot;
+<span class="lineNum">      20 </span>            : #include &quot;lundump.h&quot;
+<span class="lineNum">      21 </span>            : #include &quot;lzio.h&quot;
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : typedef struct {
+<span class="lineNum">      24 </span>            :  lua_State* L;
+<span class="lineNum">      25 </span>            :  ZIO* Z;
+<span class="lineNum">      26 </span>            :  Mbuffer* b;
+<span class="lineNum">      27 </span>            :  const char* name;
+<span class="lineNum">      28 </span>            : } LoadState;
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span><span class="lineCov">          6 : static l_noret error(LoadState* S, const char* why)</span>
+<span class="lineNum">      31 </span>            : {
+<span class="lineNum">      32 </span><span class="lineCov">          6 :  luaO_pushfstring(S-&gt;L,&quot;%s: %s precompiled chunk&quot;,S-&gt;name,why);</span>
+<span class="lineNum">      33 </span><span class="lineCov">          6 :  luaD_throw(S-&gt;L,LUA_ERRSYNTAX);</span>
+<span class="lineNum">      34 </span>            : }
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span>            : #define LoadMem(S,b,n,size)     LoadBlock(S,b,(n)*(size))
+<span class="lineNum">      37 </span>            : #define LoadByte(S)             (lu_byte)LoadChar(S)
+<span class="lineNum">      38 </span>            : #define LoadVar(S,x)            LoadMem(S,&amp;x,1,sizeof(x))
+<span class="lineNum">      39 </span>            : #define LoadVector(S,b,n,size)  LoadMem(S,b,n,size)
+<span class="lineNum">      40 </span>            : 
+<span class="lineNum">      41 </span>            : #if !defined(luai_verifycode)
+<span class="lineNum">      42 </span>            : #define luai_verifycode(L,b,f)  /* empty */
+<span class="lineNum">      43 </span>            : #endif
+<span class="lineNum">      44 </span>            : 
+<span class="lineNum">      45 </span><span class="lineCov">        371 : static void LoadBlock(LoadState* S, void* b, size_t size)</span>
+<span class="lineNum">      46 </span>            : {
+<span class="lineNum">      47 </span><span class="lineCov">        371 :  if (luaZ_read(S-&gt;Z,b,size)!=0) error(S,&quot;truncated&quot;);</span>
+<span class="lineNum">      48 </span><span class="lineCov">        370 : }</span>
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span>            : static int LoadChar(LoadState* S)
+<span class="lineNum">      51 </span>            : {
+<span class="lineNum">      52 </span>            :  char x;
+<span class="lineNum">      53 </span><span class="lineCov">        101 :  LoadVar(S,x);</span>
+<span class="lineNum">      54 </span><span class="lineCov">        101 :  return x;</span>
+<span class="lineNum">      55 </span>            : }
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineCov">        115 : static int LoadInt(LoadState* S)</span>
+<span class="lineNum">      58 </span>            : {
+<span class="lineNum">      59 </span>            :  int x;
+<span class="lineNum">      60 </span><span class="lineCov">        115 :  LoadVar(S,x);</span>
+<span class="lineNum">      61 </span><span class="lineCov">        115 :  if (x&lt;0) error(S,&quot;corrupted&quot;);</span>
+<span class="lineNum">      62 </span><span class="lineCov">        115 :  return x;</span>
+<span class="lineNum">      63 </span>            : }
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span>            : static lua_Number LoadNumber(LoadState* S)
+<span class="lineNum">      66 </span>            : {
+<span class="lineNum">      67 </span>            :  lua_Number x;
+<span class="lineNum">      68 </span><span class="lineCov">          4 :  LoadVar(S,x);</span>
+<span class="lineNum">      69 </span><span class="lineCov">          4 :  return x;</span>
+<span class="lineNum">      70 </span>            : }
+<span class="lineNum">      71 </span>            : 
+<span class="lineNum">      72 </span><span class="lineCov">         60 : static TString* LoadString(LoadState* S)</span>
+<span class="lineNum">      73 </span>            : {
+<span class="lineNum">      74 </span>            :  size_t size;
+<span class="lineNum">      75 </span><span class="lineCov">         60 :  LoadVar(S,size);</span>
+<span class="lineNum">      76 </span><span class="lineCov">         60 :  if (size==0)</span>
+<span class="lineNum">      77 </span>            :   return NULL;
+<span class="lineNum">      78 </span>            :  else
+<span class="lineNum">      79 </span>            :  {
+<span class="lineNum">      80 </span><span class="lineCov">         56 :   char* s=luaZ_openspace(S-&gt;L,S-&gt;b,size);</span>
+<span class="lineNum">      81 </span><span class="lineCov">         56 :   LoadBlock(S,s,size*sizeof(char));</span>
+<span class="lineNum">      82 </span><span class="lineCov">         56 :   return luaS_newlstr(S-&gt;L,s,size-1);                /* remove trailing '\0' */</span>
+<span class="lineNum">      83 </span>            :  }
+<span class="lineNum">      84 </span>            : }
+<span class="lineNum">      85 </span>            : 
+<span class="lineNum">      86 </span><span class="lineCov">         11 : static void LoadCode(LoadState* S, Proto* f)</span>
+<span class="lineNum">      87 </span>            : {
+<span class="lineNum">      88 </span><span class="lineCov">         11 :  int n=LoadInt(S);</span>
+<span class="lineNum">      89 </span><span class="lineCov">         11 :  f-&gt;code=luaM_newvector(S-&gt;L,n,Instruction);</span>
+<span class="lineNum">      90 </span><span class="lineCov">         11 :  f-&gt;sizecode=n;</span>
+<span class="lineNum">      91 </span><span class="lineCov">         11 :  LoadVector(S,f-&gt;code,n,sizeof(Instruction));</span>
+<span class="lineNum">      92 </span><span class="lineCov">         11 : }</span>
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : static void LoadFunction(LoadState* S, Proto* f);
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineCov">         11 : static void LoadConstants(LoadState* S, Proto* f)</span>
+<span class="lineNum">      97 </span>            : {
+<span class="lineNum">      98 </span>            :  int i,n;
+<span class="lineNum">      99 </span><span class="lineCov">         11 :  n=LoadInt(S);</span>
+<span class="lineNum">     100 </span><span class="lineCov">         11 :  f-&gt;k=luaM_newvector(S-&gt;L,n,TValue);</span>
+<span class="lineNum">     101 </span><span class="lineCov">         11 :  f-&gt;sizek=n;</span>
+<span class="lineNum">     102 </span><span class="lineCov">         11 :  for (i=0; i&lt;n; i++) setnilvalue(&amp;f-&gt;k[i]);</span>
+<span class="lineNum">     103 </span><span class="lineCov">         40 :  for (i=0; i&lt;n; i++)</span>
+<span class="lineNum">     104 </span>            :  {
+<span class="lineNum">     105 </span><span class="lineCov">         40 :   TValue* o=&amp;f-&gt;k[i];</span>
+<span class="lineNum">     106 </span>            :   int t=LoadChar(S);
+<span class="lineNum">     107 </span><span class="lineCov">         40 :   switch (t)</span>
+<span class="lineNum">     108 </span>            :   {
+<span class="lineNum">     109 </span><span class="lineCov">          2 :    case LUA_TNIL:</span>
+<span class="lineNum">     110 </span><span class="lineCov">          2 :         setnilvalue(o);</span>
+<span class="lineNum">     111 </span><span class="lineCov">          2 :         break;</span>
+<span class="lineNum">     112 </span><span class="lineCov">          2 :    case LUA_TBOOLEAN:</span>
+<span class="lineNum">     113 </span><span class="lineCov">          2 :         setbvalue(o,LoadChar(S));</span>
+<span class="lineNum">     114 </span><span class="lineCov">          2 :         break;</span>
+<span class="lineNum">     115 </span><span class="lineCov">          4 :    case LUA_TNUMBER:</span>
+<span class="lineNum">     116 </span><span class="lineCov">          4 :         setnvalue(o,LoadNumber(S));</span>
+<span class="lineNum">     117 </span><span class="lineCov">          4 :         break;</span>
+<span class="lineNum">     118 </span><span class="lineCov">         32 :    case LUA_TSTRING:</span>
+<span class="lineNum">     119 </span><span class="lineCov">         32 :         setsvalue2n(S-&gt;L,o,LoadString(S));</span>
+<span class="lineNum">     120 </span><span class="lineCov">         32 :         break;</span>
+<span class="lineNum">     121 </span><span class="lineCov">         40 :     default: lua_assert(0);</span>
+<span class="lineNum">     122 </span>            :   }
+<span class="lineNum">     123 </span>            :  }
+<span class="lineNum">     124 </span><span class="lineCov">         11 :  n=LoadInt(S);</span>
+<span class="lineNum">     125 </span><span class="lineCov">         11 :  f-&gt;p=luaM_newvector(S-&gt;L,n,Proto*);</span>
+<span class="lineNum">     126 </span><span class="lineCov">         11 :  f-&gt;sizep=n;</span>
+<span class="lineNum">     127 </span><span class="lineCov">         11 :  for (i=0; i&lt;n; i++) f-&gt;p[i]=NULL;</span>
+<span class="lineNum">     128 </span><span class="lineCov">          4 :  for (i=0; i&lt;n; i++)</span>
+<span class="lineNum">     129 </span>            :  {
+<span class="lineNum">     130 </span><span class="lineCov">          4 :   f-&gt;p[i]=luaF_newproto(S-&gt;L);</span>
+<span class="lineNum">     131 </span><span class="lineCov">          4 :   LoadFunction(S,f-&gt;p[i]);</span>
+<span class="lineNum">     132 </span>            :  }
+<span class="lineNum">     133 </span><span class="lineCov">         11 : }</span>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span><span class="lineCov">         11 : static void LoadUpvalues(LoadState* S, Proto* f)</span>
+<span class="lineNum">     136 </span>            : {
+<span class="lineNum">     137 </span>            :  int i,n;
+<span class="lineNum">     138 </span><span class="lineCov">         11 :  n=LoadInt(S);</span>
+<span class="lineNum">     139 </span><span class="lineCov">         11 :  f-&gt;upvalues=luaM_newvector(S-&gt;L,n,Upvaldesc);</span>
+<span class="lineNum">     140 </span><span class="lineCov">         11 :  f-&gt;sizeupvalues=n;</span>
+<span class="lineNum">     141 </span><span class="lineCov">         13 :  for (i=0; i&lt;n; i++) f-&gt;upvalues[i].name=NULL;</span>
+<span class="lineNum">     142 </span><span class="lineCov">         13 :  for (i=0; i&lt;n; i++)</span>
+<span class="lineNum">     143 </span>            :  {
+<span class="lineNum">     144 </span><span class="lineCov">         13 :   f-&gt;upvalues[i].instack=LoadByte(S);</span>
+<span class="lineNum">     145 </span><span class="lineCov">         13 :   f-&gt;upvalues[i].idx=LoadByte(S);</span>
+<span class="lineNum">     146 </span>            :  }
+<span class="lineNum">     147 </span><span class="lineCov">         11 : }</span>
+<span class="lineNum">     148 </span>            : 
+<span class="lineNum">     149 </span><span class="lineCov">         11 : static void LoadDebug(LoadState* S, Proto* f)</span>
+<span class="lineNum">     150 </span>            : {
+<span class="lineNum">     151 </span>            :  int i,n;
+<span class="lineNum">     152 </span><span class="lineCov">         11 :  f-&gt;source=LoadString(S);</span>
+<span class="lineNum">     153 </span><span class="lineCov">         11 :  n=LoadInt(S);</span>
+<span class="lineNum">     154 </span><span class="lineCov">         11 :  f-&gt;lineinfo=luaM_newvector(S-&gt;L,n,int);</span>
+<span class="lineNum">     155 </span><span class="lineCov">         11 :  f-&gt;sizelineinfo=n;</span>
+<span class="lineNum">     156 </span><span class="lineCov">         11 :  LoadVector(S,f-&gt;lineinfo,n,sizeof(int));</span>
+<span class="lineNum">     157 </span><span class="lineCov">         11 :  n=LoadInt(S);</span>
+<span class="lineNum">     158 </span><span class="lineCov">         11 :  f-&gt;locvars=luaM_newvector(S-&gt;L,n,LocVar);</span>
+<span class="lineNum">     159 </span><span class="lineCov">         11 :  f-&gt;sizelocvars=n;</span>
+<span class="lineNum">     160 </span><span class="lineCov">         11 :  for (i=0; i&lt;n; i++) f-&gt;locvars[i].varname=NULL;</span>
+<span class="lineNum">     161 </span><span class="lineCov">          8 :  for (i=0; i&lt;n; i++)</span>
+<span class="lineNum">     162 </span>            :  {
+<span class="lineNum">     163 </span><span class="lineCov">          8 :   f-&gt;locvars[i].varname=LoadString(S);</span>
+<span class="lineNum">     164 </span><span class="lineCov">          8 :   f-&gt;locvars[i].startpc=LoadInt(S);</span>
+<span class="lineNum">     165 </span><span class="lineCov">          8 :   f-&gt;locvars[i].endpc=LoadInt(S);</span>
+<span class="lineNum">     166 </span>            :  }
+<span class="lineNum">     167 </span><span class="lineCov">         11 :  n=LoadInt(S);</span>
+<span class="lineNum">     168 </span><span class="lineCov">         11 :  for (i=0; i&lt;n; i++) f-&gt;upvalues[i].name=LoadString(S);</span>
+<span class="lineNum">     169 </span><span class="lineCov">         11 : }</span>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span><span class="lineCov">         11 : static void LoadFunction(LoadState* S, Proto* f)</span>
+<span class="lineNum">     172 </span>            : {
+<span class="lineNum">     173 </span><span class="lineCov">         11 :  f-&gt;linedefined=LoadInt(S);</span>
+<span class="lineNum">     174 </span><span class="lineCov">         11 :  f-&gt;lastlinedefined=LoadInt(S);</span>
+<span class="lineNum">     175 </span><span class="lineCov">         11 :  f-&gt;numparams=LoadByte(S);</span>
+<span class="lineNum">     176 </span><span class="lineCov">         11 :  f-&gt;is_vararg=LoadByte(S);</span>
+<span class="lineNum">     177 </span><span class="lineCov">         11 :  f-&gt;maxstacksize=LoadByte(S);</span>
+<span class="lineNum">     178 </span><span class="lineCov">         11 :  LoadCode(S,f);</span>
+<span class="lineNum">     179 </span><span class="lineCov">         11 :  LoadConstants(S,f);</span>
+<span class="lineNum">     180 </span><span class="lineCov">         11 :  LoadUpvalues(S,f);</span>
+<span class="lineNum">     181 </span><span class="lineCov">         11 :  LoadDebug(S,f);</span>
+<span class="lineNum">     182 </span><span class="lineCov">         11 : }</span>
+<span class="lineNum">     183 </span>            : 
+<span class="lineNum">     184 </span>            : /* the code below must be consistent with the code in luaU_header */
+<span class="lineNum">     185 </span>            : #define N0      LUAC_HEADERSIZE
+<span class="lineNum">     186 </span>            : #define N1      (sizeof(LUA_SIGNATURE)-sizeof(char))
+<span class="lineNum">     187 </span>            : #define N2      N1+2
+<span class="lineNum">     188 </span>            : #define N3      N2+6
+<span class="lineNum">     189 </span>            : 
+<span class="lineNum">     190 </span><span class="lineCov">         13 : static void LoadHeader(LoadState* S)</span>
+<span class="lineNum">     191 </span>            : {
+<span class="lineNum">     192 </span>            :  lu_byte h[LUAC_HEADERSIZE];
+<span class="lineNum">     193 </span>            :  lu_byte s[LUAC_HEADERSIZE];
+<span class="lineNum">     194 </span><span class="lineCov">         13 :  luaU_header(h);</span>
+<span class="lineNum">     195 </span>            :  memcpy(s,h,sizeof(char));                      /* first char already read */
+<span class="lineNum">     196 </span><span class="lineCov">         13 :  LoadBlock(S,s+sizeof(char),LUAC_HEADERSIZE-sizeof(char));</span>
+<span class="lineNum">     197 </span><span class="lineCov">         19 :  if (memcmp(h,s,N0)==0) return;</span>
+<span class="lineNum">     198 </span><span class="lineCov">          5 :  if (memcmp(h,s,N1)!=0) error(S,&quot;not a&quot;);</span>
+<span class="lineNum">     199 </span><span class="lineCov">          4 :  if (memcmp(h,s,N2)!=0) error(S,&quot;version mismatch in&quot;);</span>
+<span class="lineNum">     200 </span><span class="lineCov">          2 :  if (memcmp(h,s,N3)!=0) error(S,&quot;incompatible&quot;); else error(S,&quot;corrupted&quot;);</span>
+<span class="lineNum">     201 </span>            : }
+<span class="lineNum">     202 </span>            : 
+<span class="lineNum">     203 </span>            : /*
+<span class="lineNum">     204 </span>            : ** load precompiled chunk
+<span class="lineNum">     205 </span>            : */
+<span class="lineNum">     206 </span><span class="lineCov">         13 : Closure* luaU_undump (lua_State* L, ZIO* Z, Mbuffer* buff, const char* name)</span>
+<span class="lineNum">     207 </span>            : {
+<span class="lineNum">     208 </span>            :  LoadState S;
+<span class="lineNum">     209 </span>            :  Closure* cl;
+<span class="lineNum">     210 </span><span class="lineCov">         13 :  if (*name=='@' || *name=='=')</span>
+<span class="lineNum">     211 </span><span class="lineCov">         13 :   S.name=name+1;</span>
+<span class="lineNum">     212 </span><span class="lineNoCov">          0 :  else if (*name==LUA_SIGNATURE[0])</span>
+<span class="lineNum">     213 </span><span class="lineNoCov">          0 :   S.name=&quot;binary string&quot;;</span>
+<span class="lineNum">     214 </span>            :  else
+<span class="lineNum">     215 </span><span class="lineNoCov">          0 :   S.name=name;</span>
+<span class="lineNum">     216 </span><span class="lineCov">         13 :  S.L=L;</span>
+<span class="lineNum">     217 </span><span class="lineCov">         13 :  S.Z=Z;</span>
+<span class="lineNum">     218 </span><span class="lineCov">         13 :  S.b=buff;</span>
+<span class="lineNum">     219 </span><span class="lineCov">         13 :  LoadHeader(&amp;S);</span>
+<span class="lineNum">     220 </span><span class="lineCov">          7 :  cl=luaF_newLclosure(L,1);</span>
+<span class="lineNum">     221 </span><span class="lineCov">          7 :  setclLvalue(L,L-&gt;top,cl); incr_top(L);</span>
+<span class="lineNum">     222 </span><span class="lineCov">          7 :  cl-&gt;l.p=luaF_newproto(L);</span>
+<span class="lineNum">     223 </span><span class="lineCov">          7 :  LoadFunction(&amp;S,cl-&gt;l.p);</span>
+<span class="lineNum">     224 </span><span class="lineCov">          7 :  if (cl-&gt;l.p-&gt;sizeupvalues != 1)</span>
+<span class="lineNum">     225 </span>            :  {
+<span class="lineNum">     226 </span>            :   Proto* p=cl-&gt;l.p;
+<span class="lineNum">     227 </span><span class="lineNoCov">          0 :   cl=luaF_newLclosure(L,cl-&gt;l.p-&gt;sizeupvalues);</span>
+<span class="lineNum">     228 </span><span class="lineNoCov">          0 :   cl-&gt;l.p=p;</span>
+<span class="lineNum">     229 </span><span class="lineNoCov">          0 :   setclLvalue(L,L-&gt;top-1,cl);</span>
+<span class="lineNum">     230 </span>            :  }
+<span class="lineNum">     231 </span>            :  luai_verifycode(L,buff,cl-&gt;l.p);
+<span class="lineNum">     232 </span><span class="lineCov">          7 :  return cl;</span>
+<span class="lineNum">     233 </span>            : }
+<span class="lineNum">     234 </span>            : 
+<span class="lineNum">     235 </span>            : #define MYINT(s)        (s[0]-'0')
+<span class="lineNum">     236 </span>            : #define VERSION         MYINT(LUA_VERSION_MAJOR)*16+MYINT(LUA_VERSION_MINOR)
+<span class="lineNum">     237 </span>            : #define FORMAT          0               /* this is the official format */
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            : /*
+<span class="lineNum">     240 </span>            : * make header for precompiled chunks
+<span class="lineNum">     241 </span>            : * if you change the code below be sure to update LoadHeader and FORMAT above
+<span class="lineNum">     242 </span>            : * and LUAC_HEADERSIZE in lundump.h
+<span class="lineNum">     243 </span>            : */
+<span class="lineNum">     244 </span><span class="lineCov">         23 : void luaU_header (lu_byte* h)</span>
+<span class="lineNum">     245 </span>            : {
+<span class="lineNum">     246 </span>            :  int x=1;
+<span class="lineNum">     247 </span>            :  memcpy(h,LUA_SIGNATURE,sizeof(LUA_SIGNATURE)-sizeof(char));
+<span class="lineNum">     248 </span>            :  h+=sizeof(LUA_SIGNATURE)-sizeof(char);
+<span class="lineNum">     249 </span><span class="lineCov">         23 :  *h++=cast_byte(VERSION);</span>
+<span class="lineNum">     250 </span><span class="lineCov">         23 :  *h++=cast_byte(FORMAT);</span>
+<span class="lineNum">     251 </span><span class="lineCov">         23 :  *h++=cast_byte(*(char*)&amp;x);                        /* endianness */</span>
+<span class="lineNum">     252 </span><span class="lineCov">         23 :  *h++=cast_byte(sizeof(int));</span>
+<span class="lineNum">     253 </span><span class="lineCov">         23 :  *h++=cast_byte(sizeof(size_t));</span>
+<span class="lineNum">     254 </span><span class="lineCov">         23 :  *h++=cast_byte(sizeof(Instruction));</span>
+<span class="lineNum">     255 </span><span class="lineCov">         23 :  *h++=cast_byte(sizeof(lua_Number));</span>
+<span class="lineNum">     256 </span><span class="lineCov">         23 :  *h++=cast_byte(((lua_Number)0.5)==0);          /* is lua_Number integral? */</span>
+<span class="lineNum">     257 </span>            :  memcpy(h,LUAC_TAIL,sizeof(LUAC_TAIL)-sizeof(char));
+<span class="lineNum">     258 </span><span class="lineCov">         23 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

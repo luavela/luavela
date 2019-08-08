@@ -1,0 +1,13 @@
+#
+# This is a batch file for running uJIT benchmarks crated/adopted by IPONWEB
+# uJIT development team. See perftest.pl for more details on the format.
+#
+
+# Test              # jit_on # jit_off # jit_overhead # arguments and input
+concat_int.lua        -60      -60         5
+laurent.lua             7        7       -30
+rindex-builtin.lua      0        0       -30            5e7
+rindex-lua.lua         17        5        10            5e7
+tf_idf.lua              0        0       -10            1e3
+# Test              # jit_on # jit_off # jit_overhead # arguments and input
+

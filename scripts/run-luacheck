@@ -1,0 +1,88 @@
+#!/usr/bin/env perl
+#
+# This is a wrapper around luacheck for linting Lua part of uJIT's code.
+# NB! Manual runs without passing --lua-bin and --lfs-lib assume that
+# uJIT and LuaFilesystem were built in-source.
+#
+# Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+
+use 5.016;
+
+use File::Basename;
+use File::Spec;
+use Getopt::Long;
+
+use constant BIN => File::Basename::basename($0);
+use constant PROJECT_DIR =>
+	File::Spec->rel2abs($0) =~ m{\A(.+)/scripts/@{[BIN]}\Z};
+use constant LUACHECK_DIR => "@{[PROJECT_DIR]}/3rdparty/lua/luacheck";
+
+use constant DEFAULTS => {
+	lua_bin => "@{[PROJECT_DIR]}/src/ujit",
+	lfs_lib => "@{[PROJECT_DIR]}/3rdparty/lua/luafilesystem/lfs.so"
+};
+
+my $options = { map { $_ => DEFAULTS->{ $_ } } qw(lua_bin lfs_lib) };
+
+Getopt::Long::GetOptions(
+	'lua-bin=s' => \$options->{lua_bin},
+	'lfs-lib=s' => \$options->{lfs_lib},
+	'help|h' => sub {
+		say <<HELP and exit 0;
+@{[BIN]} - run luacheck
+
+SYNOPSIS
+
+@{[BIN]} [options] [<files>...]
+
+Supported options are:
+
+    --lua-bin            Path to Lua binary
+    --lfs-lib            Path to LuaFileSystem library (lfs.so)
+    -h, --help           Show this message and exit.
+HELP
+	},
+);
+
+my $env = {
+	lua_bin => $options->{lua_bin},
+	lfs_lib => $options->{lfs_lib}
+};
+
+my $args = {
+	bin => "@{[ LUACHECK_DIR ]}/bin/luacheck.lua",
+	init => sprintf("-e '%s'", stringify('; ', '%s = %s',
+		'package.path' => sprintf('"%s;" .. package.path', join ';',
+			"@{[LUACHECK_DIR]}/src/?.lua",
+			"@{[LUACHECK_DIR]}/src/?/init.lua",
+		),
+		'package.cpath' => qq{"$env->{lfs_lib}"},
+		'package.preload.lanes' => 'error',
+	)),
+	opts => stringify(' ', '--%s=%s',
+		formatter => 'TAP',
+		globals => 'ujit',
+	),
+	paths => stringify(' ', '%s %s', @ARGV)
+};
+
+die "ERROR: can't find Lua binary at $env->{lua_bin}" unless -x $env->{lua_bin};
+die "ERROR: can't find LuaFileSystem library at $env->{lfs_lib}" unless -x $env->{lfs_lib};
+
+die "Please specify paths to Lua chunks to check on command line" unless @ARGV;
+
+# Invoke a shell command. The contents of stdout and stderr is reported to
+# stdout and the entire build process terminates with an error.
+
+local $| = 1;
+open(my $pipe, '-|', "$env->{lua_bin} @{ $args }{qw(init bin paths opts)} 2>&1")
+	or die "Can't fork: $!";
+print while <$pipe>;
+close($pipe) or die "luacheck returned exit code $?";
+
+exit 0;
+
+sub stringify ($$@) {
+	my ($separator, $format, %items) = @_;
+	join $separator, map { sprintf $format, $_, $items{ $_ } } keys %items;
+}

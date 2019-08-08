@@ -1,0 +1,307 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - Lua 5.1.5 - src/print.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">src</a> - print.c</td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">Lua 5.1.5</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">139</td>
+            <td class="headerCovTableEntry">148</td>
+            <td class="headerCovTableEntryHi">93.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2018-10-07 17:32:51</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="headerItem">Legend:</td>
+            <td class="headerValueLeg">            Lines:
+            <span class="coverLegendCov">hit</span>
+            <span class="coverLegendNoCov">not hit</span>
+</td>
+            <td></td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<span class="lineNum">       1 </span>            : /*
+<span class="lineNum">       2 </span>            : ** $Id: print.c,v 1.55a 2006/05/31 13:30:05 lhf Exp $
+<span class="lineNum">       3 </span>            : ** print bytecodes
+<span class="lineNum">       4 </span>            : ** See Copyright Notice in lua.h
+<span class="lineNum">       5 </span>            : */
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #include &lt;ctype.h&gt;
+<span class="lineNum">       8 </span>            : #include &lt;stdio.h&gt;
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #define luac_c
+<span class="lineNum">      11 </span>            : #define LUA_CORE
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : #include &quot;ldebug.h&quot;
+<span class="lineNum">      14 </span>            : #include &quot;lobject.h&quot;
+<span class="lineNum">      15 </span>            : #include &quot;lopcodes.h&quot;
+<span class="lineNum">      16 </span>            : #include &quot;lundump.h&quot;
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #define PrintFunction   luaU_print
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #define Sizeof(x)       ((int)sizeof(x))
+<span class="lineNum">      21 </span>            : #define VOID(p)         ((const void*)(p))
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span><span class="lineCov">         28 : static void PrintString(const TString* ts)</span>
+<span class="lineNum">      24 </span>            : {
+<span class="lineNum">      25 </span><span class="lineCov">         28 :  const char* s=getstr(ts);</span>
+<span class="lineNum">      26 </span><span class="lineCov">         28 :  size_t i,n=ts-&gt;tsv.len;</span>
+<span class="lineNum">      27 </span><span class="lineCov">         28 :  putchar('&quot;');</span>
+<span class="lineNum">      28 </span><span class="lineCov">        197 :  for (i=0; i&lt;n; i++)</span>
+<span class="lineNum">      29 </span>            :  {
+<span class="lineNum">      30 </span><span class="lineCov">        169 :   int c=s[i];</span>
+<span class="lineNum">      31 </span><span class="lineCov">        169 :   switch (c)</span>
+<span class="lineNum">      32 </span>            :   {
+<span class="lineNum">      33 </span><span class="lineCov">          3 :    case '&quot;': printf(&quot;\\\&quot;&quot;); break;</span>
+<span class="lineNum">      34 </span><span class="lineCov">          3 :    case '\\': printf(&quot;\\\\&quot;); break;</span>
+<span class="lineNum">      35 </span><span class="lineCov">          3 :    case '\a': printf(&quot;\\a&quot;); break;</span>
+<span class="lineNum">      36 </span><span class="lineCov">          3 :    case '\b': printf(&quot;\\b&quot;); break;</span>
+<span class="lineNum">      37 </span><span class="lineCov">          3 :    case '\f': printf(&quot;\\f&quot;); break;</span>
+<span class="lineNum">      38 </span><span class="lineCov">          3 :    case '\n': printf(&quot;\\n&quot;); break;</span>
+<span class="lineNum">      39 </span><span class="lineCov">          3 :    case '\r': printf(&quot;\\r&quot;); break;</span>
+<span class="lineNum">      40 </span><span class="lineCov">          3 :    case '\t': printf(&quot;\\t&quot;); break;</span>
+<span class="lineNum">      41 </span><span class="lineCov">          3 :    case '\v': printf(&quot;\\v&quot;); break;</span>
+<span class="lineNum">      42 </span><span class="lineCov">        142 :    default:     if (isprint((unsigned char)c))</span>
+<span class="lineNum">      43 </span><span class="lineCov">        139 :                         putchar(c);</span>
+<span class="lineNum">      44 </span>            :                 else
+<span class="lineNum">      45 </span><span class="lineCov">          3 :                         printf(&quot;\\%03u&quot;,(unsigned char)c);</span>
+<span class="lineNum">      46 </span>            :   }
+<span class="lineNum">      47 </span>            :  }
+<span class="lineNum">      48 </span><span class="lineCov">         28 :  putchar('&quot;');</span>
+<span class="lineNum">      49 </span><span class="lineCov">         28 : }</span>
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span><span class="lineCov">         39 : static void PrintConstant(const Proto* f, int i)</span>
+<span class="lineNum">      52 </span>            : {
+<span class="lineNum">      53 </span><span class="lineCov">         39 :  const TValue* o=&amp;f-&gt;k[i];</span>
+<span class="lineNum">      54 </span><span class="lineCov">         39 :  switch (ttype(o))</span>
+<span class="lineNum">      55 </span>            :  {
+<span class="lineNum">      56 </span><span class="lineNoCov">          0 :   case LUA_TNIL:</span>
+<span class="lineNum">      57 </span><span class="lineNoCov">          0 :         printf(&quot;nil&quot;);</span>
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :         break;</span>
+<span class="lineNum">      59 </span><span class="lineCov">          3 :   case LUA_TBOOLEAN:</span>
+<span class="lineNum">      60 </span><span class="lineCov">          3 :         printf(bvalue(o) ? &quot;true&quot; : &quot;false&quot;);</span>
+<span class="lineNum">      61 </span><span class="lineCov">          3 :         break;</span>
+<span class="lineNum">      62 </span><span class="lineCov">          8 :   case LUA_TNUMBER:</span>
+<span class="lineNum">      63 </span><span class="lineCov">          8 :         printf(LUA_NUMBER_FMT,nvalue(o));</span>
+<span class="lineNum">      64 </span><span class="lineCov">          8 :         break;</span>
+<span class="lineNum">      65 </span><span class="lineCov">         28 :   case LUA_TSTRING:</span>
+<span class="lineNum">      66 </span><span class="lineCov">         28 :         PrintString(rawtsvalue(o));</span>
+<span class="lineNum">      67 </span><span class="lineCov">         28 :         break;</span>
+<span class="lineNum">      68 </span><span class="lineNoCov">          0 :   default:                              /* cannot happen */</span>
+<span class="lineNum">      69 </span><span class="lineNoCov">          0 :         printf(&quot;? type=%d&quot;,ttype(o));</span>
+<span class="lineNum">      70 </span><span class="lineNoCov">          0 :         break;</span>
+<span class="lineNum">      71 </span>            :  }
+<span class="lineNum">      72 </span><span class="lineCov">         39 : }</span>
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineCov">          8 : static void PrintCode(const Proto* f)</span>
+<span class="lineNum">      75 </span>            : {
+<span class="lineNum">      76 </span><span class="lineCov">          8 :  const Instruction* code=f-&gt;code;</span>
+<span class="lineNum">      77 </span><span class="lineCov">          8 :  int pc,n=f-&gt;sizecode;</span>
+<span class="lineNum">      78 </span><span class="lineCov">         76 :  for (pc=0; pc&lt;n; pc++)</span>
+<span class="lineNum">      79 </span>            :  {
+<span class="lineNum">      80 </span><span class="lineCov">         68 :   Instruction i=code[pc];</span>
+<span class="lineNum">      81 </span><span class="lineCov">         68 :   OpCode o=GET_OPCODE(i);</span>
+<span class="lineNum">      82 </span><span class="lineCov">         68 :   int a=GETARG_A(i);</span>
+<span class="lineNum">      83 </span><span class="lineCov">         68 :   int b=GETARG_B(i);</span>
+<span class="lineNum">      84 </span><span class="lineCov">         68 :   int c=GETARG_C(i);</span>
+<span class="lineNum">      85 </span><span class="lineCov">         68 :   int bx=GETARG_Bx(i);</span>
+<span class="lineNum">      86 </span><span class="lineCov">         68 :   int sbx=GETARG_sBx(i);</span>
+<span class="lineNum">      87 </span><span class="lineCov">         68 :   int line=getline(f,pc);</span>
+<span class="lineNum">      88 </span><span class="lineCov">         68 :   printf(&quot;\t%d\t&quot;,pc+1);</span>
+<span class="lineNum">      89 </span><span class="lineCov">         68 :   if (line&gt;0) printf(&quot;[%d]\t&quot;,line); else printf(&quot;[-]\t&quot;);</span>
+<span class="lineNum">      90 </span><span class="lineCov">         68 :   printf(&quot;%-9s\t&quot;,luaP_opnames[o]);</span>
+<span class="lineNum">      91 </span><span class="lineCov">         68 :   switch (getOpMode(o))</span>
+<span class="lineNum">      92 </span>            :   {
+<span class="lineNum">      93 </span><span class="lineCov">         32 :    case iABC:</span>
+<span class="lineNum">      94 </span><span class="lineCov">         32 :     printf(&quot;%d&quot;,a);</span>
+<span class="lineNum">      95 </span><span class="lineCov">         32 :     if (getBMode(o)!=OpArgN) printf(&quot; %d&quot;,ISK(b) ? (-1-INDEXK(b)) : b);</span>
+<span class="lineNum">      96 </span><span class="lineCov">         32 :     if (getCMode(o)!=OpArgN) printf(&quot; %d&quot;,ISK(c) ? (-1-INDEXK(c)) : c);</span>
+<span class="lineNum">      97 </span><span class="lineCov">         32 :     break;</span>
+<span class="lineNum">      98 </span><span class="lineCov">         34 :    case iABx:</span>
+<span class="lineNum">      99 </span><span class="lineCov">         34 :     if (getBMode(o)==OpArgK) printf(&quot;%d %d&quot;,a,-1-bx); else printf(&quot;%d %d&quot;,a,bx);</span>
+<span class="lineNum">     100 </span><span class="lineCov">         34 :     break;</span>
+<span class="lineNum">     101 </span><span class="lineCov">          2 :    case iAsBx:</span>
+<span class="lineNum">     102 </span><span class="lineCov">          2 :     if (o==OP_JMP) printf(&quot;%d&quot;,sbx); else printf(&quot;%d %d&quot;,a,sbx);</span>
+<span class="lineNum">     103 </span><span class="lineCov">          2 :     break;</span>
+<span class="lineNum">     104 </span>            :   }
+<span class="lineNum">     105 </span><span class="lineCov">         68 :   switch (o)</span>
+<span class="lineNum">     106 </span>            :   {
+<span class="lineNum">     107 </span><span class="lineCov">         16 :    case OP_LOADK:</span>
+<span class="lineNum">     108 </span><span class="lineCov">         16 :     printf(&quot;\t; &quot;); PrintConstant(f,bx);</span>
+<span class="lineNum">     109 </span><span class="lineCov">         16 :     break;</span>
+<span class="lineNum">     110 </span><span class="lineCov">          2 :    case OP_GETUPVAL:</span>
+<span class="lineNum">     111 </span>            :    case OP_SETUPVAL:
+<span class="lineNum">     112 </span><span class="lineCov">          2 :     printf(&quot;\t; %s&quot;, (f-&gt;sizeupvalues&gt;0) ? getstr(f-&gt;upvalues[b]) : &quot;-&quot;);</span>
+<span class="lineNum">     113 </span><span class="lineCov">          2 :     break;</span>
+<span class="lineNum">     114 </span><span class="lineCov">         16 :    case OP_GETGLOBAL:</span>
+<span class="lineNum">     115 </span>            :    case OP_SETGLOBAL:
+<span class="lineNum">     116 </span><span class="lineCov">         16 :     printf(&quot;\t; %s&quot;,svalue(&amp;f-&gt;k[bx]));</span>
+<span class="lineNum">     117 </span><span class="lineCov">         16 :     break;</span>
+<span class="lineNum">     118 </span><span class="lineCov">          2 :    case OP_GETTABLE:</span>
+<span class="lineNum">     119 </span>            :    case OP_SELF:
+<span class="lineNum">     120 </span><span class="lineCov">          2 :     if (ISK(c)) { printf(&quot;\t; &quot;); PrintConstant(f,INDEXK(c)); }</span>
+<span class="lineNum">     121 </span><span class="lineCov">          2 :     break;</span>
+<span class="lineNum">     122 </span><span class="lineCov">          4 :    case OP_SETTABLE:</span>
+<span class="lineNum">     123 </span>            :    case OP_ADD:
+<span class="lineNum">     124 </span>            :    case OP_SUB:
+<span class="lineNum">     125 </span>            :    case OP_MUL:
+<span class="lineNum">     126 </span>            :    case OP_DIV:
+<span class="lineNum">     127 </span>            :    case OP_POW:
+<span class="lineNum">     128 </span>            :    case OP_EQ:
+<span class="lineNum">     129 </span>            :    case OP_LT:
+<span class="lineNum">     130 </span>            :    case OP_LE:
+<span class="lineNum">     131 </span><span class="lineCov">          4 :     if (ISK(b) || ISK(c))</span>
+<span class="lineNum">     132 </span>            :     {
+<span class="lineNum">     133 </span><span class="lineCov">          4 :      printf(&quot;\t; &quot;);</span>
+<span class="lineNum">     134 </span><span class="lineCov">          4 :      if (ISK(b)) PrintConstant(f,INDEXK(b)); else printf(&quot;-&quot;);</span>
+<span class="lineNum">     135 </span><span class="lineCov">          4 :      printf(&quot; &quot;);</span>
+<span class="lineNum">     136 </span><span class="lineCov">          4 :      if (ISK(c)) PrintConstant(f,INDEXK(c)); else printf(&quot;-&quot;);</span>
+<span class="lineNum">     137 </span>            :     }
+<span class="lineNum">     138 </span><span class="lineCov">          4 :     break;</span>
+<span class="lineNum">     139 </span><span class="lineCov">          2 :    case OP_JMP:</span>
+<span class="lineNum">     140 </span>            :    case OP_FORLOOP:
+<span class="lineNum">     141 </span>            :    case OP_FORPREP:
+<span class="lineNum">     142 </span><span class="lineCov">          2 :     printf(&quot;\t; to %d&quot;,sbx+pc+2);</span>
+<span class="lineNum">     143 </span><span class="lineCov">          2 :     break;</span>
+<span class="lineNum">     144 </span><span class="lineCov">          2 :    case OP_CLOSURE:</span>
+<span class="lineNum">     145 </span><span class="lineCov">          2 :     printf(&quot;\t; %p&quot;,VOID(f-&gt;p[bx]));</span>
+<span class="lineNum">     146 </span><span class="lineCov">          2 :     break;</span>
+<span class="lineNum">     147 </span><span class="lineCov">          2 :    case OP_SETLIST:</span>
+<span class="lineNum">     148 </span><span class="lineCov">          2 :     if (c==0) printf(&quot;\t; %d&quot;,(int)code[++pc]);</span>
+<span class="lineNum">     149 </span><span class="lineCov">          2 :     else printf(&quot;\t; %d&quot;,c);</span>
+<span class="lineNum">     150 </span><span class="lineCov">          2 :     break;</span>
+<span class="lineNum">     151 </span><span class="lineCov">         22 :    default:</span>
+<span class="lineNum">     152 </span><span class="lineCov">         22 :     break;</span>
+<span class="lineNum">     153 </span>            :   }
+<span class="lineNum">     154 </span><span class="lineCov">         68 :   printf(&quot;\n&quot;);</span>
+<span class="lineNum">     155 </span>            :  }
+<span class="lineNum">     156 </span><span class="lineCov">          8 : }</span>
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            : #define SS(x)   (x==1)?&quot;&quot;:&quot;s&quot;
+<span class="lineNum">     159 </span>            : #define S(x)    x,SS(x)
+<span class="lineNum">     160 </span>            : 
+<span class="lineNum">     161 </span><span class="lineCov">          8 : static void PrintHeader(const Proto* f)</span>
+<span class="lineNum">     162 </span>            : {
+<span class="lineNum">     163 </span><span class="lineCov">          8 :  const char* s=getstr(f-&gt;source);</span>
+<span class="lineNum">     164 </span><span class="lineCov">          8 :  if (*s=='@' || *s=='=')</span>
+<span class="lineNum">     165 </span><span class="lineCov">          8 :   s++;</span>
+<span class="lineNum">     166 </span><span class="lineNoCov">          0 :  else if (*s==LUA_SIGNATURE[0])</span>
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :   s=&quot;(bstring)&quot;;</span>
+<span class="lineNum">     168 </span>            :  else
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :   s=&quot;(string)&quot;;</span>
+<span class="lineNum">     170 </span><span class="lineCov">         24 :  printf(&quot;\n%s &lt;%s:%d,%d&gt; (%d instruction%s, %d bytes at %p)\n&quot;,</span>
+<span class="lineNum">     171 </span><span class="lineCov">          8 :         (f-&gt;linedefined==0)?&quot;main&quot;:&quot;function&quot;,s,</span>
+<span class="lineNum">     172 </span>            :         f-&gt;linedefined,f-&gt;lastlinedefined,
+<span class="lineNum">     173 </span><span class="lineCov">         16 :         S(f-&gt;sizecode),f-&gt;sizecode*Sizeof(Instruction),VOID(f));</span>
+<span class="lineNum">     174 </span><span class="lineCov">         56 :  printf(&quot;%d%s param%s, %d slot%s, %d upvalue%s, &quot;,</span>
+<span class="lineNum">     175 </span><span class="lineCov">         24 :         f-&gt;numparams,f-&gt;is_vararg?&quot;+&quot;:&quot;&quot;,SS(f-&gt;numparams),</span>
+<span class="lineNum">     176 </span><span class="lineCov">         32 :         S(f-&gt;maxstacksize),S(f-&gt;nups));</span>
+<span class="lineNum">     177 </span><span class="lineCov">         24 :  printf(&quot;%d local%s, %d constant%s, %d function%s\n&quot;,</span>
+<span class="lineNum">     178 </span><span class="lineCov">         24 :         S(f-&gt;sizelocvars),S(f-&gt;sizek),S(f-&gt;sizep));</span>
+<span class="lineNum">     179 </span><span class="lineCov">          8 : }</span>
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span><span class="lineCov">          3 : static void PrintConstants(const Proto* f)</span>
+<span class="lineNum">     182 </span>            : {
+<span class="lineNum">     183 </span><span class="lineCov">          3 :  int i,n=f-&gt;sizek;</span>
+<span class="lineNum">     184 </span><span class="lineCov">          3 :  printf(&quot;constants (%d) for %p:\n&quot;,n,VOID(f));</span>
+<span class="lineNum">     185 </span><span class="lineCov">         18 :  for (i=0; i&lt;n; i++)</span>
+<span class="lineNum">     186 </span>            :  {
+<span class="lineNum">     187 </span><span class="lineCov">         15 :   printf(&quot;\t%d\t&quot;,i+1);</span>
+<span class="lineNum">     188 </span><span class="lineCov">         15 :   PrintConstant(f,i);</span>
+<span class="lineNum">     189 </span><span class="lineCov">         15 :   printf(&quot;\n&quot;);</span>
+<span class="lineNum">     190 </span>            :  }
+<span class="lineNum">     191 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span><span class="lineCov">          3 : static void PrintLocals(const Proto* f)</span>
+<span class="lineNum">     194 </span>            : {
+<span class="lineNum">     195 </span><span class="lineCov">          3 :  int i,n=f-&gt;sizelocvars;</span>
+<span class="lineNum">     196 </span><span class="lineCov">          3 :  printf(&quot;locals (%d) for %p:\n&quot;,n,VOID(f));</span>
+<span class="lineNum">     197 </span><span class="lineCov">          7 :  for (i=0; i&lt;n; i++)</span>
+<span class="lineNum">     198 </span>            :  {
+<span class="lineNum">     199 </span><span class="lineCov">         12 :   printf(&quot;\t%d\t%s\t%d\t%d\n&quot;,</span>
+<span class="lineNum">     200 </span><span class="lineCov">         12 :   i,getstr(f-&gt;locvars[i].varname),f-&gt;locvars[i].startpc+1,f-&gt;locvars[i].endpc+1);</span>
+<span class="lineNum">     201 </span>            :  }
+<span class="lineNum">     202 </span><span class="lineCov">          3 : }</span>
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineCov">          3 : static void PrintUpvalues(const Proto* f)</span>
+<span class="lineNum">     205 </span>            : {
+<span class="lineNum">     206 </span><span class="lineCov">          3 :  int i,n=f-&gt;sizeupvalues;</span>
+<span class="lineNum">     207 </span><span class="lineCov">          3 :  printf(&quot;upvalues (%d) for %p:\n&quot;,n,VOID(f));</span>
+<span class="lineNum">     208 </span><span class="lineCov">          3 :  if (f-&gt;upvalues==NULL) return;</span>
+<span class="lineNum">     209 </span><span class="lineCov">          2 :  for (i=0; i&lt;n; i++)</span>
+<span class="lineNum">     210 </span>            :  {
+<span class="lineNum">     211 </span><span class="lineCov">          1 :   printf(&quot;\t%d\t%s\n&quot;,i,getstr(f-&gt;upvalues[i]));</span>
+<span class="lineNum">     212 </span>            :  }
+<span class="lineNum">     213 </span>            : }
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span><span class="lineCov">          8 : void PrintFunction(const Proto* f, int full)</span>
+<span class="lineNum">     216 </span>            : {
+<span class="lineNum">     217 </span><span class="lineCov">          8 :  int i,n=f-&gt;sizep;</span>
+<span class="lineNum">     218 </span><span class="lineCov">          8 :  PrintHeader(f);</span>
+<span class="lineNum">     219 </span><span class="lineCov">          8 :  PrintCode(f);</span>
+<span class="lineNum">     220 </span><span class="lineCov">          8 :  if (full)</span>
+<span class="lineNum">     221 </span>            :  {
+<span class="lineNum">     222 </span><span class="lineCov">          3 :   PrintConstants(f);</span>
+<span class="lineNum">     223 </span><span class="lineCov">          3 :   PrintLocals(f);</span>
+<span class="lineNum">     224 </span><span class="lineCov">          3 :   PrintUpvalues(f);</span>
+<span class="lineNum">     225 </span>            :  }
+<span class="lineNum">     226 </span><span class="lineCov">          8 :  for (i=0; i&lt;n; i++) PrintFunction(f-&gt;p[i],full);</span>
+<span class="lineNum">     227 </span><span class="lineCov">          8 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

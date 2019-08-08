@@ -1,0 +1,16 @@
+-- Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+--
+-- Reqired by history.lua and history2.lua benchmarks
+
+local Class = {}
+
+Class.__index = Class
+
+function Class:new(object)
+   object = object or {}
+   object.__parent = self
+   object.__index = object
+   return setmetatable(object, self)
+end
+
+return Class

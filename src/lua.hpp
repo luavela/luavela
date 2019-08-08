@@ -1,0 +1,10 @@
+// C++ wrapper for uJIT header files.
+// Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+
+extern "C" {
+	#include "lua.h"
+	#include "lualib.h"
+	#include "lauxlib.h"
+	#include "lextlib.h"
+	#include "ujit.h"
+}

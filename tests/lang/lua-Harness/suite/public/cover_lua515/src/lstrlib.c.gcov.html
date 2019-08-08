@@ -1,0 +1,951 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - Lua 5.1.5 - src/lstrlib.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">src</a> - lstrlib.c</td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">Lua 5.1.5</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">498</td>
+            <td class="headerCovTableEntry">502</td>
+            <td class="headerCovTableEntryHi">99.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2018-10-07 17:32:51</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="headerItem">Legend:</td>
+            <td class="headerValueLeg">            Lines:
+            <span class="coverLegendCov">hit</span>
+            <span class="coverLegendNoCov">not hit</span>
+</td>
+            <td></td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<span class="lineNum">       1 </span>            : /*
+<span class="lineNum">       2 </span>            : ** $Id: lstrlib.c,v 1.132.1.5 2010/05/14 15:34:19 roberto Exp $
+<span class="lineNum">       3 </span>            : ** Standard library for string operations and pattern-matching
+<span class="lineNum">       4 </span>            : ** See Copyright Notice in lua.h
+<span class="lineNum">       5 </span>            : */
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : 
+<span class="lineNum">       8 </span>            : #include &lt;ctype.h&gt;
+<span class="lineNum">       9 </span>            : #include &lt;stddef.h&gt;
+<span class="lineNum">      10 </span>            : #include &lt;stdio.h&gt;
+<span class="lineNum">      11 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      12 </span>            : #include &lt;string.h&gt;
+<span class="lineNum">      13 </span>            : 
+<span class="lineNum">      14 </span>            : #define lstrlib_c
+<span class="lineNum">      15 </span>            : #define LUA_LIB
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : #include &quot;lua.h&quot;
+<span class="lineNum">      18 </span>            : 
+<span class="lineNum">      19 </span>            : #include &quot;lauxlib.h&quot;
+<span class="lineNum">      20 </span>            : #include &quot;lualib.h&quot;
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : 
+<span class="lineNum">      23 </span>            : /* macro to `unsign' a character */
+<span class="lineNum">      24 </span>            : #define uchar(c)        ((unsigned char)(c))
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span><span class="lineCov">        176 : static int str_len (lua_State *L) {</span>
+<span class="lineNum">      29 </span>            :   size_t l;
+<span class="lineNum">      30 </span><span class="lineCov">        176 :   luaL_checklstring(L, 1, &amp;l);</span>
+<span class="lineNum">      31 </span><span class="lineCov">        176 :   lua_pushinteger(L, l);</span>
+<span class="lineNum">      32 </span><span class="lineCov">        176 :   return 1;</span>
+<span class="lineNum">      33 </span>            : }
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : 
+<span class="lineNum">      36 </span><span class="lineCov">      14851 : static ptrdiff_t posrelat (ptrdiff_t pos, size_t len) {</span>
+<span class="lineNum">      37 </span>            :   /* relative string position: negative means back from end */
+<span class="lineNum">      38 </span><span class="lineCov">      14851 :   if (pos &lt; 0) pos += (ptrdiff_t)len + 1;</span>
+<span class="lineNum">      39 </span><span class="lineCov">      14851 :   return (pos &gt;= 0) ? pos : 0;</span>
+<span class="lineNum">      40 </span>            : }
+<span class="lineNum">      41 </span>            : 
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span><span class="lineCov">       6342 : static int str_sub (lua_State *L) {</span>
+<span class="lineNum">      44 </span>            :   size_t l;
+<span class="lineNum">      45 </span><span class="lineCov">       6342 :   const char *s = luaL_checklstring(L, 1, &amp;l);</span>
+<span class="lineNum">      46 </span><span class="lineCov">       6342 :   ptrdiff_t start = posrelat(luaL_checkinteger(L, 2), l);</span>
+<span class="lineNum">      47 </span><span class="lineCov">       6342 :   ptrdiff_t end = posrelat(luaL_optinteger(L, 3, -1), l);</span>
+<span class="lineNum">      48 </span><span class="lineCov">       6342 :   if (start &lt; 1) start = 1;</span>
+<span class="lineNum">      49 </span><span class="lineCov">       6342 :   if (end &gt; (ptrdiff_t)l) end = (ptrdiff_t)l;</span>
+<span class="lineNum">      50 </span><span class="lineCov">       6342 :   if (start &lt;= end)</span>
+<span class="lineNum">      51 </span><span class="lineCov">       6177 :     lua_pushlstring(L, s+start-1, end-start+1);</span>
+<span class="lineNum">      52 </span><span class="lineCov">        165 :   else lua_pushliteral(L, &quot;&quot;);</span>
+<span class="lineNum">      53 </span><span class="lineCov">       6342 :   return 1;</span>
+<span class="lineNum">      54 </span>            : }
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineCov">          5 : static int str_reverse (lua_State *L) {</span>
+<span class="lineNum">      58 </span>            :   size_t l;
+<span class="lineNum">      59 </span>            :   luaL_Buffer b;
+<span class="lineNum">      60 </span><span class="lineCov">          5 :   const char *s = luaL_checklstring(L, 1, &amp;l);</span>
+<span class="lineNum">      61 </span><span class="lineCov">          5 :   luaL_buffinit(L, &amp;b);</span>
+<span class="lineNum">      62 </span><span class="lineCov">          5 :   while (l--) luaL_addchar(&amp;b, s[l]);</span>
+<span class="lineNum">      63 </span><span class="lineCov">          5 :   luaL_pushresult(&amp;b);</span>
+<span class="lineNum">      64 </span><span class="lineCov">          5 :   return 1;</span>
+<span class="lineNum">      65 </span>            : }
+<span class="lineNum">      66 </span>            : 
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineCov">          2 : static int str_lower (lua_State *L) {</span>
+<span class="lineNum">      69 </span>            :   size_t l;
+<span class="lineNum">      70 </span>            :   size_t i;
+<span class="lineNum">      71 </span>            :   luaL_Buffer b;
+<span class="lineNum">      72 </span><span class="lineCov">          2 :   const char *s = luaL_checklstring(L, 1, &amp;l);</span>
+<span class="lineNum">      73 </span><span class="lineCov">          2 :   luaL_buffinit(L, &amp;b);</span>
+<span class="lineNum">      74 </span><span class="lineCov">         10 :   for (i=0; i&lt;l; i++)</span>
+<span class="lineNum">      75 </span><span class="lineCov">          8 :     luaL_addchar(&amp;b, tolower(uchar(s[i])));</span>
+<span class="lineNum">      76 </span><span class="lineCov">          2 :   luaL_pushresult(&amp;b);</span>
+<span class="lineNum">      77 </span><span class="lineCov">          2 :   return 1;</span>
+<span class="lineNum">      78 </span>            : }
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            : 
+<span class="lineNum">      81 </span><span class="lineCov">          3 : static int str_upper (lua_State *L) {</span>
+<span class="lineNum">      82 </span>            :   size_t l;
+<span class="lineNum">      83 </span>            :   size_t i;
+<span class="lineNum">      84 </span>            :   luaL_Buffer b;
+<span class="lineNum">      85 </span><span class="lineCov">          3 :   const char *s = luaL_checklstring(L, 1, &amp;l);</span>
+<span class="lineNum">      86 </span><span class="lineCov">          3 :   luaL_buffinit(L, &amp;b);</span>
+<span class="lineNum">      87 </span><span class="lineCov">      40011 :   for (i=0; i&lt;l; i++)</span>
+<span class="lineNum">      88 </span><span class="lineCov">      40008 :     luaL_addchar(&amp;b, toupper(uchar(s[i])));</span>
+<span class="lineNum">      89 </span><span class="lineCov">          3 :   luaL_pushresult(&amp;b);</span>
+<span class="lineNum">      90 </span><span class="lineCov">          3 :   return 1;</span>
+<span class="lineNum">      91 </span>            : }
+<span class="lineNum">      92 </span>            : 
+<span class="lineNum">      93 </span><span class="lineCov">          8 : static int str_rep (lua_State *L) {</span>
+<span class="lineNum">      94 </span>            :   size_t l;
+<span class="lineNum">      95 </span>            :   luaL_Buffer b;
+<span class="lineNum">      96 </span><span class="lineCov">          8 :   const char *s = luaL_checklstring(L, 1, &amp;l);</span>
+<span class="lineNum">      97 </span><span class="lineCov">          8 :   int n = luaL_checkint(L, 2);</span>
+<span class="lineNum">      98 </span><span class="lineCov">          8 :   luaL_buffinit(L, &amp;b);</span>
+<span class="lineNum">      99 </span><span class="lineCov">      20214 :   while (n-- &gt; 0)</span>
+<span class="lineNum">     100 </span><span class="lineCov">      20198 :     luaL_addlstring(&amp;b, s, l);</span>
+<span class="lineNum">     101 </span><span class="lineCov">          8 :   luaL_pushresult(&amp;b);</span>
+<span class="lineNum">     102 </span><span class="lineCov">          8 :   return 1;</span>
+<span class="lineNum">     103 </span>            : }
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineCov">         16 : static int str_byte (lua_State *L) {</span>
+<span class="lineNum">     107 </span>            :   size_t l;
+<span class="lineNum">     108 </span><span class="lineCov">         16 :   const char *s = luaL_checklstring(L, 1, &amp;l);</span>
+<span class="lineNum">     109 </span><span class="lineCov">         16 :   ptrdiff_t posi = posrelat(luaL_optinteger(L, 2, 1), l);</span>
+<span class="lineNum">     110 </span><span class="lineCov">         16 :   ptrdiff_t pose = posrelat(luaL_optinteger(L, 3, posi), l);</span>
+<span class="lineNum">     111 </span>            :   int n, i;
+<span class="lineNum">     112 </span><span class="lineCov">         16 :   if (posi &lt;= 0) posi = 1;</span>
+<span class="lineNum">     113 </span><span class="lineCov">         16 :   if ((size_t)pose &gt; l) pose = l;</span>
+<span class="lineNum">     114 </span><span class="lineCov">         16 :   if (posi &gt; pose) return 0;  /* empty interval; return no values */</span>
+<span class="lineNum">     115 </span><span class="lineCov">         14 :   n = (int)(pose -  posi + 1);</span>
+<span class="lineNum">     116 </span><span class="lineCov">         14 :   if (posi + n &lt;= pose)  /* overflow? */</span>
+<span class="lineNum">     117 </span><span class="lineNoCov">          0 :     luaL_error(L, &quot;string slice too long&quot;);</span>
+<span class="lineNum">     118 </span><span class="lineCov">         14 :   luaL_checkstack(L, n, &quot;string slice too long&quot;);</span>
+<span class="lineNum">     119 </span><span class="lineCov">         32 :   for (i=0; i&lt;n; i++)</span>
+<span class="lineNum">     120 </span><span class="lineCov">         18 :     lua_pushinteger(L, uchar(s[posi+i-1]));</span>
+<span class="lineNum">     121 </span><span class="lineCov">         14 :   return n;</span>
+<span class="lineNum">     122 </span>            : }
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            : 
+<span class="lineNum">     125 </span><span class="lineCov">          9 : static int str_char (lua_State *L) {</span>
+<span class="lineNum">     126 </span><span class="lineCov">          9 :   int n = lua_gettop(L);  /* number of arguments */</span>
+<span class="lineNum">     127 </span>            :   int i;
+<span class="lineNum">     128 </span>            :   luaL_Buffer b;
+<span class="lineNum">     129 </span><span class="lineCov">          9 :   luaL_buffinit(L, &amp;b);</span>
+<span class="lineNum">     130 </span><span class="lineCov">         19 :   for (i=1; i&lt;=n; i++) {</span>
+<span class="lineNum">     131 </span><span class="lineCov">         12 :     int c = luaL_checkint(L, i);</span>
+<span class="lineNum">     132 </span><span class="lineCov">         11 :     luaL_argcheck(L, uchar(c) == c, i, &quot;invalid value&quot;);</span>
+<span class="lineNum">     133 </span><span class="lineCov">         10 :     luaL_addchar(&amp;b, uchar(c));</span>
+<span class="lineNum">     134 </span>            :   }
+<span class="lineNum">     135 </span><span class="lineCov">          7 :   luaL_pushresult(&amp;b);</span>
+<span class="lineNum">     136 </span><span class="lineCov">          7 :   return 1;</span>
+<span class="lineNum">     137 </span>            : }
+<span class="lineNum">     138 </span>            : 
+<span class="lineNum">     139 </span>            : 
+<span class="lineNum">     140 </span><span class="lineCov">         26 : static int writer (lua_State *L, const void* b, size_t size, void* B) {</span>
+<span class="lineNum">     141 </span>            :   (void)L;
+<span class="lineNum">     142 </span><span class="lineCov">         26 :   luaL_addlstring((luaL_Buffer*) B, (const char *)b, size);</span>
+<span class="lineNum">     143 </span><span class="lineCov">         26 :   return 0;</span>
+<span class="lineNum">     144 </span>            : }
+<span class="lineNum">     145 </span>            : 
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span><span class="lineCov">          2 : static int str_dump (lua_State *L) {</span>
+<span class="lineNum">     148 </span>            :   luaL_Buffer b;
+<span class="lineNum">     149 </span><span class="lineCov">          2 :   luaL_checktype(L, 1, LUA_TFUNCTION);</span>
+<span class="lineNum">     150 </span><span class="lineCov">          2 :   lua_settop(L, 1);</span>
+<span class="lineNum">     151 </span><span class="lineCov">          2 :   luaL_buffinit(L,&amp;b);</span>
+<span class="lineNum">     152 </span><span class="lineCov">          2 :   if (lua_dump(L, writer, &amp;b) != 0)</span>
+<span class="lineNum">     153 </span><span class="lineCov">          1 :     luaL_error(L, &quot;unable to dump given function&quot;);</span>
+<span class="lineNum">     154 </span><span class="lineCov">          1 :   luaL_pushresult(&amp;b);</span>
+<span class="lineNum">     155 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">     156 </span>            : }
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            : /*
+<span class="lineNum">     161 </span>            : ** {======================================================
+<span class="lineNum">     162 </span>            : ** PATTERN MATCHING
+<span class="lineNum">     163 </span>            : ** =======================================================
+<span class="lineNum">     164 </span>            : */
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            : #define CAP_UNFINISHED  (-1)
+<span class="lineNum">     168 </span>            : #define CAP_POSITION    (-2)
+<span class="lineNum">     169 </span>            : 
+<span class="lineNum">     170 </span>            : typedef struct MatchState {
+<span class="lineNum">     171 </span>            :   const char *src_init;  /* init of source string */
+<span class="lineNum">     172 </span>            :   const char *src_end;  /* end (`\0') of source string */
+<span class="lineNum">     173 </span>            :   lua_State *L;
+<span class="lineNum">     174 </span>            :   int level;  /* total number of captures (finished or unfinished) */
+<span class="lineNum">     175 </span>            :   struct {
+<span class="lineNum">     176 </span>            :     const char *init;
+<span class="lineNum">     177 </span>            :     ptrdiff_t len;
+<span class="lineNum">     178 </span>            :   } capture[LUA_MAXCAPTURES];
+<span class="lineNum">     179 </span>            : } MatchState;
+<span class="lineNum">     180 </span>            : 
+<span class="lineNum">     181 </span>            : 
+<span class="lineNum">     182 </span>            : #define L_ESC           '%'
+<span class="lineNum">     183 </span>            : #define SPECIALS        &quot;^$*+?.([%-&quot;
+<span class="lineNum">     184 </span>            : 
+<span class="lineNum">     185 </span>            : 
+<span class="lineNum">     186 </span><span class="lineCov">         24 : static int check_capture (MatchState *ms, int l) {</span>
+<span class="lineNum">     187 </span><span class="lineCov">         24 :   l -= '1';</span>
+<span class="lineNum">     188 </span><span class="lineCov">         24 :   if (l &lt; 0 || l &gt;= ms-&gt;level || ms-&gt;capture[l].len == CAP_UNFINISHED)</span>
+<span class="lineNum">     189 </span><span class="lineCov">          1 :     return luaL_error(ms-&gt;L, &quot;invalid capture index&quot;);</span>
+<span class="lineNum">     190 </span><span class="lineCov">         23 :   return l;</span>
+<span class="lineNum">     191 </span>            : }
+<span class="lineNum">     192 </span>            : 
+<span class="lineNum">     193 </span>            : 
+<span class="lineNum">     194 </span><span class="lineCov">        118 : static int capture_to_close (MatchState *ms) {</span>
+<span class="lineNum">     195 </span><span class="lineCov">        118 :   int level = ms-&gt;level;</span>
+<span class="lineNum">     196 </span><span class="lineCov">        125 :   for (level--; level&gt;=0; level--)</span>
+<span class="lineNum">     197 </span><span class="lineCov">        124 :     if (ms-&gt;capture[level].len == CAP_UNFINISHED) return level;</span>
+<span class="lineNum">     198 </span><span class="lineCov">          1 :   return luaL_error(ms-&gt;L, &quot;invalid pattern capture&quot;);</span>
+<span class="lineNum">     199 </span>            : }
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span>            : 
+<span class="lineNum">     202 </span><span class="lineCov">      54318 : static const char *classend (MatchState *ms, const char *p) {</span>
+<span class="lineNum">     203 </span><span class="lineCov">      54318 :   switch (*p++) {</span>
+<span class="lineNum">     204 </span><span class="lineCov">        930 :     case L_ESC: {</span>
+<span class="lineNum">     205 </span><span class="lineCov">        930 :       if (*p == '\0')</span>
+<span class="lineNum">     206 </span><span class="lineCov">          1 :         luaL_error(ms-&gt;L, &quot;malformed pattern (ends with &quot; LUA_QL(&quot;%%&quot;) &quot;)&quot;);</span>
+<span class="lineNum">     207 </span><span class="lineCov">        929 :       return p+1;</span>
+<span class="lineNum">     208 </span>            :     }
+<span class="lineNum">     209 </span><span class="lineCov">       2038 :     case '[': {</span>
+<span class="lineNum">     210 </span><span class="lineCov">       2038 :       if (*p == '^') p++;</span>
+<span class="lineNum">     211 </span>            :       do {  /* look for a `]' */
+<span class="lineNum">     212 </span><span class="lineCov">       3915 :         if (*p == '\0')</span>
+<span class="lineNum">     213 </span><span class="lineCov">          3 :           luaL_error(ms-&gt;L, &quot;malformed pattern (missing &quot; LUA_QL(&quot;]&quot;) &quot;)&quot;);</span>
+<span class="lineNum">     214 </span><span class="lineCov">       3912 :         if (*(p++) == L_ESC &amp;&amp; *p != '\0')</span>
+<span class="lineNum">     215 </span><span class="lineCov">       3204 :           p++;  /* skip escapes (e.g. `%]') */</span>
+<span class="lineNum">     216 </span><span class="lineCov">       3912 :       } while (*p != ']');</span>
+<span class="lineNum">     217 </span><span class="lineCov">       2035 :       return p+1;</span>
+<span class="lineNum">     218 </span>            :     }
+<span class="lineNum">     219 </span><span class="lineCov">      51350 :     default: {</span>
+<span class="lineNum">     220 </span><span class="lineCov">      51350 :       return p;</span>
+<span class="lineNum">     221 </span>            :     }
+<span class="lineNum">     222 </span>            :   }
+<span class="lineNum">     223 </span>            : }
+<span class="lineNum">     224 </span>            : 
+<span class="lineNum">     225 </span>            : 
+<span class="lineNum">     226 </span><span class="lineCov">       4562 : static int match_class (int c, int cl) {</span>
+<span class="lineNum">     227 </span>            :   int res;
+<span class="lineNum">     228 </span><span class="lineCov">       4562 :   switch (tolower(cl)) {</span>
+<span class="lineNum">     229 </span><span class="lineCov">        111 :     case 'a' : res = isalpha(c); break;</span>
+<span class="lineNum">     230 </span><span class="lineCov">         13 :     case 'c' : res = iscntrl(c); break;</span>
+<span class="lineNum">     231 </span><span class="lineCov">       2131 :     case 'd' : res = isdigit(c); break;</span>
+<span class="lineNum">     232 </span><span class="lineCov">         14 :     case 'l' : res = islower(c); break;</span>
+<span class="lineNum">     233 </span><span class="lineCov">         14 :     case 'p' : res = ispunct(c); break;</span>
+<span class="lineNum">     234 </span><span class="lineCov">       1008 :     case 's' : res = isspace(c); break;</span>
+<span class="lineNum">     235 </span><span class="lineCov">         14 :     case 'u' : res = isupper(c); break;</span>
+<span class="lineNum">     236 </span><span class="lineCov">        717 :     case 'w' : res = isalnum(c); break;</span>
+<span class="lineNum">     237 </span><span class="lineCov">        164 :     case 'x' : res = isxdigit(c); break;</span>
+<span class="lineNum">     238 </span><span class="lineCov">         11 :     case 'z' : res = (c == 0); break;</span>
+<span class="lineNum">     239 </span><span class="lineCov">        365 :     default: return (cl == c);</span>
+<span class="lineNum">     240 </span>            :   }
+<span class="lineNum">     241 </span><span class="lineCov">       4197 :   return (islower(cl) ? res : !res);</span>
+<span class="lineNum">     242 </span>            : }
+<span class="lineNum">     243 </span>            : 
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span><span class="lineCov">       5218 : static int matchbracketclass (int c, const char *p, const char *ec) {</span>
+<span class="lineNum">     246 </span><span class="lineCov">       5218 :   int sig = 1;</span>
+<span class="lineNum">     247 </span><span class="lineCov">       5218 :   if (*(p+1) == '^') {</span>
+<span class="lineNum">     248 </span><span class="lineCov">       4056 :     sig = 0;</span>
+<span class="lineNum">     249 </span><span class="lineCov">       4056 :     p++;  /* skip the `^' */</span>
+<span class="lineNum">     250 </span>            :   }
+<span class="lineNum">     251 </span><span class="lineCov">      16356 :   while (++p &lt; ec) {</span>
+<span class="lineNum">     252 </span><span class="lineCov">       6382 :     if (*p == L_ESC) {</span>
+<span class="lineNum">     253 </span><span class="lineCov">       2058 :       p++;</span>
+<span class="lineNum">     254 </span><span class="lineCov">       2058 :       if (match_class(c, uchar(*p)))</span>
+<span class="lineNum">     255 </span><span class="lineCov">        134 :         return sig;</span>
+<span class="lineNum">     256 </span>            :     }
+<span class="lineNum">     257 </span><span class="lineCov">       4324 :     else if ((*(p+1) == '-') &amp;&amp; (p+2 &lt; ec)) {</span>
+<span class="lineNum">     258 </span><span class="lineCov">         43 :       p+=2;</span>
+<span class="lineNum">     259 </span><span class="lineCov">         75 :       if (uchar(*(p-2)) &lt;= c &amp;&amp; c &lt;= uchar(*p))</span>
+<span class="lineNum">     260 </span><span class="lineCov">         11 :         return sig;</span>
+<span class="lineNum">     261 </span>            :     }
+<span class="lineNum">     262 </span><span class="lineCov">       4281 :     else if (uchar(*p) == c) return sig;</span>
+<span class="lineNum">     263 </span>            :   }
+<span class="lineNum">     264 </span><span class="lineCov">       4756 :   return !sig;</span>
+<span class="lineNum">     265 </span>            : }
+<span class="lineNum">     266 </span>            : 
+<span class="lineNum">     267 </span>            : 
+<span class="lineNum">     268 </span><span class="lineCov">      57230 : static int singlematch (int c, const char *p, const char *ep) {</span>
+<span class="lineNum">     269 </span><span class="lineCov">      57230 :   switch (*p) {</span>
+<span class="lineNum">     270 </span><span class="lineCov">        299 :     case '.': return 1;  /* matches any char */</span>
+<span class="lineNum">     271 </span><span class="lineCov">       2504 :     case L_ESC: return match_class(c, uchar(*(p+1)));</span>
+<span class="lineNum">     272 </span><span class="lineCov">       5168 :     case '[': return matchbracketclass(c, p, ep-1);</span>
+<span class="lineNum">     273 </span><span class="lineCov">      49259 :     default:  return (uchar(*p) == c);</span>
+<span class="lineNum">     274 </span>            :   }
+<span class="lineNum">     275 </span>            : }
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span>            : static const char *match (MatchState *ms, const char *s, const char *p);
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span>            : 
+<span class="lineNum">     281 </span><span class="lineCov">         15 : static const char *matchbalance (MatchState *ms, const char *s,</span>
+<span class="lineNum">     282 </span>            :                                    const char *p) {
+<span class="lineNum">     283 </span><span class="lineCov">         15 :   if (*p == 0 || *(p+1) == 0)</span>
+<span class="lineNum">     284 </span><span class="lineCov">          1 :     luaL_error(ms-&gt;L, &quot;unbalanced pattern&quot;);</span>
+<span class="lineNum">     285 </span><span class="lineCov">         14 :   if (*s != *p) return NULL;</span>
+<span class="lineNum">     286 </span>            :   else {
+<span class="lineNum">     287 </span><span class="lineCov">          6 :     int b = *p;</span>
+<span class="lineNum">     288 </span><span class="lineCov">          6 :     int e = *(p+1);</span>
+<span class="lineNum">     289 </span><span class="lineCov">          6 :     int cont = 1;</span>
+<span class="lineNum">     290 </span><span class="lineCov">         60 :     while (++s &lt; ms-&gt;src_end) {</span>
+<span class="lineNum">     291 </span><span class="lineCov">         53 :       if (*s == e) {</span>
+<span class="lineNum">     292 </span><span class="lineCov">          8 :         if (--cont == 0) return s+1;</span>
+<span class="lineNum">     293 </span>            :       }
+<span class="lineNum">     294 </span><span class="lineCov">         45 :       else if (*s == b) cont++;</span>
+<span class="lineNum">     295 </span>            :     }
+<span class="lineNum">     296 </span>            :   }
+<span class="lineNum">     297 </span><span class="lineCov">          1 :   return NULL;  /* string ends out of balance */</span>
+<span class="lineNum">     298 </span>            : }
+<span class="lineNum">     299 </span>            : 
+<span class="lineNum">     300 </span>            : 
+<span class="lineNum">     301 </span><span class="lineCov">        805 : static const char *max_expand (MatchState *ms, const char *s,</span>
+<span class="lineNum">     302 </span>            :                                  const char *p, const char *ep) {
+<span class="lineNum">     303 </span><span class="lineCov">        805 :   ptrdiff_t i = 0;  /* counts maximum expand for item */</span>
+<span class="lineNum">     304 </span><span class="lineCov">       6324 :   while ((s+i)&lt;ms-&gt;src_end &amp;&amp; singlematch(uchar(*(s+i)), p, ep))</span>
+<span class="lineNum">     305 </span><span class="lineCov">       4714 :     i++;</span>
+<span class="lineNum">     306 </span>            :   /* keeps trying to match with the maximum repetitions */
+<span class="lineNum">     307 </span><span class="lineCov">       1750 :   while (i&gt;=0) {</span>
+<span class="lineNum">     308 </span><span class="lineCov">        888 :     const char *res = match(ms, (s+i), ep+1);</span>
+<span class="lineNum">     309 </span><span class="lineCov">        888 :     if (res) return res;</span>
+<span class="lineNum">     310 </span><span class="lineCov">        140 :     i--;  /* else didn't match; reduce 1 repetition to try again */</span>
+<span class="lineNum">     311 </span>            :   }
+<span class="lineNum">     312 </span><span class="lineCov">         57 :   return NULL;</span>
+<span class="lineNum">     313 </span>            : }
+<span class="lineNum">     314 </span>            : 
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span><span class="lineCov">        218 : static const char *min_expand (MatchState *ms, const char *s,</span>
+<span class="lineNum">     317 </span>            :                                  const char *p, const char *ep) {
+<span class="lineNum">     318 </span><span class="lineCov">        195 :   for (;;) {</span>
+<span class="lineNum">     319 </span><span class="lineCov">        218 :     const char *res = match(ms, s, ep+1);</span>
+<span class="lineNum">     320 </span><span class="lineCov">        218 :     if (res != NULL)</span>
+<span class="lineNum">     321 </span><span class="lineCov">         23 :       return res;</span>
+<span class="lineNum">     322 </span><span class="lineCov">        195 :     else if (s&lt;ms-&gt;src_end &amp;&amp; singlematch(uchar(*s), p, ep))</span>
+<span class="lineNum">     323 </span><span class="lineCov">        195 :       s++;  /* try with one more repetition */</span>
+<span class="lineNum">     324 </span><span class="lineNoCov">          0 :     else return NULL;</span>
+<span class="lineNum">     325 </span>            :   }
+<span class="lineNum">     326 </span>            : }
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span>            : 
+<span class="lineNum">     329 </span><span class="lineCov">        112 : static const char *start_capture (MatchState *ms, const char *s,</span>
+<span class="lineNum">     330 </span>            :                                     const char *p, int what) {
+<span class="lineNum">     331 </span>            :   const char *res;
+<span class="lineNum">     332 </span><span class="lineCov">        112 :   int level = ms-&gt;level;</span>
+<span class="lineNum">     333 </span><span class="lineCov">        112 :   if (level &gt;= LUA_MAXCAPTURES) luaL_error(ms-&gt;L, &quot;too many captures&quot;);</span>
+<span class="lineNum">     334 </span><span class="lineCov">        112 :   ms-&gt;capture[level].init = s;</span>
+<span class="lineNum">     335 </span><span class="lineCov">        112 :   ms-&gt;capture[level].len = what;</span>
+<span class="lineNum">     336 </span><span class="lineCov">        112 :   ms-&gt;level = level+1;</span>
+<span class="lineNum">     337 </span><span class="lineCov">        112 :   if ((res=match(ms, s, p)) == NULL)  /* match failed? */</span>
+<span class="lineNum">     338 </span><span class="lineCov">         42 :     ms-&gt;level--;  /* undo capture */</span>
+<span class="lineNum">     339 </span><span class="lineCov">        112 :   return res;</span>
+<span class="lineNum">     340 </span>            : }
+<span class="lineNum">     341 </span>            : 
+<span class="lineNum">     342 </span>            : 
+<span class="lineNum">     343 </span><span class="lineCov">        118 : static const char *end_capture (MatchState *ms, const char *s,</span>
+<span class="lineNum">     344 </span>            :                                   const char *p) {
+<span class="lineNum">     345 </span><span class="lineCov">        118 :   int l = capture_to_close(ms);</span>
+<span class="lineNum">     346 </span>            :   const char *res;
+<span class="lineNum">     347 </span><span class="lineCov">        117 :   ms-&gt;capture[l].len = s - ms-&gt;capture[l].init;  /* close capture */</span>
+<span class="lineNum">     348 </span><span class="lineCov">        117 :   if ((res = match(ms, s, p)) == NULL)  /* match failed? */</span>
+<span class="lineNum">     349 </span><span class="lineCov">         49 :     ms-&gt;capture[l].len = CAP_UNFINISHED;  /* undo capture */</span>
+<span class="lineNum">     350 </span><span class="lineCov">        117 :   return res;</span>
+<span class="lineNum">     351 </span>            : }
+<span class="lineNum">     352 </span>            : 
+<span class="lineNum">     353 </span>            : 
+<span class="lineNum">     354 </span><span class="lineCov">         24 : static const char *match_capture (MatchState *ms, const char *s, int l) {</span>
+<span class="lineNum">     355 </span>            :   size_t len;
+<span class="lineNum">     356 </span><span class="lineCov">         24 :   l = check_capture(ms, l);</span>
+<span class="lineNum">     357 </span><span class="lineCov">         23 :   len = ms-&gt;capture[l].len;</span>
+<span class="lineNum">     358 </span><span class="lineCov">         46 :   if ((size_t)(ms-&gt;src_end-s) &gt;= len &amp;&amp;</span>
+<span class="lineNum">     359 </span><span class="lineCov">         23 :       memcmp(ms-&gt;capture[l].init, s, len) == 0)</span>
+<span class="lineNum">     360 </span><span class="lineCov">          5 :     return s+len;</span>
+<span class="lineNum">     361 </span><span class="lineCov">         18 :   else return NULL;</span>
+<span class="lineNum">     362 </span>            : }
+<span class="lineNum">     363 </span>            : 
+<span class="lineNum">     364 </span>            : 
+<span class="lineNum">     365 </span><span class="lineCov">      55305 : static const char *match (MatchState *ms, const char *s, const char *p) {</span>
+<span class="lineNum">     366 </span><span class="lineCov">      55305 :   init: /* using goto's to optimize tail recursion */</span>
+<span class="lineNum">     367 </span><span class="lineCov">      55305 :   switch (*p) {</span>
+<span class="lineNum">     368 </span><span class="lineCov">        112 :     case '(': {  /* start capture */</span>
+<span class="lineNum">     369 </span><span class="lineCov">        112 :       if (*(p+1) == ')')  /* position capture? */</span>
+<span class="lineNum">     370 </span><span class="lineCov">          4 :         return start_capture(ms, s, p+2, CAP_POSITION);</span>
+<span class="lineNum">     371 </span>            :       else
+<span class="lineNum">     372 </span><span class="lineCov">        108 :         return start_capture(ms, s, p+1, CAP_UNFINISHED);</span>
+<span class="lineNum">     373 </span>            :     }
+<span class="lineNum">     374 </span><span class="lineCov">        118 :     case ')': {  /* end capture */</span>
+<span class="lineNum">     375 </span><span class="lineCov">        118 :       return end_capture(ms, s, p+1);</span>
+<span class="lineNum">     376 </span>            :     }
+<span class="lineNum">     377 </span><span class="lineCov">       1004 :     case L_ESC: {</span>
+<span class="lineNum">     378 </span><span class="lineCov">       1004 :       switch (*(p+1)) {</span>
+<span class="lineNum">     379 </span><span class="lineCov">         15 :         case 'b': {  /* balanced string? */</span>
+<span class="lineNum">     380 </span><span class="lineCov">         15 :           s = matchbalance(ms, s, p+2);</span>
+<span class="lineNum">     381 </span><span class="lineCov">         14 :           if (s == NULL) return NULL;</span>
+<span class="lineNum">     382 </span><span class="lineCov">          5 :           p+=4; goto init;  /* else return match(ms, s, p+4); */</span>
+<span class="lineNum">     383 </span>            :         }
+<span class="lineNum">     384 </span><span class="lineCov">         35 :         case 'f': {  /* frontier? */</span>
+<span class="lineNum">     385 </span>            :           const char *ep; char previous;
+<span class="lineNum">     386 </span><span class="lineCov">         35 :           p += 2;</span>
+<span class="lineNum">     387 </span><span class="lineCov">         35 :           if (*p != '[')</span>
+<span class="lineNum">     388 </span><span class="lineCov">          1 :             luaL_error(ms-&gt;L, &quot;missing &quot; LUA_QL(&quot;[&quot;) &quot; after &quot;</span>
+<span class="lineNum">     389 </span>            :                                LUA_QL(&quot;%%f&quot;) &quot; in pattern&quot;);
+<span class="lineNum">     390 </span><span class="lineCov">         34 :           ep = classend(ms, p);  /* points to what is next */</span>
+<span class="lineNum">     391 </span><span class="lineCov">         34 :           previous = (s == ms-&gt;src_init) ? '\0' : *(s-1);</span>
+<span class="lineNum">     392 </span><span class="lineCov">         50 :           if (matchbracketclass(uchar(previous), p, ep-1) ||</span>
+<span class="lineNum">     393 </span><span class="lineCov">         44 :              !matchbracketclass(uchar(*s), p, ep-1)) return NULL;</span>
+<span class="lineNum">     394 </span><span class="lineCov">          6 :           p=ep; goto init;  /* else return match(ms, s, ep); */</span>
+<span class="lineNum">     395 </span>            :         }
+<span class="lineNum">     396 </span><span class="lineCov">        954 :         default: {</span>
+<span class="lineNum">     397 </span><span class="lineCov">        954 :           if (isdigit(uchar(*(p+1)))) {  /* capture results (%0-%9)? */</span>
+<span class="lineNum">     398 </span><span class="lineCov">         24 :             s = match_capture(ms, s, uchar(*(p+1)));</span>
+<span class="lineNum">     399 </span><span class="lineCov">         23 :             if (s == NULL) return NULL;</span>
+<span class="lineNum">     400 </span><span class="lineCov">          5 :             p+=2; goto init;  /* else return match(ms, s, p+2) */</span>
+<span class="lineNum">     401 </span>            :           }
+<span class="lineNum">     402 </span><span class="lineCov">        930 :           goto dflt;  /* case default */</span>
+<span class="lineNum">     403 </span>            :         }
+<span class="lineNum">     404 </span>            :       }
+<span class="lineNum">     405 </span>            :     }
+<span class="lineNum">     406 </span><span class="lineCov">        587 :     case '\0': {  /* end of pattern */</span>
+<span class="lineNum">     407 </span><span class="lineCov">        587 :       return s;  /* match succeeded */</span>
+<span class="lineNum">     408 </span>            :     }
+<span class="lineNum">     409 </span><span class="lineCov">        192 :     case '$': {</span>
+<span class="lineNum">     410 </span><span class="lineCov">        192 :       if (*(p+1) == '\0')  /* is the `$' the last char in pattern? */</span>
+<span class="lineNum">     411 </span><span class="lineCov">        130 :         return (s == ms-&gt;src_end) ? s : NULL;  /* check end of string */</span>
+<span class="lineNum">     412 </span><span class="lineCov">         62 :       else goto dflt;</span>
+<span class="lineNum">     413 </span>            :     }
+<span class="lineNum">     414 </span><span class="lineCov">      54284 :     default: dflt: {  /* it is a pattern item */</span>
+<span class="lineNum">     415 </span><span class="lineCov">      54284 :       const char *ep = classend(ms, p);  /* points to what is next */</span>
+<span class="lineNum">     416 </span><span class="lineCov">      54280 :       int m = s&lt;ms-&gt;src_end &amp;&amp; singlematch(uchar(*s), p, ep);</span>
+<span class="lineNum">     417 </span><span class="lineCov">      54280 :       switch (*ep) {</span>
+<span class="lineNum">     418 </span><span class="lineCov">         45 :         case '?': {  /* optional */</span>
+<span class="lineNum">     419 </span>            :           const char *res;
+<span class="lineNum">     420 </span><span class="lineCov">         45 :           if (m &amp;&amp; ((res=match(ms, s+1, ep+1)) != NULL))</span>
+<span class="lineNum">     421 </span><span class="lineCov">         39 :             return res;</span>
+<span class="lineNum">     422 </span><span class="lineCov">          6 :           p=ep+1; goto init;  /* else return match(ms, s, ep+1); */</span>
+<span class="lineNum">     423 </span>            :         }
+<span class="lineNum">     424 </span><span class="lineCov">         13 :         case '*': {  /* 0 or more repetitions */</span>
+<span class="lineNum">     425 </span><span class="lineCov">         13 :           return max_expand(ms, s, p, ep);</span>
+<span class="lineNum">     426 </span>            :         }
+<span class="lineNum">     427 </span><span class="lineCov">       2378 :         case '+': {  /* 1 or more repetitions */</span>
+<span class="lineNum">     428 </span><span class="lineCov">       2378 :           return (m ? max_expand(ms, s+1, p, ep) : NULL);</span>
+<span class="lineNum">     429 </span>            :         }
+<span class="lineNum">     430 </span><span class="lineCov">         23 :         case '-': {  /* 0 or more repetitions (minimum) */</span>
+<span class="lineNum">     431 </span><span class="lineCov">         23 :           return min_expand(ms, s, p, ep);</span>
+<span class="lineNum">     432 </span>            :         }
+<span class="lineNum">     433 </span><span class="lineCov">      51821 :         default: {</span>
+<span class="lineNum">     434 </span><span class="lineCov">      51821 :           if (!m) return NULL;</span>
+<span class="lineNum">     435 </span><span class="lineCov">      11072 :           s++; p=ep; goto init;  /* else return match(ms, s+1, ep); */</span>
+<span class="lineNum">     436 </span>            :         }
+<span class="lineNum">     437 </span>            :       }
+<span class="lineNum">     438 </span>            :     }
+<span class="lineNum">     439 </span>            :   }
+<span class="lineNum">     440 </span>            : }
+<span class="lineNum">     441 </span>            : 
+<span class="lineNum">     442 </span>            : 
+<span class="lineNum">     443 </span>            : 
+<span class="lineNum">     444 </span><span class="lineCov">         10 : static const char *lmemfind (const char *s1, size_t l1,</span>
+<span class="lineNum">     445 </span>            :                                const char *s2, size_t l2) {
+<span class="lineNum">     446 </span><span class="lineCov">         10 :   if (l2 == 0) return s1;  /* empty strings are everywhere */</span>
+<span class="lineNum">     447 </span><span class="lineCov">         10 :   else if (l2 &gt; l1) return NULL;  /* avoids a negative `l1' */</span>
+<span class="lineNum">     448 </span>            :   else {
+<span class="lineNum">     449 </span>            :     const char *init;  /* to search for a `*s2' inside `s1' */
+<span class="lineNum">     450 </span><span class="lineCov">          9 :     l2--;  /* 1st char will be checked by `memchr' */</span>
+<span class="lineNum">     451 </span><span class="lineCov">          9 :     l1 = l1-l2;  /* `s2' cannot be found after that */</span>
+<span class="lineNum">     452 </span><span class="lineCov">         20 :     while (l1 &gt; 0 &amp;&amp; (init = (const char *)memchr(s1, *s2, l1)) != NULL) {</span>
+<span class="lineNum">     453 </span><span class="lineCov">          9 :       init++;   /* 1st char is already checked */</span>
+<span class="lineNum">     454 </span><span class="lineCov">          9 :       if (memcmp(init, s2+1, l2) == 0)</span>
+<span class="lineNum">     455 </span><span class="lineCov">          7 :         return init-1;</span>
+<span class="lineNum">     456 </span>            :       else {  /* correct `l1' and `s1' to try again */
+<span class="lineNum">     457 </span><span class="lineCov">          2 :         l1 -= init-s1;</span>
+<span class="lineNum">     458 </span><span class="lineCov">          2 :         s1 = init;</span>
+<span class="lineNum">     459 </span>            :       }
+<span class="lineNum">     460 </span>            :     }
+<span class="lineNum">     461 </span><span class="lineCov">          2 :     return NULL;  /* not found */</span>
+<span class="lineNum">     462 </span>            :   }
+<span class="lineNum">     463 </span>            : }
+<span class="lineNum">     464 </span>            : 
+<span class="lineNum">     465 </span>            : 
+<span class="lineNum">     466 </span><span class="lineCov">        555 : static void push_onecapture (MatchState *ms, int i, const char *s,</span>
+<span class="lineNum">     467 </span>            :                                                     const char *e) {
+<span class="lineNum">     468 </span><span class="lineCov">        555 :   if (i &gt;= ms-&gt;level) {</span>
+<span class="lineNum">     469 </span><span class="lineCov">        484 :     if (i == 0)  /* ms-&gt;level == 0, too */</span>
+<span class="lineNum">     470 </span><span class="lineCov">        483 :       lua_pushlstring(ms-&gt;L, s, e - s);  /* add whole match */</span>
+<span class="lineNum">     471 </span>            :     else
+<span class="lineNum">     472 </span><span class="lineCov">          1 :       luaL_error(ms-&gt;L, &quot;invalid capture index&quot;);</span>
+<span class="lineNum">     473 </span>            :   }
+<span class="lineNum">     474 </span>            :   else {
+<span class="lineNum">     475 </span><span class="lineCov">         71 :     ptrdiff_t l = ms-&gt;capture[i].len;</span>
+<span class="lineNum">     476 </span><span class="lineCov">         71 :     if (l == CAP_UNFINISHED) luaL_error(ms-&gt;L, &quot;unfinished capture&quot;);</span>
+<span class="lineNum">     477 </span><span class="lineCov">         71 :     if (l == CAP_POSITION)</span>
+<span class="lineNum">     478 </span><span class="lineCov">          2 :       lua_pushinteger(ms-&gt;L, ms-&gt;capture[i].init - ms-&gt;src_init + 1);</span>
+<span class="lineNum">     479 </span>            :     else
+<span class="lineNum">     480 </span><span class="lineCov">         69 :       lua_pushlstring(ms-&gt;L, ms-&gt;capture[i].init, l);</span>
+<span class="lineNum">     481 </span>            :   }
+<span class="lineNum">     482 </span><span class="lineCov">        554 : }</span>
+<span class="lineNum">     483 </span>            : 
+<span class="lineNum">     484 </span>            : 
+<span class="lineNum">     485 </span><span class="lineCov">        515 : static int push_captures (MatchState *ms, const char *s, const char *e) {</span>
+<span class="lineNum">     486 </span>            :   int i;
+<span class="lineNum">     487 </span><span class="lineCov">        515 :   int nlevels = (ms-&gt;level == 0 &amp;&amp; s) ? 1 : ms-&gt;level;</span>
+<span class="lineNum">     488 </span><span class="lineCov">        515 :   luaL_checkstack(ms-&gt;L, nlevels, &quot;too many captures&quot;);</span>
+<span class="lineNum">     489 </span><span class="lineCov">       1045 :   for (i = 0; i &lt; nlevels; i++)</span>
+<span class="lineNum">     490 </span><span class="lineCov">        530 :     push_onecapture(ms, i, s, e);</span>
+<span class="lineNum">     491 </span><span class="lineCov">        515 :   return nlevels;  /* number of strings pushed */</span>
+<span class="lineNum">     492 </span>            : }
+<span class="lineNum">     493 </span>            : 
+<span class="lineNum">     494 </span>            : 
+<span class="lineNum">     495 </span><span class="lineCov">       2135 : static int str_find_aux (lua_State *L, int find) {</span>
+<span class="lineNum">     496 </span>            :   size_t l1, l2;
+<span class="lineNum">     497 </span><span class="lineCov">       2135 :   const char *s = luaL_checklstring(L, 1, &amp;l1);</span>
+<span class="lineNum">     498 </span><span class="lineCov">       2135 :   const char *p = luaL_checklstring(L, 2, &amp;l2);</span>
+<span class="lineNum">     499 </span><span class="lineCov">       2135 :   ptrdiff_t init = posrelat(luaL_optinteger(L, 3, 1), l1) - 1;</span>
+<span class="lineNum">     500 </span><span class="lineCov">       2135 :   if (init &lt; 0) init = 0;</span>
+<span class="lineNum">     501 </span><span class="lineCov">       2135 :   else if ((size_t)(init) &gt; l1) init = (ptrdiff_t)l1;</span>
+<span class="lineNum">     502 </span><span class="lineCov">       2150 :   if (find &amp;&amp; (lua_toboolean(L, 4) ||  /* explicit request? */</span>
+<span class="lineNum">     503 </span><span class="lineCov">         18 :       strpbrk(p, SPECIALS) == NULL)) {  /* or no special characters? */</span>
+<span class="lineNum">     504 </span>            :     /* do a plain search */
+<span class="lineNum">     505 </span><span class="lineCov">         10 :     const char *s2 = lmemfind(s+init, l1-init, p, l2);</span>
+<span class="lineNum">     506 </span><span class="lineCov">         10 :     if (s2) {</span>
+<span class="lineNum">     507 </span><span class="lineCov">          7 :       lua_pushinteger(L, s2-s+1);</span>
+<span class="lineNum">     508 </span><span class="lineCov">          7 :       lua_pushinteger(L, s2-s+l2);</span>
+<span class="lineNum">     509 </span><span class="lineCov">          7 :       return 2;</span>
+<span class="lineNum">     510 </span>            :     }
+<span class="lineNum">     511 </span>            :   }
+<span class="lineNum">     512 </span>            :   else {
+<span class="lineNum">     513 </span>            :     MatchState ms;
+<span class="lineNum">     514 </span><span class="lineCov">       2125 :     int anchor = (*p == '^') ? (p++, 1) : 0;</span>
+<span class="lineNum">     515 </span><span class="lineCov">       2125 :     const char *s1=s+init;</span>
+<span class="lineNum">     516 </span><span class="lineCov">       2125 :     ms.L = L;</span>
+<span class="lineNum">     517 </span><span class="lineCov">       2125 :     ms.src_init = s;</span>
+<span class="lineNum">     518 </span><span class="lineCov">       2125 :     ms.src_end = s+l1;</span>
+<span class="lineNum">     519 </span>            :     do {
+<span class="lineNum">     520 </span>            :       const char *res;
+<span class="lineNum">     521 </span><span class="lineCov">       3428 :       ms.level = 0;</span>
+<span class="lineNum">     522 </span><span class="lineCov">       3428 :       if ((res=match(&amp;ms, s1, p)) != NULL) {</span>
+<span class="lineNum">     523 </span><span class="lineCov">        500 :         if (find) {</span>
+<span class="lineNum">     524 </span><span class="lineCov">          6 :           lua_pushinteger(L, s1-s+1);  /* start */</span>
+<span class="lineNum">     525 </span><span class="lineCov">          6 :           lua_pushinteger(L, res-s);   /* end */</span>
+<span class="lineNum">     526 </span><span class="lineCov">        506 :           return push_captures(&amp;ms, NULL, 0) + 2;</span>
+<span class="lineNum">     527 </span>            :         }
+<span class="lineNum">     528 </span>            :         else
+<span class="lineNum">     529 </span><span class="lineCov">        494 :           return push_captures(&amp;ms, s1, res);</span>
+<span class="lineNum">     530 </span>            :       }
+<span class="lineNum">     531 </span><span class="lineCov">       2921 :     } while (s1++ &lt; ms.src_end &amp;&amp; !anchor);</span>
+<span class="lineNum">     532 </span>            :   }
+<span class="lineNum">     533 </span><span class="lineCov">       1621 :   lua_pushnil(L);  /* not found */</span>
+<span class="lineNum">     534 </span><span class="lineCov">       1621 :   return 1;</span>
+<span class="lineNum">     535 </span>            : }
+<span class="lineNum">     536 </span>            : 
+<span class="lineNum">     537 </span>            : 
+<span class="lineNum">     538 </span><span class="lineCov">         18 : static int str_find (lua_State *L) {</span>
+<span class="lineNum">     539 </span><span class="lineCov">         18 :   return str_find_aux(L, 1);</span>
+<span class="lineNum">     540 </span>            : }
+<span class="lineNum">     541 </span>            : 
+<span class="lineNum">     542 </span>            : 
+<span class="lineNum">     543 </span><span class="lineCov">       2117 : static int str_match (lua_State *L) {</span>
+<span class="lineNum">     544 </span><span class="lineCov">       2117 :   return str_find_aux(L, 0);</span>
+<span class="lineNum">     545 </span>            : }
+<span class="lineNum">     546 </span>            : 
+<span class="lineNum">     547 </span>            : 
+<span class="lineNum">     548 </span><span class="lineCov">         14 : static int gmatch_aux (lua_State *L) {</span>
+<span class="lineNum">     549 </span>            :   MatchState ms;
+<span class="lineNum">     550 </span>            :   size_t ls;
+<span class="lineNum">     551 </span><span class="lineCov">         14 :   const char *s = lua_tolstring(L, lua_upvalueindex(1), &amp;ls);</span>
+<span class="lineNum">     552 </span><span class="lineCov">         14 :   const char *p = lua_tostring(L, lua_upvalueindex(2));</span>
+<span class="lineNum">     553 </span>            :   const char *src;
+<span class="lineNum">     554 </span><span class="lineCov">         14 :   ms.L = L;</span>
+<span class="lineNum">     555 </span><span class="lineCov">         14 :   ms.src_init = s;</span>
+<span class="lineNum">     556 </span><span class="lineCov">         14 :   ms.src_end = s+ls;</span>
+<span class="lineNum">     557 </span><span class="lineCov">         39 :   for (src = s + (size_t)lua_tointeger(L, lua_upvalueindex(3));</span>
+<span class="lineNum">     558 </span><span class="lineCov">         25 :        src &lt;= ms.src_end;</span>
+<span class="lineNum">     559 </span><span class="lineCov">         11 :        src++) {</span>
+<span class="lineNum">     560 </span>            :     const char *e;
+<span class="lineNum">     561 </span><span class="lineCov">         21 :     ms.level = 0;</span>
+<span class="lineNum">     562 </span><span class="lineCov">         21 :     if ((e = match(&amp;ms, src, p)) != NULL) {</span>
+<span class="lineNum">     563 </span><span class="lineCov">         10 :       lua_Integer newstart = e-s;</span>
+<span class="lineNum">     564 </span><span class="lineCov">         10 :       if (e == src) newstart++;  /* empty match? go at least one position */</span>
+<span class="lineNum">     565 </span><span class="lineCov">         10 :       lua_pushinteger(L, newstart);</span>
+<span class="lineNum">     566 </span><span class="lineCov">         10 :       lua_replace(L, lua_upvalueindex(3));</span>
+<span class="lineNum">     567 </span><span class="lineCov">         10 :       return push_captures(&amp;ms, src, e);</span>
+<span class="lineNum">     568 </span>            :     }
+<span class="lineNum">     569 </span>            :   }
+<span class="lineNum">     570 </span><span class="lineCov">          4 :   return 0;  /* not found */</span>
+<span class="lineNum">     571 </span>            : }
+<span class="lineNum">     572 </span>            : 
+<span class="lineNum">     573 </span>            : 
+<span class="lineNum">     574 </span><span class="lineCov">          4 : static int gmatch (lua_State *L) {</span>
+<span class="lineNum">     575 </span><span class="lineCov">          4 :   luaL_checkstring(L, 1);</span>
+<span class="lineNum">     576 </span><span class="lineCov">          4 :   luaL_checkstring(L, 2);</span>
+<span class="lineNum">     577 </span><span class="lineCov">          4 :   lua_settop(L, 2);</span>
+<span class="lineNum">     578 </span><span class="lineCov">          4 :   lua_pushinteger(L, 0);</span>
+<span class="lineNum">     579 </span><span class="lineCov">          4 :   lua_pushcclosure(L, gmatch_aux, 3);</span>
+<span class="lineNum">     580 </span><span class="lineCov">          4 :   return 1;</span>
+<span class="lineNum">     581 </span>            : }
+<span class="lineNum">     582 </span>            : 
+<span class="lineNum">     583 </span>            : 
+<span class="lineNum">     584 </span><span class="lineNoCov">          0 : static int gfind_nodef (lua_State *L) {</span>
+<span class="lineNum">     585 </span><span class="lineNoCov">          0 :   return luaL_error(L, LUA_QL(&quot;string.gfind&quot;) &quot; was renamed to &quot;</span>
+<span class="lineNum">     586 </span>            :                        LUA_QL(&quot;string.gmatch&quot;));
+<span class="lineNum">     587 </span>            : }
+<span class="lineNum">     588 </span>            : 
+<span class="lineNum">     589 </span>            : 
+<span class="lineNum">     590 </span><span class="lineCov">         85 : static void add_s (MatchState *ms, luaL_Buffer *b, const char *s,</span>
+<span class="lineNum">     591 </span>            :                                                    const char *e) {
+<span class="lineNum">     592 </span>            :   size_t l, i;
+<span class="lineNum">     593 </span><span class="lineCov">         85 :   const char *news = lua_tolstring(ms-&gt;L, 3, &amp;l);</span>
+<span class="lineNum">     594 </span><span class="lineCov">        272 :   for (i = 0; i &lt; l; i++) {</span>
+<span class="lineNum">     595 </span><span class="lineCov">        188 :     if (news[i] != L_ESC)</span>
+<span class="lineNum">     596 </span><span class="lineCov">        147 :       luaL_addchar(b, news[i]);</span>
+<span class="lineNum">     597 </span>            :     else {
+<span class="lineNum">     598 </span><span class="lineCov">         41 :       i++;  /* skip ESC */</span>
+<span class="lineNum">     599 </span><span class="lineCov">         41 :       if (!isdigit(uchar(news[i])))</span>
+<span class="lineNum">     600 </span><span class="lineCov">          6 :         luaL_addchar(b, news[i]);</span>
+<span class="lineNum">     601 </span><span class="lineCov">         35 :       else if (news[i] == '0')</span>
+<span class="lineNum">     602 </span><span class="lineCov">         18 :           luaL_addlstring(b, s, e - s);</span>
+<span class="lineNum">     603 </span>            :       else {
+<span class="lineNum">     604 </span><span class="lineCov">         17 :         push_onecapture(ms, news[i] - '1', s, e);</span>
+<span class="lineNum">     605 </span><span class="lineCov">         16 :         luaL_addvalue(b);  /* add capture to accumulated result */</span>
+<span class="lineNum">     606 </span>            :       }
+<span class="lineNum">     607 </span>            :     }
+<span class="lineNum">     608 </span>            :   }
+<span class="lineNum">     609 </span><span class="lineCov">         84 : }</span>
+<span class="lineNum">     610 </span>            : 
+<span class="lineNum">     611 </span>            : 
+<span class="lineNum">     612 </span><span class="lineCov">         98 : static void add_value (MatchState *ms, luaL_Buffer *b, const char *s,</span>
+<span class="lineNum">     613 </span>            :                                                        const char *e) {
+<span class="lineNum">     614 </span><span class="lineCov">         98 :   lua_State *L = ms-&gt;L;</span>
+<span class="lineNum">     615 </span><span class="lineCov">         98 :   switch (lua_type(L, 3)) {</span>
+<span class="lineNum">     616 </span><span class="lineCov">         85 :     case LUA_TNUMBER:</span>
+<span class="lineNum">     617 </span>            :     case LUA_TSTRING: {
+<span class="lineNum">     618 </span><span class="lineCov">         85 :       add_s(ms, b, s, e);</span>
+<span class="lineNum">     619 </span><span class="lineCov">         84 :       return;</span>
+<span class="lineNum">     620 </span>            :     }
+<span class="lineNum">     621 </span><span class="lineCov">          5 :     case LUA_TFUNCTION: {</span>
+<span class="lineNum">     622 </span>            :       int n;
+<span class="lineNum">     623 </span><span class="lineCov">          5 :       lua_pushvalue(L, 3);</span>
+<span class="lineNum">     624 </span><span class="lineCov">          5 :       n = push_captures(ms, s, e);</span>
+<span class="lineNum">     625 </span><span class="lineCov">          5 :       lua_call(L, n, 1);</span>
+<span class="lineNum">     626 </span><span class="lineCov">          5 :       break;</span>
+<span class="lineNum">     627 </span>            :     }
+<span class="lineNum">     628 </span><span class="lineCov">          8 :     case LUA_TTABLE: {</span>
+<span class="lineNum">     629 </span><span class="lineCov">          8 :       push_onecapture(ms, 0, s, e);</span>
+<span class="lineNum">     630 </span><span class="lineCov">          8 :       lua_gettable(L, 3);</span>
+<span class="lineNum">     631 </span><span class="lineCov">          8 :       break;</span>
+<span class="lineNum">     632 </span>            :     }
+<span class="lineNum">     633 </span>            :   }
+<span class="lineNum">     634 </span><span class="lineCov">         13 :   if (!lua_toboolean(L, -1)) {  /* nil or false? */</span>
+<span class="lineNum">     635 </span><span class="lineCov">          1 :     lua_pop(L, 1);</span>
+<span class="lineNum">     636 </span><span class="lineCov">          1 :     lua_pushlstring(L, s, e - s);  /* keep original text */</span>
+<span class="lineNum">     637 </span>            :   }
+<span class="lineNum">     638 </span><span class="lineCov">         12 :   else if (!lua_isstring(L, -1))</span>
+<span class="lineNum">     639 </span><span class="lineCov">          1 :     luaL_error(L, &quot;invalid replacement value (a %s)&quot;, luaL_typename(L, -1)); </span>
+<span class="lineNum">     640 </span><span class="lineCov">         12 :   luaL_addvalue(b);  /* add result to accumulator */</span>
+<span class="lineNum">     641 </span>            : }
+<span class="lineNum">     642 </span>            : 
+<span class="lineNum">     643 </span>            : 
+<span class="lineNum">     644 </span><span class="lineCov">       1988 : static int str_gsub (lua_State *L) {</span>
+<span class="lineNum">     645 </span>            :   size_t srcl;
+<span class="lineNum">     646 </span><span class="lineCov">       1988 :   const char *src = luaL_checklstring(L, 1, &amp;srcl);</span>
+<span class="lineNum">     647 </span><span class="lineCov">       1988 :   const char *p = luaL_checkstring(L, 2);</span>
+<span class="lineNum">     648 </span><span class="lineCov">       1988 :   int  tr = lua_type(L, 3);</span>
+<span class="lineNum">     649 </span><span class="lineCov">       1988 :   int max_s = luaL_optint(L, 4, srcl+1);</span>
+<span class="lineNum">     650 </span><span class="lineCov">       1988 :   int anchor = (*p == '^') ? (p++, 1) : 0;</span>
+<span class="lineNum">     651 </span><span class="lineCov">       1988 :   int n = 0;</span>
+<span class="lineNum">     652 </span>            :   MatchState ms;
+<span class="lineNum">     653 </span>            :   luaL_Buffer b;
+<span class="lineNum">     654 </span><span class="lineCov">       1988 :   luaL_argcheck(L, tr == LUA_TNUMBER || tr == LUA_TSTRING ||</span>
+<span class="lineNum">     655 </span>            :                    tr == LUA_TFUNCTION || tr == LUA_TTABLE, 3,
+<span class="lineNum">     656 </span>            :                       &quot;string/function/table expected&quot;);
+<span class="lineNum">     657 </span><span class="lineCov">       1987 :   luaL_buffinit(L, &amp;b);</span>
+<span class="lineNum">     658 </span><span class="lineCov">       1987 :   ms.L = L;</span>
+<span class="lineNum">     659 </span><span class="lineCov">       1987 :   ms.src_init = src;</span>
+<span class="lineNum">     660 </span><span class="lineCov">       1987 :   ms.src_end = src+srcl;</span>
+<span class="lineNum">     661 </span><span class="lineCov">      41378 :   while (n &lt; max_s) {</span>
+<span class="lineNum">     662 </span>            :     const char *e;
+<span class="lineNum">     663 </span><span class="lineCov">      39388 :     ms.level = 0;</span>
+<span class="lineNum">     664 </span><span class="lineCov">      39388 :     e = match(&amp;ms, src, p);</span>
+<span class="lineNum">     665 </span><span class="lineCov">      39387 :     if (e) {</span>
+<span class="lineNum">     666 </span><span class="lineCov">         98 :       n++;</span>
+<span class="lineNum">     667 </span><span class="lineCov">         98 :       add_value(&amp;ms, &amp;b, src, e);</span>
+<span class="lineNum">     668 </span>            :     }
+<span class="lineNum">     669 </span><span class="lineCov">      39385 :     if (e &amp;&amp; e&gt;src) /* non empty match? */</span>
+<span class="lineNum">     670 </span><span class="lineCov">         96 :       src = e;  /* skip it */</span>
+<span class="lineNum">     671 </span><span class="lineCov">      39289 :     else if (src &lt; ms.src_end)</span>
+<span class="lineNum">     672 </span><span class="lineCov">      37309 :       luaL_addchar(&amp;b, *src++);</span>
+<span class="lineNum">     673 </span><span class="lineCov">       1980 :     else break;</span>
+<span class="lineNum">     674 </span><span class="lineCov">      37405 :     if (anchor) break;</span>
+<span class="lineNum">     675 </span>            :   }
+<span class="lineNum">     676 </span><span class="lineCov">       1984 :   luaL_addlstring(&amp;b, src, ms.src_end-src);</span>
+<span class="lineNum">     677 </span><span class="lineCov">       1984 :   luaL_pushresult(&amp;b);</span>
+<span class="lineNum">     678 </span><span class="lineCov">       1984 :   lua_pushinteger(L, n);  /* number of substitutions */</span>
+<span class="lineNum">     679 </span><span class="lineCov">       1984 :   return 2;</span>
+<span class="lineNum">     680 </span>            : }
+<span class="lineNum">     681 </span>            : 
+<span class="lineNum">     682 </span>            : /* }====================================================== */
+<span class="lineNum">     683 </span>            : 
+<span class="lineNum">     684 </span>            : 
+<span class="lineNum">     685 </span>            : /* maximum size of each formatted item (&gt; len(format('%99.99f', -1e308))) */
+<span class="lineNum">     686 </span>            : #define MAX_ITEM        512
+<span class="lineNum">     687 </span>            : /* valid flags in a format specification */
+<span class="lineNum">     688 </span>            : #define FLAGS   &quot;-+ #0&quot;
+<span class="lineNum">     689 </span>            : /*
+<span class="lineNum">     690 </span>            : ** maximum size of each format specification (such as '%-099.99d')
+<span class="lineNum">     691 </span>            : ** (+10 accounts for %99.99x plus margin of error)
+<span class="lineNum">     692 </span>            : */
+<span class="lineNum">     693 </span>            : #define MAX_FORMAT      (sizeof(FLAGS) + sizeof(LUA_INTFRMLEN) + 10)
+<span class="lineNum">     694 </span>            : 
+<span class="lineNum">     695 </span>            : 
+<span class="lineNum">     696 </span><span class="lineCov">          7 : static void addquoted (lua_State *L, luaL_Buffer *b, int arg) {</span>
+<span class="lineNum">     697 </span>            :   size_t l;
+<span class="lineNum">     698 </span><span class="lineCov">          7 :   const char *s = luaL_checklstring(L, arg, &amp;l);</span>
+<span class="lineNum">     699 </span><span class="lineCov">          5 :   luaL_addchar(b, '&quot;');</span>
+<span class="lineNum">     700 </span><span class="lineCov">         95 :   while (l--) {</span>
+<span class="lineNum">     701 </span><span class="lineCov">         85 :     switch (*s) {</span>
+<span class="lineNum">     702 </span><span class="lineCov">          3 :       case '&quot;': case '\\': case '\n': {</span>
+<span class="lineNum">     703 </span><span class="lineCov">          3 :         luaL_addchar(b, '\\');</span>
+<span class="lineNum">     704 </span><span class="lineCov">          3 :         luaL_addchar(b, *s);</span>
+<span class="lineNum">     705 </span><span class="lineCov">          3 :         break;</span>
+<span class="lineNum">     706 </span>            :       }
+<span class="lineNum">     707 </span><span class="lineCov">          1 :       case '\r': {</span>
+<span class="lineNum">     708 </span><span class="lineCov">          1 :         luaL_addlstring(b, &quot;\\r&quot;, 2);</span>
+<span class="lineNum">     709 </span><span class="lineCov">          1 :         break;</span>
+<span class="lineNum">     710 </span>            :       }
+<span class="lineNum">     711 </span><span class="lineCov">          1 :       case '\0': {</span>
+<span class="lineNum">     712 </span><span class="lineCov">          1 :         luaL_addlstring(b, &quot;\\000&quot;, 4);</span>
+<span class="lineNum">     713 </span><span class="lineCov">          1 :         break;</span>
+<span class="lineNum">     714 </span>            :       }
+<span class="lineNum">     715 </span><span class="lineCov">         80 :       default: {</span>
+<span class="lineNum">     716 </span><span class="lineCov">         80 :         luaL_addchar(b, *s);</span>
+<span class="lineNum">     717 </span><span class="lineCov">         80 :         break;</span>
+<span class="lineNum">     718 </span>            :       }
+<span class="lineNum">     719 </span>            :     }
+<span class="lineNum">     720 </span><span class="lineCov">         85 :     s++;</span>
+<span class="lineNum">     721 </span>            :   }
+<span class="lineNum">     722 </span><span class="lineCov">          5 :   luaL_addchar(b, '&quot;');</span>
+<span class="lineNum">     723 </span><span class="lineCov">          5 : }</span>
+<span class="lineNum">     724 </span>            : 
+<span class="lineNum">     725 </span><span class="lineCov">         29 : static const char *scanformat (lua_State *L, const char *strfrmt, char *form) {</span>
+<span class="lineNum">     726 </span><span class="lineCov">         29 :   const char *p = strfrmt;</span>
+<span class="lineNum">     727 </span><span class="lineCov">         29 :   while (*p != '\0' &amp;&amp; strchr(FLAGS, *p) != NULL) p++;  /* skip flags */</span>
+<span class="lineNum">     728 </span><span class="lineCov">         29 :   if ((size_t)(p - strfrmt) &gt;= sizeof(FLAGS))</span>
+<span class="lineNum">     729 </span><span class="lineCov">          1 :     luaL_error(L, &quot;invalid format (repeated flags)&quot;);</span>
+<span class="lineNum">     730 </span><span class="lineCov">         28 :   if (isdigit(uchar(*p))) p++;  /* skip width */</span>
+<span class="lineNum">     731 </span><span class="lineCov">         28 :   if (isdigit(uchar(*p))) p++;  /* (2 digits at most) */</span>
+<span class="lineNum">     732 </span><span class="lineCov">         28 :   if (*p == '.') {</span>
+<span class="lineNum">     733 </span><span class="lineCov">          2 :     p++;</span>
+<span class="lineNum">     734 </span><span class="lineCov">          2 :     if (isdigit(uchar(*p))) p++;  /* skip precision */</span>
+<span class="lineNum">     735 </span><span class="lineCov">          2 :     if (isdigit(uchar(*p))) p++;  /* (2 digits at most) */</span>
+<span class="lineNum">     736 </span>            :   }
+<span class="lineNum">     737 </span><span class="lineCov">         28 :   if (isdigit(uchar(*p)))</span>
+<span class="lineNum">     738 </span><span class="lineCov">          3 :     luaL_error(L, &quot;invalid format (width or precision too long)&quot;);</span>
+<span class="lineNum">     739 </span><span class="lineCov">         25 :   *(form++) = '%';</span>
+<span class="lineNum">     740 </span><span class="lineCov">         25 :   strncpy(form, strfrmt, p - strfrmt + 1);</span>
+<span class="lineNum">     741 </span><span class="lineCov">         25 :   form += p - strfrmt + 1;</span>
+<span class="lineNum">     742 </span><span class="lineCov">         25 :   *form = '\0';</span>
+<span class="lineNum">     743 </span><span class="lineCov">         25 :   return p;</span>
+<span class="lineNum">     744 </span>            : }
+<span class="lineNum">     745 </span>            : 
+<span class="lineNum">     746 </span>            : 
+<span class="lineNum">     747 </span><span class="lineCov">          7 : static void addintlen (char *form) {</span>
+<span class="lineNum">     748 </span><span class="lineCov">          7 :   size_t l = strlen(form);</span>
+<span class="lineNum">     749 </span><span class="lineCov">          7 :   char spec = form[l - 1];</span>
+<span class="lineNum">     750 </span><span class="lineCov">          7 :   strcpy(form + l - 1, LUA_INTFRMLEN);</span>
+<span class="lineNum">     751 </span><span class="lineCov">          7 :   form[l + sizeof(LUA_INTFRMLEN) - 2] = spec;</span>
+<span class="lineNum">     752 </span><span class="lineCov">          7 :   form[l + sizeof(LUA_INTFRMLEN) - 1] = '\0';</span>
+<span class="lineNum">     753 </span><span class="lineCov">          7 : }</span>
+<span class="lineNum">     754 </span>            : 
+<span class="lineNum">     755 </span>            : 
+<span class="lineNum">     756 </span><span class="lineCov">         22 : static int str_format (lua_State *L) {</span>
+<span class="lineNum">     757 </span><span class="lineCov">         22 :   int top = lua_gettop(L);</span>
+<span class="lineNum">     758 </span><span class="lineCov">         22 :   int arg = 1;</span>
+<span class="lineNum">     759 </span>            :   size_t sfl;
+<span class="lineNum">     760 </span><span class="lineCov">         22 :   const char *strfrmt = luaL_checklstring(L, arg, &amp;sfl);</span>
+<span class="lineNum">     761 </span><span class="lineCov">         22 :   const char *strfrmt_end = strfrmt+sfl;</span>
+<span class="lineNum">     762 </span>            :   luaL_Buffer b;
+<span class="lineNum">     763 </span><span class="lineCov">         22 :   luaL_buffinit(L, &amp;b);</span>
+<span class="lineNum">     764 </span><span class="lineCov">         90 :   while (strfrmt &lt; strfrmt_end) {</span>
+<span class="lineNum">     765 </span><span class="lineCov">         55 :     if (*strfrmt != L_ESC)</span>
+<span class="lineNum">     766 </span><span class="lineCov">         23 :       luaL_addchar(&amp;b, *strfrmt++);</span>
+<span class="lineNum">     767 </span><span class="lineCov">         32 :     else if (*++strfrmt == L_ESC)</span>
+<span class="lineNum">     768 </span><span class="lineCov">          2 :       luaL_addchar(&amp;b, *strfrmt++);  /* %% */</span>
+<span class="lineNum">     769 </span>            :     else { /* format item */
+<span class="lineNum">     770 </span>            :       char form[MAX_FORMAT];  /* to store the format (`%...') */
+<span class="lineNum">     771 </span>            :       char buff[MAX_ITEM];  /* to store the formatted item */
+<span class="lineNum">     772 </span><span class="lineCov">         30 :       if (++arg &gt; top)</span>
+<span class="lineNum">     773 </span><span class="lineCov">          1 :         luaL_argerror(L, arg, &quot;no value&quot;);</span>
+<span class="lineNum">     774 </span><span class="lineCov">         29 :       strfrmt = scanformat(L, strfrmt, form);</span>
+<span class="lineNum">     775 </span><span class="lineCov">         25 :       switch (*strfrmt++) {</span>
+<span class="lineNum">     776 </span><span class="lineCov">          1 :         case 'c': {</span>
+<span class="lineNum">     777 </span><span class="lineCov">          1 :           sprintf(buff, form, (int)luaL_checknumber(L, arg));</span>
+<span class="lineNum">     778 </span><span class="lineCov">          1 :           break;</span>
+<span class="lineNum">     779 </span>            :         }
+<span class="lineNum">     780 </span><span class="lineCov">          5 :         case 'd':  case 'i': {</span>
+<span class="lineNum">     781 </span><span class="lineCov">          5 :           addintlen(form);</span>
+<span class="lineNum">     782 </span><span class="lineCov">          5 :           sprintf(buff, form, (LUA_INTFRM_T)luaL_checknumber(L, arg));</span>
+<span class="lineNum">     783 </span><span class="lineCov">          4 :           break;</span>
+<span class="lineNum">     784 </span>            :         }
+<span class="lineNum">     785 </span><span class="lineCov">          2 :         case 'o':  case 'u':  case 'x':  case 'X': {</span>
+<span class="lineNum">     786 </span><span class="lineCov">          2 :           addintlen(form);</span>
+<span class="lineNum">     787 </span><span class="lineCov">          2 :           sprintf(buff, form, (unsigned LUA_INTFRM_T)luaL_checknumber(L, arg));</span>
+<span class="lineNum">     788 </span><span class="lineCov">          2 :           break;</span>
+<span class="lineNum">     789 </span>            :         }
+<span class="lineNum">     790 </span><span class="lineCov">          1 :         case 'e':  case 'E': case 'f':</span>
+<span class="lineNum">     791 </span>            :         case 'g': case 'G': {
+<span class="lineNum">     792 </span><span class="lineCov">          1 :           sprintf(buff, form, (double)luaL_checknumber(L, arg));</span>
+<span class="lineNum">     793 </span><span class="lineCov">          1 :           break;</span>
+<span class="lineNum">     794 </span>            :         }
+<span class="lineNum">     795 </span><span class="lineCov">          7 :         case 'q': {</span>
+<span class="lineNum">     796 </span><span class="lineCov">          7 :           addquoted(L, &amp;b, arg);</span>
+<span class="lineNum">     797 </span><span class="lineCov">         11 :           continue;  /* skip the 'addsize' at the end */</span>
+<span class="lineNum">     798 </span>            :         }
+<span class="lineNum">     799 </span><span class="lineCov">          8 :         case 's': {</span>
+<span class="lineNum">     800 </span>            :           size_t l;
+<span class="lineNum">     801 </span><span class="lineCov">          8 :           const char *s = luaL_checklstring(L, arg, &amp;l);</span>
+<span class="lineNum">     802 </span><span class="lineCov">          8 :           if (!strchr(form, '.') &amp;&amp; l &gt;= 100) {</span>
+<span class="lineNum">     803 </span>            :             /* no precision and string is too long to be formatted;
+<span class="lineNum">     804 </span>            :                keep original string */
+<span class="lineNum">     805 </span><span class="lineCov">          1 :             lua_pushvalue(L, arg);</span>
+<span class="lineNum">     806 </span><span class="lineCov">          1 :             luaL_addvalue(&amp;b);</span>
+<span class="lineNum">     807 </span><span class="lineCov">          1 :             continue;  /* skip the `addsize' at the end */</span>
+<span class="lineNum">     808 </span>            :           }
+<span class="lineNum">     809 </span>            :           else {
+<span class="lineNum">     810 </span><span class="lineCov">          7 :             sprintf(buff, form, s);</span>
+<span class="lineNum">     811 </span><span class="lineCov">          7 :             break;</span>
+<span class="lineNum">     812 </span>            :           }
+<span class="lineNum">     813 </span>            :         }
+<span class="lineNum">     814 </span><span class="lineCov">          1 :         default: {  /* also treat cases `pnLlh' */</span>
+<span class="lineNum">     815 </span><span class="lineCov">          1 :           return luaL_error(L, &quot;invalid option &quot; LUA_QL(&quot;%%%c&quot;) &quot; to &quot;</span>
+<span class="lineNum">     816 </span><span class="lineCov">          1 :                                LUA_QL(&quot;format&quot;), *(strfrmt - 1));</span>
+<span class="lineNum">     817 </span>            :         }
+<span class="lineNum">     818 </span>            :       }
+<span class="lineNum">     819 </span><span class="lineCov">         15 :       luaL_addlstring(&amp;b, buff, strlen(buff));</span>
+<span class="lineNum">     820 </span>            :     }
+<span class="lineNum">     821 </span>            :   }
+<span class="lineNum">     822 </span><span class="lineCov">         13 :   luaL_pushresult(&amp;b);</span>
+<span class="lineNum">     823 </span><span class="lineCov">         13 :   return 1;</span>
+<span class="lineNum">     824 </span>            : }
+<span class="lineNum">     825 </span>            : 
+<span class="lineNum">     826 </span>            : 
+<span class="lineNum">     827 </span>            : static const luaL_Reg strlib[] = {
+<span class="lineNum">     828 </span>            :   {&quot;byte&quot;, str_byte},
+<span class="lineNum">     829 </span>            :   {&quot;char&quot;, str_char},
+<span class="lineNum">     830 </span>            :   {&quot;dump&quot;, str_dump},
+<span class="lineNum">     831 </span>            :   {&quot;find&quot;, str_find},
+<span class="lineNum">     832 </span>            :   {&quot;format&quot;, str_format},
+<span class="lineNum">     833 </span>            :   {&quot;gfind&quot;, gfind_nodef},
+<span class="lineNum">     834 </span>            :   {&quot;gmatch&quot;, gmatch},
+<span class="lineNum">     835 </span>            :   {&quot;gsub&quot;, str_gsub},
+<span class="lineNum">     836 </span>            :   {&quot;len&quot;, str_len},
+<span class="lineNum">     837 </span>            :   {&quot;lower&quot;, str_lower},
+<span class="lineNum">     838 </span>            :   {&quot;match&quot;, str_match},
+<span class="lineNum">     839 </span>            :   {&quot;rep&quot;, str_rep},
+<span class="lineNum">     840 </span>            :   {&quot;reverse&quot;, str_reverse},
+<span class="lineNum">     841 </span>            :   {&quot;sub&quot;, str_sub},
+<span class="lineNum">     842 </span>            :   {&quot;upper&quot;, str_upper},
+<span class="lineNum">     843 </span>            :   {NULL, NULL}
+<span class="lineNum">     844 </span>            : };
+<span class="lineNum">     845 </span>            : 
+<span class="lineNum">     846 </span>            : 
+<span class="lineNum">     847 </span><span class="lineCov">         83 : static void createmetatable (lua_State *L) {</span>
+<span class="lineNum">     848 </span><span class="lineCov">         83 :   lua_createtable(L, 0, 1);  /* create metatable for strings */</span>
+<span class="lineNum">     849 </span><span class="lineCov">         83 :   lua_pushliteral(L, &quot;&quot;);  /* dummy string */</span>
+<span class="lineNum">     850 </span><span class="lineCov">         83 :   lua_pushvalue(L, -2);</span>
+<span class="lineNum">     851 </span><span class="lineCov">         83 :   lua_setmetatable(L, -2);  /* set string metatable */</span>
+<span class="lineNum">     852 </span><span class="lineCov">         83 :   lua_pop(L, 1);  /* pop dummy string */</span>
+<span class="lineNum">     853 </span><span class="lineCov">         83 :   lua_pushvalue(L, -2);  /* string library... */</span>
+<span class="lineNum">     854 </span><span class="lineCov">         83 :   lua_setfield(L, -2, &quot;__index&quot;);  /* ...is the __index metamethod */</span>
+<span class="lineNum">     855 </span><span class="lineCov">         83 :   lua_pop(L, 1);  /* pop metatable */</span>
+<span class="lineNum">     856 </span><span class="lineCov">         83 : }</span>
+<span class="lineNum">     857 </span>            : 
+<span class="lineNum">     858 </span>            : 
+<span class="lineNum">     859 </span>            : /*
+<span class="lineNum">     860 </span>            : ** Open string library
+<span class="lineNum">     861 </span>            : */
+<span class="lineNum">     862 </span><span class="lineCov">         83 : LUALIB_API int luaopen_string (lua_State *L) {</span>
+<span class="lineNum">     863 </span><span class="lineCov">         83 :   luaL_register(L, LUA_STRLIBNAME, strlib);</span>
+<span class="lineNum">     864 </span>            : #if defined(LUA_COMPAT_GFIND)
+<span class="lineNum">     865 </span><span class="lineCov">         83 :   lua_getfield(L, -1, &quot;gmatch&quot;);</span>
+<span class="lineNum">     866 </span><span class="lineCov">         83 :   lua_setfield(L, -2, &quot;gfind&quot;);</span>
+<span class="lineNum">     867 </span>            : #endif
+<span class="lineNum">     868 </span><span class="lineCov">         83 :   createmetatable(L);</span>
+<span class="lineNum">     869 </span><span class="lineCov">         83 :   return 1;</span>
+<span class="lineNum">     870 </span>            : }
+<span class="lineNum">     871 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

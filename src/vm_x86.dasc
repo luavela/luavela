@@ -1,0 +1,4105 @@
+|// Low-level VM code for x86 CPUs.
+|// Bytecode interpreter, fast functions and helper functions.
+|// Copyright (C) 2005-2017 Mike Pall. See Copyright Notice in luajit.h
+|
+|.arch x64
+|.section code_op, code_sub
+|
+|.actionlist build_actionlist
+|.globals GLOB_
+|.globalnames globnames
+|.externnames extnames
+|
+|//-----------------------------------------------------------------------
+|
+|// Fixed register assignments for the interpreter.
+|// This is very fragile and has many dependencies. Caveat emptor.
+|.define BASE,          r10     // Not C callee-save, refetched anyway.    // NEW
+|.define KBASEd,        r15d    // Must be C callee-save.                  // NEW
+|.define KBASE,         r15                                                // NEW
+|.define PC,            rbx                                                // NEW
+|.define DISPATCH,      r14     // Must be C callee-save.                  // NEW
+|.define DISPATCHd,     r14d                                               // NEW
+|
+|.define RA,            ecx                                                // OLD
+|.define RAH,           ch                                                 // OLD
+|.define RAL,           cl                                                 // OLD
+|.define RB,            ebp     // Must be ebp (C callee-save).            // OLD
+|.define RC,            eax     // Must be eax.                            // OLD
+|.define RCW,           ax                                                 // OLD
+|.define RCH,           ah                                                 // OLD
+|.define RCL,           al                                                 // OLD
+|.define OP,            RB                                                 // OLD
+|.define RD,            RC                                                 // OLD
+|.define RDW,           RCW                                                // OLD
+|.define RDL,           RCL                                                // OLD
+|
+|.define RAa, rcx                                                          // OLD
+|.define RBa, rbp                                                          // OLD
+|.define RCa, rax                                                          // OLD
+|.define RDa, RCa                                                          // OLD
+|
+|// Register used in mov64xx and barrierback macros as an intermediate
+|// storage. Might be used in another places, but take care of the code
+|// that will implicitly change it.
+|.define XCHG,  r11                                                        // NEW
+|.define XCHGd, r11d                                                       // NEW
+|.define XCHGw, r11w                                                       // NEW
+|
+|// Auxilary registers.
+|.define AUX1,  r9                                                         // NEW
+|.define AUX1d,  r9d                                                       // NEW
+|.define AUX1w,  r9w                                                       // NEW
+|.define AUX2,  r8                                                         // NEW
+|
+|.define CRET,          rax                                                // NEW
+|.define CARG1,         rdi     // x64/POSIX C call arguments.             // NEW
+|.define CARG2,         rsi                                                // NEW
+|.define CARG3,         rdx                                                // NEW
+|.define CARG4,         rcx                                                // NEW
+|.define CARG5,         r8                                                 // NEW
+|.define CARG6,         r9                                                 // NEW
+|.define CRETd,         eax                                                // NEW
+|.define CARG1d,        edi                                                // OLD
+|.define CARG2d,        esi                                                // OLD
+|.define CARG3d,        edx                                                // OLD
+|.define CRETb,         al                                                 // NEW
+|
+|// Floating-point C parameters
+|.define CARG1f,        xmm0                                               // NEW
+|
+|// Type definitions. Some of these are only used for documentation.
+|.type L,               lua_State
+|.type GL,              global_State
+|.type TVALUE,          TValue
+|.type GCOBJ,           GCobj
+|.type STR,             GCstr
+|.type TAB,             GCtab
+|.type LFUNC,           GCfuncL
+|.type CFUNC,           GCfuncC
+|.type PROTO,           GCproto
+|.type UPVAL,           GCupval
+|.type NODE,            Node
+|.type NARGS,           int
+|.type TRACE,           GCtrace
+|
+|.define TVS,          16 // sizeof(TValue);                      // -> 16
+|.define TVB,           4 // synonym of TVS to be used in shifts. // -> 4
+|.define TVS_X2,        8 // TVS / 2, for handling x2 encoding
+|.define TVB_X2,        3 // TVB - 1, for handling x2 encoding
+|
+|// Relative offsets (in bytes) to HOTCNT's counter
+|.define LOOP_COUNTER_OFFSET,    -6
+|.define FORL_COUNTER_OFFSET,    -6
+|.define ITERL_COUNTER_OFFSET,   -10
+|.define PROLOGUE_COUNTER_OFFSET, 2
+|.define HOTCNT_COUNTER_OFFSET,   2
+|
+|// Stack layout while in interpreter.
+|// Must match with lj_frame.h and uj_cframe.h
+|//-----------------------------------------------------------------------
+|.define CFRAME_SPACE,  qword*11                // Delta for rsp (see <--).
+|
+|.macro saveregs_
+|  push rbx; push r15; push r14
+|  sub rsp, CFRAME_SPACE
+|.endmacro
+|.macro saveregs
+|  push rbp; saveregs_
+|.endmacro
+|.macro restoreregs
+|  add rsp, CFRAME_SPACE
+|  pop r14; pop r15; pop rbx; pop rbp
+|.endmacro
+|
+|//----- 16 byte aligned, see x64 ABI p.3.2.2
+|.define SAVE_RET,      qword [rsp+qword*15]    //<-- rsp entering interpreter.
+|.define SAVE_RBP,      qword [rsp+qword*14]
+|.define SAVE_RBX,      qword [rsp+qword*13]
+|.define SAVE_R15,      qword [rsp+qword*12]
+|.define SAVE_R14,      qword [rsp+qword*11]    //<-- rsp after register saves.
+|.define SAVE_CFRAME,   qword [rsp+qword*10]
+|.define SAVE_PC,       qword [rsp+qword*9]
+|.define SAVE_L,        qword [rsp+qword*8]
+|.define SAVE_ERRF,     qword [rsp+qword*7]
+|.define SAVE_NRES,     qword [rsp+qword*6]
+|.define MULTRES,       dword [rsp+dword*11]
+|.define SAVE_VMSTATE,  dword [rsp+qword*5]
+|.define TMPTV_TAG,     dword [rsp+qword*4]
+|.define TMPTV,         qword [rsp+qword*3]
+|.define TMPa2,         qword [rsp+qword*2]
+|.define TMPa,          qword [rsp+qword*1]
+|.define TMP2,          dword [rsp+dword*1]
+|.define TMP1,          dword [rsp]             //<-- rsp while in interpreter.
+|//----- 16 byte aligned
+|
+|// -- Loading stack slot pointers to registers --------------------------------
+|
+|// Loads stack-based TValue pointer to the register. TValue is addressed
+|// via base and up to two offsets. The simple (second) form of macro
+|// is used for simple addressing, like `&stack[i]`. The full (first form)
+|// is used for addressing like `&stack[i+j]` or `&stack[i-j]`. This is done
+|// because of DynASM processing limitations. All i2tvp macros assume that off_1
+|// is x2-encoded (see lj_bc.h for details). All *2tvp* macros assume that
+|// off_2 (if passed) is a literal.
+|// Mnemo: Index to TValue Pointer
+|.macro i2tvp, acc, base, off_1, off_2
+|  lea acc, [base + off_1*TVS_X2 + (off_2)*TVS]
+|.endmacro
+|
+|.macro i2tvp, acc, base, off_1
+|  lea acc, [base + off_1*TVS_X2]
+|.endmacro
+|
+|// Same as i2tvp, but assumes that off_1 is not x2-encoded.
+|// NB! All n2tvp macros modify off_1 in-place and do *not* restore the
+|// the original value (see n2tvp_r).
+|// Mnemo: Nargs to TValue Pointer; mnemo originates from the most frequent
+|// use case when NARGS register is used for accessing values on the stack.
+|.macro n2tvp, acc, base, off_1, off_2
+|  shl off_1, 1
+|  i2tvp acc, base, off_1, off_2
+|.endmacro
+|
+|.macro n2tvp, acc, base, off_1
+|  shl off_1, 1
+|  i2tvp acc, base, off_1
+|.endmacro
+|
+|// Same as n2tvp, but all n2tvp_r macros restore the original value of off_1.
+|// Mnemo: Nargs to TValue Pointer, off_1 Restored
+|.macro n2tvp_r, acc, base, off_1, off_2
+|  n2tvp acc, base, off_1, off_2
+|  shr off_1, 1
+|.endmacro
+|
+|.macro n2tvp_r, acc, base, off_1
+|  n2tvp acc, base, off_1
+|  shr off_1, 1
+|.endmacro
+|
+|// -- New TValue tag getters/setters ---------------------------------------------------------------
+|
+|.macro settag, tag, base, off_1, off_2
+|  mov dword [base + off_1*TVS_X2 + (off_2)*TVS + 8], tag
+|.endmacro
+|
+|.macro settag, tag, base, off_1
+|  mov dword [base + off_1*TVS_X2 + 8], tag
+|.endmacro
+|
+|// Special version of settag for padding stack slots with nil's in various contexts
+|.macro setnil, base, off_1, off_2
+|  shl off_1, 1
+|  settag LJ_TNIL, base, off_1, off_2
+|  shr off_1, 1
+|.endmacro
+|
+|// Sets a stack slot to nil. off should be *a constant value*.
+|.macro setnil, base, off
+|  mov dword [base + off * TVS + 8], LJ_TNIL
+|.endmacro
+|// Sets a stack slot to nil. Overloaded version of the above if off == 0.
+|.macro setnil, base
+|  mov dword [base + 8], LJ_TNIL
+|.endmacro
+|
+|.macro gettag, acc, base, off_1
+|  mov acc, dword [base + off_1*TVS_X2 + 8]
+|.endmacro
+|
+|.macro checktag, tag, base, off_1
+|  cmp dword [base + off_1*TVS_X2 + 8], tag
+|.endmacro
+|
+|// Temp workaround for tricky load in BC_ITERN
+|.macro __i2gcr, acc, base, off_1, off_2
+|  mov acc, dword [base + off_1*TVS_X2 + (off_2)*TVS]
+|.endmacro
+|
+|// Loads GCref of stack-based TValue to the register.
+|.macro i2gcr, acc, base, off_1, off_2
+|  mov acc, qword [base + off_1*TVS_X2 + (off_2)*TVS]
+|.endmacro
+|
+|.macro i2gcr, acc, base, off_1
+|  mov acc, qword [BASE + off_1*TVS_X2]
+|.endmacro
+|
+|// Loads a GCobj* of type src_gct from the source register src_reg
+|// to the stack slot [base + off], off is assumed to be *a constant value*.
+|// Mnemo: GCObject to Stack
+|// NOTE: Intel syntax order is dismissed in this macro!
+|.macro gco2s, src_reg, src_gct, base, off
+|  mov qword [base+off*TVS]  , src_reg
+|  mov dword [base+off*TVS+8], src_gct
+|.endmacro
+|
+|// Loads a GCobj* of type src_gct from the source register src_reg
+|// to the stack slot [base + off], off is assumed to be *a variable value*.
+|// Mnemo: GCObject to Stack with Variable slot offset
+|// NOTE: Intel syntax order is dismissed in this macro!
+|.macro gco2sv, src_reg, src_gct, base, off
+|  mov qword [base + off*TVS_X2]    , src_reg
+|  mov dword [base + off*TVS_X2 + 8], src_gct
+|.endmacro
+|
+|// Loads a number from the source register src_reg to the stack slot
+|// [base + off], off is assumed to be *a constant value*.
+|// Mnemo: NUMber to Stack
+|// NOTE: Intel syntax order is dismissed in this macro!
+|.macro num2s, src_reg, base, off
+|  movsd qword [base+off*TVS]  , src_reg
+|  mov   dword [base+off*TVS+8], LJ_TNUMX
+|.endmacro
+|
+|// Loads a number from the source register src_reg to the stack slot
+|// [base + off], off is assumed to be *a variable value*.
+|// Mnemo: NUMber to Stack with Variable slot offset
+|// NOTE: Intel syntax order is dismissed in this macro!
+|.macro num2sv, src_reg, base, off
+|  movsd qword [base+off*TVS_X2]  , src_reg
+|  mov   dword [base+off*TVS_X2+8], LJ_TNUMX
+|.endmacro
+|
+|// For a given base, load address of corresponding callable object to acc.
+|// For details, see TValue layout in lj_obj.h (framelink version).
+|.macro i2func, acc, base
+|  mov acc, qword [base-1*TVS]
+|.endmacro
+|
+|//-----------------------------------------------------------------------
+|// Calculate number of stack slots based on two stack pointers. The resulting
+|// value is incremented by two in order to comply to NARGS format.
+|.macro ptrdiff2nargs, acc, top, base
+|  mov acc, top
+|  sub acc, base
+|  shr acc, TVB
+|  add NARGS:acc, 1
+|.endmacro
+|
+|//-----------------------------------------------------------------------
+|.macro inc_PC; lea PC, [PC+4]; .endmacro
+|
+|// Save PC on the x86 stack when leaving the dispatch loop (i.e. on func call).
+|.macro save_PC; mov SAVE_PC, PC; .endmacro
+|
+|// Restore caller PC on return inside the dispatch loop.
+|.macro restore_PC
+|  mov PC, qword [BASE-1*TVS+8] // PC = stack[-1].fr.tp.pcr
+|.endmacro
+|
+|// Get frame offset for non-standard caller frame.
+|// Synonym for frame_sized(reg) (see lj_frame.h)
+|.macro ftsz2offs, reg
+|  and reg, -8
+|.endmacro
+|
+|.macro setup_dispatch, l_ptr
+|  mov DISPATCH, l_ptr->glref
+|  add DISPATCH, GG_G2DISP
+|.endmacro
+|
+|.macro redispatch_static, reg
+|  jmp qword [DISPATCH+reg*8+GG_DISP2STATIC]
+|.endmacro
+|
+|// base points at the base of new function, thus
+|// base-TVS contains the frame link
+|.macro setup_kbase, base
+|  i2func LFUNC:KBASE, base
+|  mov KBASE, LFUNC:KBASE->pc
+|  mov KBASE, qword [KBASE+PC2PROTO(k)]
+|.endmacro
+|
+|// Instruction headers.
+|.macro ins_A; .endmacro
+|.macro ins_AD; .endmacro
+|.macro ins_AJ; .endmacro
+|.macro ins_ABC; movzx RB, RCH; movzx RC, RCL; .endmacro
+|.macro ins_AB_; movzx RB, RCH; .endmacro
+|.macro ins_A_C; movzx RC, RCL; .endmacro
+|.macro ins_AND; not RDa; .endmacro
+|
+|// Instruction decode+dispatch. Carefully tuned (nope, lodsd is not faster).
+|.macro _ins_next
+|  mov RC, dword [PC]
+|  movzx RA, RCH
+|  movzx OP, RCL
+|  inc_PC
+|  shr RC, 16
+|.endmacro
+|
+|.macro ins_next
+|  _ins_next
+|  jmp qword [DISPATCH+OP*8]
+|.endmacro
+|
+|// Call decode and dispatch.
+|.macro ins_callt
+|  // BASE = new base, RB = LFUNC, RD = nargs+1, [BASE-4] = PC
+|  mov PC, LFUNC:RBa->pc
+|  mov RA, dword [PC]
+|  movzx OP, RAL
+|  movzx RA, RAH
+|  inc_PC
+|  jmp qword [DISPATCH+OP*8]
+|.endmacro
+|
+|// Save caller's PC to ftsz area of the function about to be executed
+|// (see restore_PC) and call ins_callt to actually start executing callee.
+|.macro ins_call
+|  // BASE = new base, RB = LFUNC, RD = nargs+1
+|  mov qword [BASE-1*TVS+8], PC
+|  ins_callt
+|.endmacro
+|
+|// ----------------------------------------------------------------------------
+|// Mnemo: load Kbase-Indexed TValue object Address 2 Register
+|// TODO: it's not TValue, just an object address, he-he. Should rewrite mnemo.
+|.macro kitva2r, reg, kindex
+|  mov reg, qword [KBASE+kindex*8]
+|.endmacro
+|
+|// Mnemo: load Indexed UpValue Address 2 Register
+|// Note: MOAR MNEMONICS TO THE GOD OF MNEMONICS!!!111
+|.macro iuva2r, reg, uvidx
+|  i2func XCHG, BASE
+|  mov reg, qword [XCHG+uvidx*8+offsetof(GCfuncL, uvptr)]
+|.endmacro
+|
+|//-----------------------------------------------------------------------
+|// Checks that the table referenced by tbl_ptr has metatable and that
+|// metamethod cache does not contain information about metamethod absence.
+|// If any of checks fail, jumps to fallback. Falls through otherwise.
+|.macro tbl_check_mm, tbl_ptr, mm_name, mm_fallback
+|  mov TAB:AUX2, TAB:tbl_ptr->metatable
+|  test TAB:AUX2, TAB:AUX2
+|  jz mm_fallback   // No metatable - use fallback.
+|  test byte TAB:AUX2->nomm, 1<<MM_..mm_name
+|  jnz mm_fallback  // Flag 'no such metamethod' cached - use fallback.
+|.endmacro
+|
+|// Makes an attempt to find string key in table. Has two fallbacks,
+|// for the cases when the key is absent and corresponding value is nil.
+|// Two fallbacks instead of one are used in BC_TSETS_Z.
+|// On success, returns TValue* of corresponding val in AUX1 and falls
+|// through.
+|// Caveat: defines local labels 7,8 and 9.
+|.macro tbl_find_key, tbl_ptr, str_ptr, nokey_fallback, nilval_fallback
+|  mov AUX1d, STR:str_ptr->hash
+|  and AUX1,  TAB:tbl_ptr->hmask
+|  imul AUX1, #NODE
+|  add NODE:AUX1, TAB:tbl_ptr->node
+|7: // Check current node
+|  cmp dword NODE:AUX1->key.value_tag, LJ_TSTR
+|  jne >8
+|  cmp qword NODE:AUX1->key.gcr, STR:str_ptr
+|  je >9
+|8: // Proceed to next node in chain
+|  mov NODE:AUX1, NODE:AUX1->next
+|  test NODE:AUX1, NODE:AUX1
+|  jnz <7
+|  jmp nokey_fallback
+|9: // Node found
+|  cmp dword [AUX1+8], LJ_TNIL // Assumes offsetof(Node, val) == 0
+|  je nilval_fallback
+|.endmacro
+|//-----------------------------------------------------------------------
+|// Synonym for copyTV(lua_State*, TValue*, TValue*)
+|.macro movtv, dst, src
+|  movdqu xmm7, [src]
+|  movdqu [dst], xmm7
+|.endmacro
+|
+|// Macros to test operand types.
+|.macro checknum, reg, target; checktag LJ_TNUMX, BASE, reg; jne target; .endmacro
+|.macro checkstr, reg, target; checktag LJ_TSTR, BASE, reg; jne target; .endmacro
+|.macro checktab, reg, target; checktag LJ_TTAB, BASE, reg; jne target; .endmacro
+|.macro checkfunc, reg, target; checktag LJ_TFUNC, BASE, reg; jne target; .endmacro
+|
+|.macro _checkimmutable, reg, target
+| test byte GCOBJ:reg->gch.marked, UJ_GCO_IMMUTABLE
+| jne target;
+|.endmacro
+|
+|// Checks if an object stored in reg is immutable and jumps to an error
+|// handler in case this is true. Must be used in byte code semantics only.
+|.macro checkimmutable_bc, reg
+| _checkimmutable reg, ->vm_err_immutable
+|.endmacro
+|
+|// Checks if an object stored in reg is immutable and jumps to the common
+|// fast function fallback handler in case this is true.
+|// Must be used in fast functions only.
+|.macro checkimmutable_ff, reg
+| _checkimmutable reg, ->fff_fallback
+|.endmacro
+|
+|// Checks if a couroutine has expired. If the check succeeds, throws a timeout
+|// exception. Otherwise does nothing.
+|.macro checktimeout
+#ifdef UJIT_CO_TIMEOUT
+|  mov XCHG, SAVE_L       // Convention chosen to minimize register clobbering
+|  call ->vm_checktimeout // (lua_State *L)
+#endif
+|.endmacro
+|
+|// These operands must be used with movzx.
+|// Restores bytecode operands and opcode in case they were corrupted during
+|// bytecode execution (e.g. by extern call).
+|// Refer to lj_bc.h for bytecode layout.
+|.define PC_OP, byte [PC-4]
+|.define PC_RA, byte [PC-3]
+|.define PC_RB, byte [PC-1]
+|.define PC_RC, byte [PC-2]
+|.define PC_RD, word [PC-2]
+|.macro restore_RA; movzx RA, PC_RA; .endmacro
+|.macro restore_RB; movzx RB, PC_RB; .endmacro
+|.macro restore_RC; movzx RC, PC_RC; .endmacro
+|.macro restore_RD; movzx RD, PC_RD; .endmacro
+|
+|.macro branchPC, reg
+|  lea PC, [PC+reg*4-BCBIAS_J*4]
+|.endmacro
+|
+|// Restore the base before the call was made using caller's PC and
+|// 'base' argument from the CALL instruction: OLD_BASE = BASE - (base + 1),
+|// We use double indexing, so in our case:
+|// (2*OLD_BASE) = (2*BASE) - 2(base + 1) = (2*BASE) - (2*base + 2)
+|.macro restore_base, base_acc
+|  restore_RA // RA = 2*base
+|// -(2*base + 2) = -(RA + 2) = -(RA + 1) - 1 = ~RA - 1
+|  not RAa
+|  sub RAa, 1
+|  i2tvp base_acc, BASE, RAa
+|.endmacro
+|
+|// Assumes DISPATCH is relative to GL.
+#define DISPATCH_GL(field)      (GG_DISP2G + (int)offsetof(global_State, field))
+#define DISPATCH_J(field)       (GG_DISP2J + (int)offsetof(jit_State, field))
+|
+#define PC2PROTO(field)  ((int)offsetof(GCproto, field)-(int)sizeof(GCproto))
+#define CFRAME_SIZE     sizeof(struct cframe)
+|
+|// Compare hotcounter and trigger trace recorder
+|.macro hotloop, offset
+|  mov XCHGw, [PC + offset]
+|  cmp XCHGw, 1
+|  jb ->vm_hotloop
+|.endmacro
+|
+|.macro hotcall, offset
+|  mov XCHGw, [PC + offset]
+|  cmp XCHGw, 0
+|  jz ->vm_hotcall
+|.endmacro
+|
+|.macro save_vmstate
+|  mov XCHGd, dword [DISPATCH+DISPATCH_GL(vmstate)]
+|  mov SAVE_VMSTATE, XCHGd
+|.endmacro
+|
+|.macro restore_vmstate
+|  mov XCHGd, SAVE_VMSTATE
+|  mov dword [DISPATCH+DISPATCH_GL(vmstate)], XCHGd
+|.endmacro
+|
+|// Set current VM state.
+|.macro set_vmstate, st
+|  mov dword [DISPATCH+DISPATCH_GL(vmstate)], ~UJ_VMST_..st
+|.endmacro
+|
+|// Stash interpreter's internal base and enter LFUNC VM state.
+|// PROFILER: Each time profiler sees LFUNC state, it will inspect [BASE-1]
+|// expecting to see a valid framelink there. So enter this state only when
+|// BASE is stable and slots are not moved on the stack.
+|.macro set_vmstate_lfunc
+|  set_vmstate INTERP // Guard for non-atomic VM context restoration
+|  mov qword [DISPATCH+DISPATCH_GL(top_frame.guesttop)], BASE
+|  set_vmstate LFUNC
+|.endmacro
+|
+|// Stash ID of the fast function about to be executed and enter FFUNC VM state.
+|// PROFILER: Each time profiler sees FFUNC state, it will write ffid
+|// to the profile stream.
+|.macro set_vmstate_ffunc
+|  set_vmstate INTERP // Guard for non-atomic VM context restoration
+|  i2func LFUNC:XCHG, BASE
+|  mov XCHG, LFUNC:XCHG->ffid
+|  mov qword [DISPATCH+DISPATCH_GL(top_frame.ffid)], XCHG
+|  set_vmstate FFUNC
+|.endmacro
+|
+|// Stash address of the C function about to be executed and enter CFUNC VM state.
+|// PROFILER: Each time profiler sees CFUNC state, it will write this address
+|// to the profile stream.
+|.macro set_vmstate_cfunc
+|  set_vmstate INTERP // Guard for non-atomic VM context restoration
+|  mov qword [DISPATCH+DISPATCH_GL(top_frame.guesttop)], BASE
+|  set_vmstate CFUNC
+|.endmacro
+|
+|// Updates L's pointers to base and top of the Lua stack with actual values
+|// before calling an external function from the interpreter. Partially
+|// reproduces the semantics of curr_topL(L). `acc` will contain L upon exit.
+|.macro sync_stack, acc
+|  i2func LFUNC:acc, BASE
+|  mov acc, LFUNC:acc->pc
+|  movzx XCHG, byte [acc + PC2PROTO(framesize)]
+|  n2tvp XCHG, BASE, XCHG
+|  mov L:acc, SAVE_L
+|  mov L:acc->base, BASE
+|  mov L:acc->top, XCHG
+|.endmacro
+|
+|// x87 compares.
+|.macro fcomparepp                      // Compare and pop st0 >< st1.
+|  fucomip st1
+|  fpop
+|.endmacro
+|
+|.macro fdup; fld st0; .endmacro
+|.macro fpop1; fstp st1; .endmacro
+|
+|// Synthesize SSE FP constants.
+|.macro sseconst_abs, reg               // Synthesize abs mask.
+|  mov64 XCHG, U64x(7fffffff,ffffffff); movd reg, XCHG
+|.endmacro
+|.macro sseconst_hi, reg, val   // Synthesize hi-32 bit const.
+|  mov64 XCHG, U64x(val,00000000); movd reg, XCHG
+|.endmacro
+|.macro sseconst_sign, reg      // Synthesize sign mask.
+|  sseconst_hi reg, 80000000
+|.endmacro
+|.macro sseconst_1, reg         // Synthesize 1.0.
+|  sseconst_hi reg, 3ff00000
+|.endmacro
+|.macro sseconst_tobit, reg     // Synthesize 2^52 + 2^51.
+|  sseconst_hi reg, 43380000
+|.endmacro
+|
+|// Move table write barrier back. Overwrites reg.
+|.macro barrierback, tab
+|  and byte tab->marked, (uint8_t)~LJ_GC_BLACK  // black2gray(tab)
+|  mov XCHG, qword [DISPATCH+DISPATCH_GL(gc.grayagain)]
+|  mov qword [DISPATCH+DISPATCH_GL(gc.grayagain)], tab
+|  mov tab->gclist, XCHG
+|.endmacro
+|
+|//-----------------------------------------------------------------------
+|
+|// Triggering GC if needed upon creating a new table.
+|.macro newtab_gccheck
+|  mov L:RBa, SAVE_L
+|  mov L:RBa->base, BASE
+|  save_PC
+|  mov L:CARG1, L:RBa
+|  call extern lj_gc_check_fixtop // (lua_State *L)
+|  restore_RD
+|.endmacro
+|
+|// Setup the newly created table at RA stack index
+|.macro newtab2tv_ra, src_reg
+|  restore_RA
+|  gco2sv src_reg, LJ_TTAB, BASE, RAa
+|.endmacro
+
+// Generate subroutines used by opcodes and other parts of the VM.
+// The .code_sub section should be last to help static branch prediction.
+static void build_subroutines(BuildCtx *ctx)
+{
+  |.code_sub
+  |
+  |->vm_checktimeout:
+#ifdef UJIT_CO_TIMEOUT
+  |  // XCHG = L
+  |  // Uses: XCHG, RDa/CRET, CARG1
+  |  // Saves PC, syncs L->base, does *not* sync L->top
+  |  cmp qword L:XCHG->timeout.usec, 0
+  |  jz >2     // Cannot expire: Has no ticks to run
+  |  test qword L:XCHG->cframe, CFRAME_RESUME
+  |  jz >2     // Cannot expire: not started with vm_resume or runs past a C-call boundary
+  |  test byte [DISPATCH+DISPATCH_GL(hookmask)], HOOK_ACTIVE
+  |  jnz >2    // Cannot expire: Inside a "regular" hook or a __gc finalizer
+  |  test word L:XCHG->events, EXTEV_ANY_EVENT // uj_state_has_event(L, EXTEV_ANY_EVENT)
+  |  jnz >2    // Cannot expire: External event running (non-interruptable)
+  |  mov XCHG, qword L:XCHG->timeout.expticks
+  |  // Saving RDa (rax alias) due to external C call below
+  |  push RDa
+  |  call extern uj_timerint_ticks // (void)
+  |  cmp CRET, XCHG
+  |  jb >1     // Cannot expire: Has remaining ticks
+  |  // Coroutine has expired:
+  |  // 1. Clean up the host stack to fit the regular VM frame layout:
+  |  // 1.1. pop RDa
+  |  // 1.2. pop return address pushed during call ->vm_checktimeout
+  |  // 2. Save PC and sync L->base
+  |  // 3. Throw a timeout exception
+  |  add rsp, 2 * 8
+  |  save_PC
+  |  mov L:CARG1, SAVE_L
+  |  mov L:CARG1->base, BASE
+  |  call extern uj_throw_timeout // (lua_State *L)
+  |1:          // Restore clobbered RDa, fallthrough
+  |  pop RDa
+  |2:          // Return: Coroutine has not expired yet
+#endif
+  |  ret
+  |
+  |//-----------------------------------------------------------------------
+  |//-- Return handling ----------------------------------------------------
+  |//-----------------------------------------------------------------------
+  |
+  |->vm_returnp:
+  |  test PC, FRAME_P
+  |  jz ->cont_dispatch
+  |
+  |  // Return from pcall or xpcall fast func.
+  |  ftsz2offs PC
+  |  sub BASE, PC                       // Restore caller base.
+  |  lea RAa, [RAa+PC-TVS]              // Rebase RA and prepend one result.
+  |  restore_PC                         // Fetch PC of previous frame.
+  |  // Prepending may overwrite the pcall frame, so do it at the end.
+  |  mov dword [BASE+RAa+8], LJ_TTRUE   // Prepend true to results.
+  |
+  |->vm_returnc:
+  |  add RD, 1                          // RD = nresults+1
+  |  jz ->vm_unwind_yield
+  |  mov MULTRES, RD
+  |  test PC, FRAME_TYPE
+  |  jz ->BC_RET_Z                      // Handle regular return to Lua.
+  |
+  |->vm_return:
+  |  // BASE = base, RA = resultofs, RD = nresults+1 (= MULTRES), PC = return
+  |  xor PC, FRAME_C
+  |  test PC, FRAME_TYPE
+  |  jnz ->vm_returnp
+  |
+  |  ftsz2offs PC
+  |  sub PC, BASE
+  |  neg PC                             // Previous base = BASE - delta.
+  |
+  |  sub RD, 1
+  |  jz >2
+  |1:  // Move results down.
+  |  movtv BASE-1*TVS, BASE+RA
+  |  add BASE, TVS
+  |  sub RD, 1
+  |  jnz <1
+  |2:
+  |  mov L:RBa, SAVE_L
+  |  mov L:RBa->base, PC
+  |3:
+  |  mov RD, MULTRES
+  |  mov RAa, SAVE_NRES                 // RA = wanted nresults+1
+  |4:
+  |  cmp RA, RD
+  |  jne >6                             // More/less results wanted?
+  |5:
+  |  sub BASE, 1*TVS
+  |  mov L:RBa->top, BASE
+  |
+  |->vm_leave_cp:
+  |  mov RAa, SAVE_CFRAME               // Restore previous C frame.
+  |  mov L:RBa->cframe, RAa
+  |  xor CRETd, CRETd                   // Ok return status for vm_pcall.
+  |
+  |->vm_leave_unw:
+  |  set_vmstate INTERP
+  |  mov XCHG, L:RBa->base
+  |  // NB! Two lines below require that DISPATCH reg is set properly.
+  |  mov qword [DISPATCH+DISPATCH_GL(top_frame.guesttop)], XCHG
+  |  restore_vmstate
+  |  restoreregs
+  |  ret
+  |
+  |6:
+  |  jb >7                              // Less results wanted?
+  |  // More results wanted. Check stack size and fill up results with nil.
+  |  cmp BASE, L:RBa->maxstack
+  |  ja >8
+  |  setnil BASE, -1
+  |  add BASE, TVS
+  |  add RD, 1
+  |  jmp <4
+  |
+  |7:  // Less results wanted.
+  |  test RA, RA
+  |  jz <5                              // But check for LUA_MULTRET+1.
+  |  sub RAa, RDa                       // Negative result!
+  |  n2tvp_r BASE, BASE, RAa            // Correct top.
+  |  jmp <5
+  |
+  |8:  // Corner case: need to grow stack for filling up results.
+  |  // This can happen if:
+  |  // - A C function grows the stack (a lot).
+  |  // - The GC shrinks the stack in between.
+  |  // - A return back from a lua_call() with (high) nresults adjustment.
+  |  mov L:RBa->top, BASE               // Save current top held in BASE (yes).
+  |  mov MULTRES, RD                    // Need to fill only remainder with nil.
+  |  mov CARG2, RAa
+  |  mov CARG1, L:RBa
+  |  call extern uj_state_stack_grow     // (lua_State *L, int n)
+  |  mov BASE, L:RBa->top               // Need the (realloced) L->top in BASE.
+  |  jmp <3
+  |
+  |->vm_unwind_yield:
+  |  mov CRETb, LUA_YIELD
+  |  jmp ->vm_unwind_c_eh
+  |
+  |->vm_unwind_c:                       // Unwind C stack, return from vm_pcall.
+  |  // (void *cframe, int errcode)
+  |  mov CRETd, CARG2d                  // Error return status for vm_pcall.
+  |  mov rsp, CARG1
+  |->vm_unwind_c_eh:                    // Landing pad for external unwinder.
+  |  mov L:RBa, SAVE_L
+  |  setup_dispatch L:RBa
+  |  jmp ->vm_leave_unw
+  |
+  |->vm_unwind_rethrow:
+  |  mov CARG1, SAVE_L
+  |  // This part is inherited from LuaJIT source code.
+  |  // The rax is set within dwarf_cleanup subroutine with _UnwindSetGR method
+  |  // and contains exception that should be reprocessed. In instruction below
+  |  // its dword part is simply moved to dword part of rsi (register containing
+  |  // the second argument according to x64 ABI).
+  |  // TODO: is it possible to store exception with _UnwindSetGR method
+  |  // directly to rsi register?
+  |  mov CARG2d, eax
+  |  restoreregs
+  |  jmp extern uj_throw                // (lua_State *L, int errcode)
+  |
+  |->vm_unwind_ff:                      // Unwind C stack, return from ff pcall.
+  |  // (void *cframe)
+  |  and CARG1, CFRAME_RAWMASK
+  |  mov rsp, CARG1
+  |->vm_unwind_ff_eh:                   // Landing pad for external unwinder.
+  |  mov L:RBa, SAVE_L
+  |  mov RAa, -1*TVS                    // Results start at BASE+RA = BASE-8.
+  |  mov RD, 1+1                        // Really 1+2 results, incr. later.
+  |  mov BASE, L:RBa->base
+  |  setup_dispatch L:RBa
+  |  restore_PC                          // Fetch PC of previous frame.
+  |  mov dword [BASE-1*TVS+8], LJ_TFALSE // Prepend false to error message.
+  |  set_vmstate INTERP // Unwinding C stack: INTERP until jump to BC_RET* or return to C
+  |  jmp ->vm_returnc                   // Increments RD/MULTRES and returns.
+  |
+  |//-----------------------------------------------------------------------
+  |//-- Grow stack for calls -----------------------------------------------
+  |//-----------------------------------------------------------------------
+  |
+  |->vm_growstack_c:                    // Grow stack for C function.
+  |  mov CARG2d, LUA_MINSTACK
+  |  jmp >2
+  |
+  |->vm_growstack_v:                    // Grow stack for vararg Lua function.
+  |  sub RDa, 1*TVS
+  |  jmp >1
+  |
+  |->vm_growstack_f:                    // Grow stack for fixarg Lua function.
+  |  // BASE = new base, RD = nargs+1, RB = L, PC = first PC
+  |  n2tvp RDa, BASE, RDa, -1
+  |1:
+  |  movzx RA, byte [PC-4+PC2PROTO(framesize)]
+  |  inc_PC                             // Must point after first instruction.
+  |  mov L:RBa->base, BASE
+  |  mov L:RBa->top, RDa
+  |  save_PC
+  |  mov CARG2, RAa
+  |2:
+  |  // RB = L, L->base = new base, L->top = top
+  |  mov CARG1, L:RBa
+  |  call extern uj_state_stack_grow     // (lua_State *L, int n)
+  |  mov BASE, L:RBa->base
+  |  ptrdiff2nargs RDa, L:RBa->top, BASE
+  |  i2func LFUNC:RBa, BASE
+  |  // BASE = new base, RB = LFUNC, RD = nargs+1
+  |  ins_callt                          // Just retry the call.
+  |
+  |//-----------------------------------------------------------------------
+  |//-- Entry points into the assembler VM ---------------------------------
+  |//-----------------------------------------------------------------------
+  |
+  |->vm_resume:                         // Setup C frame and resume thread.
+  |  // (lua_State *L, TValue *base, int nres1 = 0, ptrdiff_t ef = 0)
+  |  saveregs
+  |  mov L:RBa, CARG1
+  |  mov SAVE_L, CARG1
+  |  mov RAa, CARG2
+  |  mov PC, FRAME_CP
+  |  xor RDa, RDa
+  |  lea KBASE, [rsp+CFRAME_RESUME]
+  |  mov L:RBa->cframe, KBASE
+  |  setup_dispatch L:RBa
+  |  save_vmstate
+  |  mov SAVE_PC, RDa                   // SAVE_PC     = 0;
+  |  mov SAVE_CFRAME, RDa               // SAVE_CFRAME = 0;
+  |  mov SAVE_NRES, RDa                 // SAVE_NRES   = 0;
+  |  mov SAVE_ERRF, RDa                 // SAVE_ERRF   = 0;
+  |  cmp byte L:RBa->status, RDL
+  |  je >2                              // Initial resume (like a call).
+  |
+  |  // Resume after yield (like a return).
+  |  set_vmstate INTERP // Coroutine about to be resumed: INTERP until jump to BC_RET* or vm_return
+  |  mov byte L:RBa->status, RDL
+#ifdef UJIT_IPROF_ENABLED
+  |  // call uj_iprof_tick if subroutine is being profiled
+  |  cmp dword L:RBa->iprof.profiling, 0
+  |  jz >1
+  |  // Saving RAa (rcx alias) due to external C call below
+  |  mov TMPa, RAa
+  |  // NB! L is already in CARG1 (see above)
+  |  mov CARG2, IPROF_RESUME
+  |  call extern uj_iprof_tick          // (lua_State *L, enum iprof_node_type type)
+  |  mov RAa, TMPa
+  |1:
+#endif
+  |  mov BASE, L:RBa->base
+  |  ptrdiff2nargs RDa, L:RBa->top, RAa
+  |  sub RAa, BASE                      // RA = resultofs
+  |  restore_PC
+  |  mov MULTRES, RD
+  |  test PC, FRAME_TYPE
+  |  jz ->BC_RET_Z
+  |  jmp ->vm_return
+  |
+  |->vm_pcall:                          // Setup protected C frame and enter VM.
+  |  // (lua_State *L, TValue *base, int nres1, ptrdiff_t ef)
+  |  saveregs
+  |  mov PC, FRAME_CP
+  |  mov SAVE_ERRF, CARG4
+  |  jmp >1
+  |
+  |->vm_call:                           // Setup C frame and enter VM.
+  |  // (lua_State *L, TValue *base, int nres1)
+  |  saveregs
+  |  mov PC, FRAME_C
+  |
+  |1:  // Entry point for vm_pcall above (PC = ftype).
+  |  mov SAVE_NRES, CARG3
+  |  mov L:RBa, CARG1
+  |  mov SAVE_L, CARG1
+  |  mov RAa, CARG2
+  |
+  |  mov KBASE, L:RBa->cframe           // Add our C frame to cframe chain.
+  |  mov SAVE_CFRAME, KBASE
+  |  mov SAVE_PC, L:RBa                 // Any value outside of bytecode is ok.
+  |  mov L:RBa->cframe, rsp
+  |
+  |  setup_dispatch L:RBa
+  |  save_vmstate
+  |
+  |2:  // Entry point for vm_resume above (RA = base, RB = L, PC = ftype).
+  |    // Entry point for vm_cpcall below (RA = base, RB = L, PC = ftype).
+  |  set_vmstate INTERP // Coroutine about to be resumed: INTERP until executing BC_IFUNC*
+  |  mov BASE, L:RBa->base              // BASE = old base (used in vmeta_call).
+  |  add PC, RAa
+  |  sub PC, BASE                       // PC = frame delta + frame type
+  |  ptrdiff2nargs RDa, L:RBa->top, RAa
+  |
+  |->vm_call_dispatch:
+  |  i2func LFUNC:RBa, RAa
+  |  cmp dword [RAa-1*TVS+8], LJ_TFUNC; jne ->vmeta_call // Ensure KBASE defined and != BASE.
+  |
+  |->vm_call_dispatch_f:
+  |  mov BASE, RAa
+  |  ins_call
+  |  // BASE = new base, RB = func, RD = nargs+1, PC = caller PC
+  |
+  |->vm_cpcall:                         // Setup protected C frame, call C.
+  |  // (lua_State *L, lua_CFunction func, void *ud, lua_CPFunction cp)
+  |  saveregs
+  |  mov L:RBa, CARG1
+  |  setup_dispatch L:RBa
+  |  save_vmstate
+  |  mov SAVE_L, CARG1
+  |  mov SAVE_PC, L:RBa                 // Any value outside of bytecode is ok.
+  |
+  |  mov KBASE, L:RBa->stack            // Compute -uj_state_stack_save(L, L->top).
+  |  sub KBASE, L:RBa->top
+  |  mov SAVE_ERRF, 0                   // No error function.
+  |  mov SAVE_NRES, KBASE               // Neg. delta means cframe w/o frame.
+  |  // Handler may change uj_cframe_nres(L->cframe) or uj_cframe_errfunc(L->cframe).
+  |
+  |  mov KBASE, L:RBa->cframe           // Add our C frame to cframe chain.
+  |  mov SAVE_CFRAME, KBASE
+  |  mov L:RBa->cframe, rsp
+  |
+  |  call CARG4                 // (lua_State *L, lua_CFunction func, void *ud)
+  |  // TValue * (new base) or NULL returned in CRET.
+  |  test CRET, CRET
+  |  jz ->vm_leave_cp                   // No base? Just remove C frame.
+  |  mov RAa, RCa
+  |  mov PC, FRAME_CP
+  |  setup_dispatch L:RBa
+  |  jmp <2                             // Else continue with the call.
+  |
+  |//-----------------------------------------------------------------------
+  |//-- Metamethod handling ------------------------------------------------
+  |//-----------------------------------------------------------------------
+  |
+  |//-- Continuation dispatch ----------------------------------------------
+  |
+  |->cont_dispatch:
+  |  // BASE = meta base, RA = resultofs, RD = nresults+1 (also in MULTRES)
+  |  add RAa, BASE
+  |  ftsz2offs PC
+  |  mov RBa, BASE
+  |  sub BASE, PC                               // Restore caller BASE.
+  |  setnil RAa, RDa, -1                        // Ensure one valid arg.
+  |  mov RCa, RAa                               // ... in [RC]
+  |  mov PC, qword [RBa-2*TVS+8]                // Restore PC from [cont|PC].
+  |  movsxd RAa, dword [RBa-2*TVS]              // May be negative on WIN64 with debug.
+  |  setnil RBa, -2                             // ... and set slot to nil
+  |.if FFI
+  |  cmp RAa, 1
+  |  jbe >1
+  |.endif
+  |  lea KBASE, qword [=>0]
+  |  add RAa, KBASE
+  |  setup_kbase BASE
+  |  // BASE = base, RC = result, RB = meta base
+  |  set_vmstate_lfunc
+  |  jmp RAa                            // Jump to continuation.
+  |
+  |.if FFI
+  |1:
+  |  je ->cont_ffi_callback             // cont = 1: return from FFI callback.
+  |  // cont = 0: Tail call from C function.
+  |  sub RBa, BASE
+  |  shr RBa, TVB
+  |  lea RDa, [RBa-1]
+  |  jmp ->vm_call_tail
+  |.endif
+  |
+  |// Continue with concatenation after two topmost non-string operands
+  |// were concatenated via __cat metamethod. See uj_meta_cat in uj_meta.c
+  |->cont_cat:                  // BASE = base, RC = result, RB = mbase
+  |  movzx XCHGd, PC_RB
+  |  i2tvp CARG2, BASE, XCHG
+  |  mov CARG3, RBa
+  |  sub CARG3, 2*TVS
+  |  cmp CARG2, CARG3
+  |  je ->cont_ra
+  |  movtv CARG3, RCa
+  |  jmp ->BC_CAT_Z
+  |
+  |//-- Table indexing metamethods -----------------------------------------
+  |
+  |->vmeta_tgets:
+  |  mov TMPTV, STR:RCa                 // RC = GCstr *
+  |  mov TMPTV_TAG, LJ_TSTR
+  |  lea RCa, TMPTV                     // Store temp. TValue in TMPTV.
+  |  cmp PC_OP, BC_GGET
+  |  jne >1
+  |  lea RAa, [DISPATCH+DISPATCH_GL(tmptv)]  // Store fn->l.env in g->tmptv.
+  |  gco2s TAB:RBa, LJ_TTAB, RAa, 0
+  |  mov RBa, RAa
+  |  jmp >2
+  |
+  |->vmeta_tgetb:
+  |  restore_RC
+  |  cvtsi2sd xmm0, RC
+  |  movsd TMPTV, xmm0
+  |  mov TMPTV_TAG, LJ_TNUMX
+  |  lea RCa, TMPTV                     // Store temp. TValue in TMPTV.
+  |  jmp >1
+  |
+  |->vmeta_tgetv:
+  |  restore_RC
+  |  i2tvp RCa, BASE, RCa
+  |1:
+  |  restore_RB
+  |  i2tvp RBa, BASE, RBa
+  |2:
+  |  mov L:CARG1, SAVE_L
+  |  mov L:CARG1->base, BASE
+  |  mov CARG2, RBa
+  |  mov CARG3, RCa                     // May be 64 bit ptr to stack.
+  |  mov L:RBa, L:CARG1
+  |  save_PC
+  |  call extern uj_meta_tget           // (lua_State *L, const TValue *tv, const TValue *k)
+  |  // TValue * (finished) or NULL (metamethod) returned in CRET.
+  |  mov BASE, L:RBa->base
+  |  test CRET, CRET
+  |  jz >3
+  |->cont_ra:                           // BASE = base, CRET = result
+  |  restore_RA
+  |  i2tvp AUX1, BASE, RAa
+  |  movtv AUX1, CRET
+  |  ins_next
+  |
+  |3:  // Call __index metamethod.
+  |  // BASE = base, L->top = new base, stack = cont/func/t/k
+  |  mov RAa, L:RBa->top
+  |  mov qword [RAa-2*TVS+8], PC                        // [cont|PC]
+  |  lea PC, [RAa+FRAME_CONT]
+  |  sub PC, BASE
+  |  i2func LFUNC:RBa, RAa              // Guaranteed to be a function here.
+  |  mov NARGS:RD, 2+1                  // 2 args for func(t, k).
+  |  jmp ->vm_call_dispatch_f
+  |
+  |//-----------------------------------------------------------------------
+  |
+  |->vmeta_tsets:
+  |  mov TMPTV, STR:RCa                 // RC = GCstr *
+  |  mov TMPTV_TAG, LJ_TSTR
+  |  lea RCa, TMPTV                     // Store temp. TValue in TMPTV.
+  |  cmp PC_OP, BC_GSET
+  |  jne >1
+  |  lea RAa, [DISPATCH+DISPATCH_GL(tmptv)]  // Store fn->l.env in g->tmptv.
+  |  gco2s TAB:RBa, LJ_TTAB, RAa, 0
+  |  mov RBa, RAa
+  |  jmp >2
+  |
+  |->vmeta_tsetb:
+  |  restore_RC
+  |  cvtsi2sd xmm0, RC
+  |  movsd TMPTV, xmm0
+  |  mov TMPTV_TAG, LJ_TNUMX
+  |  lea RCa, TMPTV                     // Store temp. TValue in TMPTV.
+  |  jmp >1
+  |
+  |->vmeta_tsetv:
+  |  restore_RC
+  |  i2tvp RCa, BASE, RCa // RC := TValue*
+  |1:
+  |  restore_RB
+  |  i2tvp RBa, BASE, RBa // RB := TValue*
+  |2:
+  |  mov L:CARG1, SAVE_L
+  |  mov L:CARG1->base, BASE
+  |  mov CARG2, RBa
+  |  mov CARG3, RCa                     // May be 64 bit ptr to stack.
+  |  mov L:RBa, L:CARG1
+  |  save_PC
+  |  call extern uj_meta_tset           // (lua_State *L, const TValue *tv, const TValue *k)
+  |  // TValue * (finished) or NULL (metamethod) returned in CRET.
+  |  mov BASE, L:RBa->base
+  |  test CRET, CRET
+  |  jz >3
+  |  // NOBARRIER: uj_meta_tset ensures the table is not black.
+  |  restore_RA
+  |  i2tvp RAa, BASE, RAa
+  |  movtv CRET, RAa
+  |->cont_nop:                          // BASE = base, (CRET = result)
+  |  ins_next
+  |
+  |3:  // Call __newindex metamethod.
+  |  // BASE = base, L->top = new base, stack = cont/func/t/k/(v)
+  |  mov RAa, L:RBa->top
+  |  mov qword [RAa-2*TVS+8], PC                // [cont|PC]
+  |  movzx RC, PC_RA
+  |  // Copy value to third argument.
+  |  i2tvp RCa, BASE, RCa
+  |  movtv RAa+2*TVS, RCa
+  |  lea PC, [RAa+FRAME_CONT]
+  |  sub PC, BASE
+  |  i2func LFUNC:RBa, RAa              // Guaranteed to be a function here.
+  |  mov NARGS:RD, 3+1                  // 3 args for func(t, k, v).
+  |  jmp ->vm_call_dispatch_f
+  |
+  |//-- Comparison metamethods ---------------------------------------------
+  |
+  |// Generic fallback for ISLT/ISGE/ISLE/ISGT for the case when one or both
+  |// operands are not numbers
+  |->vmeta_comp:
+  |  mov L:RBa, SAVE_L
+  |  mov L:RBa->base, BASE
+  |  i2tvp CARG2, BASE, RAa // CARG2 := TValue*
+  |  i2tvp CARG3, BASE, RDa // CARG3 := TValue*
+  |  mov CARG1, L:RBa                   // Caveat: CARG4 overlaps RA.
+  |  movzx CARG4, PC_OP
+  |  save_PC
+  |  call extern uj_meta_comp   // (lua_State *L, const TValue *tv1, const TValue *tv2, int op)
+  |  // 0/1 or TValue * (metamethod) returned in CRET.
+  |3:
+  |  mov BASE, L:RBa->base
+  |  cmp CRET, 1
+  |  ja ->vmeta_binop
+  |4:
+  |  inc_PC
+  |  jb >6
+  |5:
+  |  restore_RD
+  |  branchPC RDa
+  |6:
+  |  ins_next
+  |
+  |->cont_condt:                        // BASE = base, RC = result
+  |  inc_PC
+  |  cmp dword [RCa+8], LJ_TISTRUECOND  // Branch if result is true.
+  |  jb <5
+  |  jmp <6
+  |
+  |->cont_condf:                        // BASE = base, RC = result
+  |  cmp dword [RCa+8], LJ_TISTRUECOND  // Branch if result is false.
+  |  jmp <4
+  |
+  |->vmeta_equal:
+  |  sub PC, 4
+  |  mov CARG2, RAa
+  |  mov CARG4, RBa                     // Caveat: CARG4 overlaps RA.
+  |  mov L:RBa, SAVE_L
+  |  mov L:RBa->base, BASE
+  |  mov CARG3, RDa
+  |  mov CARG1, L:RBa
+  |  save_PC
+  |  call extern uj_meta_equal  // (lua_State *L, GCobj *o1, GCobj *o2, int ne)
+  |  // 0/1 or TValue * (metamethod) returned in CRET.
+  |  jmp <3
+  |
+  |->vmeta_equal_cd:
+  |.if FFI
+  |  sub PC, 4
+  |  mov L:RBa, SAVE_L
+  |  mov L:RBa->base, BASE
+  |  mov CARG1, L:RBa
+  |  mov CARG2d, dword [PC-4]
+  |  save_PC
+  |  call extern uj_meta_equal_cd       // (lua_State *L, BCIns ins)
+  |  // 0/1 or TValue * (metamethod) returned in CRET.
+  |  jmp <3
+  |.endif
+  |
+  |//-- Arithmetic metamethods ---------------------------------------------
+  |
+  |->vmeta_unm:
+  |  i2tvp RCa, BASE, RDa
+  |  mov RBa, RCa          // TValue *RBa = RCa;
+  |  jmp >1
+  |
+  |->vmeta_arith_vv:
+  |  i2tvp RCa, BASE, RCa
+  |  i2tvp RBa, BASE, RBa
+  |1:
+  |  i2tvp RAa, BASE, RAa
+  |  movzx CARG5, PC_OP
+  |  mov CARG2, RAa
+  |  mov CARG4, RCa                     // Caveat: CARG4 overlaps RA.
+  |  mov L:CARG1, SAVE_L
+  |  mov L:CARG1->base, BASE
+  |  mov CARG3, RBa
+  |  mov L:RBa, L:CARG1
+  |  save_PC
+  |  call extern uj_meta_arith  // (lua_State *L, TValue *ra, const TValue *rb, const TValue *rc, BCReg op)
+  |  // NULL (finished) or TValue * (metamethod) returned in CRET.
+  |  mov BASE, L:RBa->base
+  |  test CRET, CRET
+  |  jz ->cont_nop
+  |
+  |  // Call metamethod for binary op.
+  |->vmeta_binop:
+  |  // BASE = base, RC = new base, stack = cont/func/o1/o2
+  |  mov RAa, RCa
+  |  sub RCa, BASE
+  |  mov qword [RAa-2*TVS+8], PC                        // [cont|PC]
+  |  lea PC, [RCa+FRAME_CONT]
+  |  mov NARGS:RD, 2+1                  // 2 args for func(o1, o2).
+  |  jmp ->vm_call_dispatch
+  |
+  |->vmeta_len:
+  |  mov L:RBa, SAVE_L
+  |  mov L:RBa->base, BASE
+  |  i2tvp CARG2, BASE, RDa
+  |  mov L:CARG1, L:RBa
+  |  save_PC
+  |  call extern uj_meta_len            // (lua_State *L, const TValue *tv)
+  |  // NULL (retry) or TValue * (metamethod) returned in CRET.
+  |  mov BASE, L:RBa->base
+#if LJ_52
+  |  test CRET, CRET
+  |  jne ->vmeta_binop                  // Binop call for compatibility.
+  |  restore_RD
+  |  i2gcr CARG1, BASE, RDa
+  |  jmp ->BC_LEN_Z
+#else
+  |  jmp ->vmeta_binop                  // Binop call for compatibility.
+#endif
+  |
+  |//-- Call metamethod ----------------------------------------------------
+  |
+  |->vmeta_call_ra:
+  |  i2tvp RAa, BASE, RAa, 1
+  |->vmeta_call:                        // Resolve and call __call metamethod.
+  |  // BASE = old base, RA = new base, RC = nargs+1, PC = return
+  |  mov TMPa, RAa              // Save RA, RC for us.
+  |  mov TMP1, NARGS:RD
+  |  sub RAa, 1*TVS
+  |  mov L:RBa, SAVE_L
+  |  mov L:RBa->base, BASE
+  |  mov CARG2, RAa
+  |  n2tvp CARG3, RAa, RDa     // TValue *CARG3 := (TValue*)(RAa + RD);
+  |  mov CARG1, L:RBa
+  |  save_PC
+  |  call extern uj_meta_call   // (lua_State *L, TValue *func, TValue *top)
+  |  mov BASE, L:RBa->base
+  |  mov RAa, TMPa
+  |  mov NARGS:RD, TMP1
+  |  i2func LFUNC:RBa, RAa
+  |  add NARGS:RD, 1
+  |  // This is fragile. L->base must not move, KBASE must always be defined.
+  |  cmp KBASE, BASE                    // Continue with CALLT if flag set.
+  |  je ->BC_CALLT_Z
+  |  mov BASE, RAa
+  |  ins_call                           // Otherwise call resolved metamethod.
+  |
+  |//-- Argument coercion for 'for' statement ------------------------------
+  |
+  |->vmeta_for:
+  |  mov L:RBa, SAVE_L
+  |  mov L:RBa->base, BASE
+  |  mov CARG2, RAa
+  |  mov L:CARG1, L:RBa
+  |  save_PC
+  |  call extern uj_meta_for    // (lua_State *L, TValue *base)
+  |  mov BASE, L:RBa->base
+  |  mov RC, dword [PC-4]
+  |  movzx RA, RCH
+  |  movzx OP, RCL
+  |  shr RC, 16
+  |  redispatch_static OP
+  |
+  |//-----------------------------------------------------------------------
+  |//-- Fast functions -----------------------------------------------------
+  |//-----------------------------------------------------------------------
+  |//
+  |// NB! Fast functions do not honor their frame link, i.e. slot located
+  |// at [BASE - 1]. It means that they dispose their interrim values (if any)
+  |// and return values starting right at [BASE - 1]. This must be taken into
+  |// account when performing async tasks, e.g. profiling.
+  |//
+  |.macro .ffunc, name
+  |->ff_ .. name:
+  |  set_vmstate_ffunc
+  |.endmacro
+  |
+  |.macro .ffunc_1, name
+  |  .ffunc name
+  |  cmp NARGS:RD, 1+1;  jb ->fff_fallback
+  |.endmacro
+  |
+  |.macro .ffunc_2, name
+  |  .ffunc name
+  |  cmp NARGS:RD, 2+1;  jb ->fff_fallback
+  |.endmacro
+  |
+  |.macro .ffunc_n, name
+  |  .ffunc_1 name
+  |  cmp dword [BASE+8], LJ_TNUMX; jne ->fff_fallback
+  |  fld qword [BASE]
+  |.endmacro
+  |
+  |.macro .ffunc_n, name, op
+  |  .ffunc_1 name
+  |  cmp dword [BASE+8], LJ_TNUMX; jne ->fff_fallback
+  |  op
+  |  fld qword [BASE]
+  |.endmacro
+  |
+  |.macro .ffunc_nsse, name, op
+  |  .ffunc_1 name
+  |  cmp dword [BASE+8], LJ_TNUMX; jne ->fff_fallback
+  |  op xmm0, qword [BASE]
+  |.endmacro
+  |
+  |.macro .ffunc_nsse, name
+  |  .ffunc_nsse name, movsd
+  |.endmacro
+  |
+  |.macro .ffunc_nn, name
+  |  .ffunc_2 name
+  |  cmp dword [BASE+0*TVS+8], LJ_TNUMX; jne ->fff_fallback
+  |  cmp dword [BASE+1*TVS+8], LJ_TNUMX; jne ->fff_fallback
+  |  fld qword [BASE]
+  |  fld qword [BASE+1*TVS]
+  |.endmacro
+  |
+  |.macro .ffunc_nnsse, name
+  |  .ffunc_2 name
+  |  cmp dword [BASE+0*TVS+8], LJ_TNUMX; jne ->fff_fallback
+  |  cmp dword [BASE+1*TVS+8], LJ_TNUMX; jne ->fff_fallback
+  |  movsd xmm0, qword [BASE]
+  |  movsd xmm1, qword [BASE+1*TVS]
+  |.endmacro
+  |
+  |.macro .ffunc_nnr, name
+  |  .ffunc_2 name
+  |  cmp dword [BASE+0*TVS+8], LJ_TNUMX; jne ->fff_fallback
+  |  cmp dword [BASE+1*TVS+8], LJ_TNUMX; jne ->fff_fallback
+  |  fld qword [BASE+1*TVS]
+  |  fld qword [BASE]
+  |.endmacro
+  |
+  |// Inlined GC threshold check. Caveat: uses label 1.
+  |.macro ffgccheck
+  |  mov RBa, qword [DISPATCH+DISPATCH_GL(mem.metrics.total)]
+  |  cmp RBa, qword [DISPATCH+DISPATCH_GL(gc.threshold)]
+  |  jb >1
+  |  call ->fff_gcstep
+  |1:
+  |.endmacro
+  |
+  |//-- Base library: checks -----------------------------------------------
+  |
+  |.ffunc_1 assert
+  |  mov RB, dword [BASE+8]
+  |  cmp RB, LJ_TISTRUECOND;  jae ->fff_fallback
+  |  restore_PC
+  |  mov MULTRES, RD
+  |  movtv BASE-1*TVS, BASE
+  |  sub RD, 2
+  |  jz >2
+  |  mov RAa, BASE
+  |1:
+  |  add RAa, 1*TVS
+  |  movtv RAa-1*TVS, RAa
+  |  sub RD, 1
+  |  jnz <1
+  |2:
+  |  mov RD, MULTRES
+  |  jmp ->fff_res_
+  |
+  |.ffunc_1 type
+  |  mov RC, dword [BASE+8]
+  |  not RC
+  |  i2func CFUNC:RBa, BASE
+  |  shl RC, TVB
+  |  mov STR:RCa, qword [CFUNC:RB+RC+((char *)(&((GCfuncC *)0)->upvalue))]
+  |  restore_PC
+  |  gco2s STR:RCa, LJ_TSTR, BASE, -1
+  |  jmp ->fff_res1
+  |
+  |//-- Base library: getters and setters ---------------------------------
+  |
+  |.ffunc_1 getmetatable
+  |  mov RB, dword [BASE+8]
+  |  restore_PC
+  |  cmp RB, LJ_TTAB;  jne >3
+  |1:  // Field metatable must be at same offset for GCtab and GCudata!
+  |  mov TAB:RBa, qword [BASE]
+  |  mov TAB:RBa, TAB:RBa->metatable
+  |2:
+  |  setnil BASE, -1
+  |  test TAB:RBa, TAB:RBa
+  |  jz ->fff_res1
+  |  mov STR:RCa, qword [DISPATCH+DISPATCH_GL(gcroot)+8*(GCROOT_MMNAME+MM_metatable)]
+  |  gco2s TAB:RBa, LJ_TTAB, BASE, -1  // Store metatable as default result.
+  |  tbl_find_key RBa, RCa, ->fff_res1, ->fff_res1
+  |  movtv BASE-1*TVS, AUX1
+  |  jmp ->fff_res1
+  |3:
+  |  cmp RB, LJ_TUDATA; je <1
+  |  not RB
+  |  mov TAB:RBa, qword [DISPATCH+RB*8+DISPATCH_GL(gcroot[GCROOT_BASEMT])]
+  |  jmp <2
+  |
+  |.ffunc_2 setmetatable
+  |  cmp dword [BASE+0*TVS+8], LJ_TTAB; jne ->fff_fallback
+  |  // Fast path: no mt for table yet and not clearing the mt.
+  |  mov TAB:RBa, qword [BASE+0*TVS]
+  |  checkimmutable_ff RBa
+  |  cmp qword TAB:RBa->metatable, 0;  jne ->fff_fallback
+  |  cmp dword [BASE+1*TVS+8], LJ_TTAB; jne ->fff_fallback
+  |  mov TAB:RCa, qword [BASE+1*TVS]
+  |  mov TAB:RBa->metatable, TAB:RCa
+  |  restore_PC
+  |  gco2s TAB:RBa, LJ_TTAB, BASE, -1       // Return original table.
+  |  test byte TAB:RBa->marked, LJ_GC_BLACK // isblack(table)
+  |  jz >1
+  |  // Possible write barrier. Table is black, but skip iswhite(mt) check.
+  |  barrierback TAB:RBa
+  |1:
+  |  jmp ->fff_res1
+  |
+  |.ffunc_2 rawget
+  |  cmp dword [BASE+8], LJ_TTAB; jne ->fff_fallback
+  |  mov RBa, BASE                      // Save BASE.
+  |  mov TAB:CARG2, qword [BASE+0*TVS]
+  |  lea CARG3, qword [BASE+1*TVS]
+  |  mov CARG1, SAVE_L
+  |  call extern lj_tab_get     // (lua_State *L, GCtab *t, const TValue *key)
+  |  // const TValue * returned in CRET.
+  |  mov BASE, RBa                      // Restore BASE.
+  |  // Copy table slot.
+  |  restore_PC
+  |  movtv BASE-1*TVS, CRET
+  |  jmp ->fff_res1
+  |
+  |//-- Base library: conversions ------------------------------------------
+  |
+  |.ffunc tonumber
+  |  // Only handles the number case inline (without a base argument).
+  |  cmp NARGS:RD, 1+1;  jne ->fff_fallback     // Exactly one argument.
+  |  cmp dword [BASE+8], LJ_TNUMX; jne ->fff_fallback
+  |  movsd xmm0, qword [BASE]; jmp ->fff_resxmm0
+  |
+  |.ffunc_1 tostring
+  |  // Only handles the string or number case inline.
+  |  restore_PC
+  |  cmp dword [BASE+8], LJ_TSTR; jne >3
+  |  // A __tostring method in the string base metatable is ignored.
+  |  mov STR:CRET, qword [BASE]
+  |2:
+  |  gco2s STR:CRET, LJ_TSTR, BASE, -1
+  |  jmp ->fff_res1
+  |3:  // Handle numbers inline, unless a number base metatable is present.
+  |  cmp dword [BASE+8], LJ_TNUMX; jne ->fff_fallback
+  |  cmp dword [DISPATCH+DISPATCH_GL(gcroot[GCROOT_BASEMT_NUM])], 0
+  |  jne ->fff_fallback
+  |  ffgccheck                          // Caveat: uses label 1.
+  |  mov L:RBa, SAVE_L
+  |  mov L:RBa->base, BASE              // Add frame since C call can throw.
+  |  save_PC                    // Redundant (but a defined value).
+  |  movsd CARG1f, qword [BASE]
+  |  mov L:CARG1, L:RBa
+  |  call extern uj_str_fromnumber      // (lua_State *L, lua_Number n)
+  |  // GCstr returned in CRET.
+  |  mov BASE, L:RBa->base
+  |  jmp <2
+  |
+  |//-- Base library: iterators -------------------------------------------
+  |
+  |.ffunc_1 next
+  |  je >2                              // Missing 2nd arg?
+  |1:
+  |  cmp dword [BASE+8], LJ_TTAB; jne ->fff_fallback
+  |  mov L:RBa, SAVE_L
+  |  mov L:RBa->base, BASE              // Add frame since C call can throw.
+  |  mov L:RBa->top, BASE               // Dummy frame length is ok.
+  |  restore_PC
+  |  mov TAB:CARG2, qword [BASE+0*TVS]
+  |  lea CARG3, qword [BASE+1*TVS]
+  |  mov CARG1, L:RBa
+  |  save_PC                    // Needed for ITERN fallback.
+  |  call extern lj_tab_next    // (lua_State *L, GCtab *t, TValue *key)
+  |  // Flag returned in eax (CRETd).
+  |  mov BASE, L:RBa->base
+  |  test CRETd, CRETd;  jz >3                // End of traversal?
+  |  // Copy key and value to results.
+  |  movtv BASE-1*TVS, BASE+1*TVS
+  |  movtv BASE, BASE+2*TVS
+  |->fff_res2:
+  |  mov RD, 1+2
+  |  jmp ->fff_res
+  |2:  // Set missing 2nd arg to nil.
+  |  setnil BASE, 1
+  |  jmp <1
+  |3:  // End of traversal: return nil.
+  |  setnil BASE, -1
+  |  jmp ->fff_res1
+  |
+  |.ffunc_1 pairs
+  |  mov TAB:RBa, qword [BASE+0*TVS]
+  |  cmp dword [BASE+8], LJ_TTAB; jne ->fff_fallback
+#if LJ_52
+  |  cmp qword TAB:RBa->metatable, 0; jne ->fff_fallback
+#endif
+  |  i2func CFUNC:RBa, BASE
+  |  mov CFUNC:RDa, CFUNC:RBa->upvalue[0]
+  |  restore_PC
+  |  gco2s CFUNC:RDa, LJ_TFUNC, BASE, -1
+  |  setnil BASE, 1
+  |  mov RD, 1+3
+  |  jmp ->fff_res
+  |
+  |.ffunc_2 ipairs_aux
+  |  cmp dword [BASE+0*TVS+8], LJ_TTAB ; jne ->fff_fallback
+  |  cmp dword [BASE+1*TVS+8], LJ_TNUMX; jne ->fff_fallback
+  |  restore_PC
+  |  movsd xmm0, qword [BASE+1*TVS]
+  |  sseconst_1 xmm1
+  |  addsd xmm0, xmm1
+  |  cvtsd2si RD, xmm0
+  |  num2s xmm0, BASE, -1
+  |  mov TAB:RBa, qword [BASE+0*TVS]
+  |  cmp RDa, TAB:RBa->asize;  jae >2   // Not in array part?
+  |  shl RDa, TVB
+  |  add RDa, TAB:RBa->array
+  |1:
+  |  cmp dword [RDa+8], LJ_TNIL;  je ->fff_res0
+  |  // Copy array slot.
+  |  movtv BASE, RDa
+  |  jmp ->fff_res2
+  |2:  // Check for empty hash part first. Otherwise call C function.
+  |  cmp qword TAB:RBa->hmask, 0; je ->fff_res0
+  |  mov CARG1, TAB:RBa
+  |  mov RBa, BASE                      // Save BASE.
+  |  mov CARG2d, RD
+  |  call extern lj_tab_getinth         // (GCtab *t, int32_t key)
+  |  // const TValue * or NULL returned in CRET.
+  |  mov BASE, RBa
+  |  test CRET, CRET
+  |  jnz <1
+  |->fff_res0:
+  |  mov RD, 1+0
+  |  jmp ->fff_res
+  |
+  |.ffunc_1 ipairs
+  |  mov TAB:RBa, qword [BASE]
+  |  cmp dword [BASE+8], LJ_TTAB; jne ->fff_fallback
+#if LJ_52
+  |  cmp qword TAB:RBa->metatable, 0; jne ->fff_fallback
+#endif
+  |  i2func CFUNC:RBa, BASE
+  |  mov CFUNC:RDa, CFUNC:RBa->upvalue[0]
+  |  restore_PC
+  |  gco2s CFUNC:RDa, LJ_TFUNC, BASE, -1
+  |  xorps xmm0, xmm0
+  |  num2s xmm0, BASE, 1
+  |  mov RD, 1+3
+  |  jmp ->fff_res
+  |
+  |//-- Base library: catch errors ----------------------------------------
+  |
+  |.ffunc_1 pcall
+  |  lea RAa, qword [BASE+1*TVS]
+  |  sub NARGS:RD, 1
+  |  mov PC, TVS+FRAME_PCALL
+  |1:
+  |  movzx RB, byte [DISPATCH+DISPATCH_GL(hookmask)]
+  |  shr RB, HOOK_ACTIVE_SHIFT
+  |  and RB, 1
+  |  add PC, RBa                                // Remember active hook before pcall.
+  |  jmp ->vm_call_dispatch
+  |
+  |.ffunc_2 xpcall
+  |  cmp dword [BASE+1*TVS+8], LJ_TFUNC; jne ->fff_fallback
+  |
+  |  // Swap function and traceback.
+  |  lea AUX1, qword [DISPATCH+DISPATCH_GL(tmptv)]
+  |  movtv AUX1, BASE+1*TVS
+  |  movtv BASE+1*TVS, BASE
+  |  movtv BASE, AUX1
+  |  lea RAa, qword [BASE+2*TVS]
+  |  sub NARGS:RD, 2
+  |  mov PC, 2*TVS+FRAME_PCALL
+  |  jmp <1
+  |
+  |//-- Coroutine library --------------------------------------------------
+  |
+  |.macro coroutine_resume_wrap, resume
+  |.if resume
+  |.ffunc_1 coroutine_resume
+  |  mov L:RBa, qword [BASE]
+  |.else
+  |.ffunc coroutine_wrap_aux
+  |  i2func CFUNC:RBa, BASE
+  |  mov L:RBa, CFUNC:RBa->upvalue[0].gcr
+  |.endif
+  |  restore_PC
+  |  save_PC
+  |  mov TMPa, L:RBa
+  |.if resume
+  |  cmp dword [BASE+8], LJ_TTHREAD; jne ->fff_fallback
+  |.endif
+  |  cmp qword L:RBa->timeout.usec, 0; ja ->fff_fallback
+  |  cmp qword L:RBa->cframe, 0; jne ->fff_fallback
+  |  cmp byte L:RBa->status, LUA_YIELD;  ja ->fff_fallback
+  |  mov RAa, L:RBa->top
+  |  je >1                              // Status != LUA_YIELD (i.e. 0)?
+  |  cmp RAa, L:RBa->base               // Check for presence of initial func.
+  |  je ->fff_fallback
+  |1:
+  |.if resume
+  |  n2tvp_r PC, RAa, RDa, -2  // TValue *PC = (TValue*)(RAa + (RD-2));
+  |                            // Check stack space (-1-thread).
+  |.else
+  |  n2tvp_r PC, RAa, RDa, -1  // TValue *PC = (TValue*)(RAa + (RD-1));
+  |                            // Check stack space (-1).
+  |.endif
+  |  cmp PC, L:RBa->maxstack; ja ->fff_fallback
+  |  mov L:RBa->top, PC
+  |
+  |  mov L:RBa, SAVE_L
+  |  mov L:RBa->base, BASE
+  |.if resume
+  |  add BASE, 1*TVS                    // Keep resumed thread in stack for GC.
+  |.endif
+  |  mov L:RBa->top, BASE
+  |.if resume
+  |  n2tvp_r RBa, BASE, RDa, -3 // RBa = end of source for stack move.
+  |.else
+  |  n2tvp_r RBa, BASE, RDa, -2 // RBa = end of source for stack move.
+  |.endif
+  |  sub RBa, PC                        // Relative to PC.
+  |
+  |  cmp PC, RAa
+  |  je >3
+  |2:  // Move args to coroutine.
+  |  movtv PC-1*TVS, PC+RBa
+  |  sub PC, 1*TVS
+  |  cmp PC, RAa
+  |  jne <2
+  |3:
+  |  mov CARG2, RAa
+  |  mov CARG1, TMPa
+  |  call ->vm_resume                   // (lua_State *L, TValue *base, 0, 0)
+  |  set_vmstate INTERP // coroutine.{resume,wrap}: Resumed coroutine returned, INTERP until jump to BC_RET* or vm_return
+  |
+  |  mov L:RBa, SAVE_L
+  |  mov L:PC, TMPa
+  |  mov BASE, L:RBa->base
+  |  cmp CRETd, LUA_YIELD
+  |  ja >8
+  |4:
+  |  mov RAa, L:PC->base
+  |  mov KBASE, L:PC->top
+  |  mov L:PC->top, RAa                 // Clear coroutine stack.
+  |  mov PC, KBASE
+  |  sub PC, RAa
+  |  je >6                              // No results?
+  |  lea RDa, [BASE+PC]
+  |  shr PC, TVB
+  |  cmp RDa, L:RBa->maxstack
+  |  ja >9                              // Need to grow stack?
+  |
+  |  mov RBa, BASE
+  |  sub RBa, RAa
+  |5:  // Move results from coroutine.
+  |  movtv RAa+RBa, RAa
+  |  add RAa, 1*TVS
+  |  cmp RAa, KBASE
+  |  jne <5
+  |6:
+  |.if resume
+  |  lea RDa, [PC+2]                    // nresults+1 = 1 + true + results.
+  |  mov dword [BASE-1*TVS+8], LJ_TTRUE // Prepend true to results.
+  |.else
+  |  lea RDa, [PC+1]                    // nresults+1 = 1 + results.
+  |.endif
+  |7:
+  |  mov PC, SAVE_PC
+  |  mov MULTRES, RD
+  |.if resume
+  |  mov RAa, -TVS
+  |.else
+  |  xor RAa, RAa
+  |.endif
+  |  test PC, FRAME_TYPE
+  |  jz ->BC_RET_Z
+  |  jmp ->vm_return
+  |
+  |8:  // Coroutine returned with error (at co->top-1).
+  |.if resume
+  |  mov dword [BASE-1*TVS+8], LJ_TFALSE
+  |  mov RAa, L:PC->top
+  |  sub RAa, 1*TVS
+  |  mov L:PC->top, RAa                 // Clear error from coroutine stack.
+  |  // Copy error message.
+  |  movtv BASE, RAa
+  |  mov RD, 1+2                        // nresults+1 = 1 + false + error.
+  |  jmp <7
+  |.else
+  |  mov CARG2, L:PC
+  |  mov CARG1, L:RBa
+  |  call extern lj_ffh_coroutine_wrap_err    // (lua_State *L, lua_State *co)
+  |  // Error function does not return.
+  |.endif
+  |
+  |9:  // Handle stack expansion on return from yield.
+  |  mov L:RAa, TMPa
+  |  mov L:RAa->top, KBASE      // Undo coroutine stack clearing.
+  |  mov CARG2, PC
+  |  mov CARG1, L:RBa
+  |  call extern uj_state_stack_grow     // (lua_State *L, int n)
+  |  mov L:PC, TMPa
+  |  mov BASE, L:RBa->base
+  |  jmp <4                             // Retry the stack move.
+  |.endmacro
+  |
+  |  coroutine_resume_wrap 1            // coroutine.resume
+  |  coroutine_resume_wrap 0            // coroutine.wrap
+  |
+  |.ffunc coroutine_yield
+  |  checktimeout // coroutine.yield
+  |  mov L:RBa, SAVE_L
+  |  test qword L:RBa->cframe, CFRAME_RESUME
+  |  jz ->fff_fallback
+  |  mov L:RBa->base, BASE
+  |  n2tvp RDa, BASE, RDa, -1
+  |  mov L:RBa->top, RDa
+  |  mov qword L:RBa->cframe, 0
+#ifdef UJIT_IPROF_ENABLED
+  |  // call uj_iprof_tick if subroutine is being profiled
+  |  cmp dword L:RBa->iprof.profiling, 0
+  |  jz >1
+  |  mov CARG1, L:RBa
+  |  mov CARG2, IPROF_YIELD
+  |  call extern uj_iprof_tick          // (lua_State *L, enum iprof_node_type type)
+  |1:
+#endif
+  |  xor CRET, CRET
+  |  mov CRETb, LUA_YIELD
+  |  mov byte L:RBa->status, CRETb
+  |  jmp ->vm_leave_unw
+  |
+  |//-- Math library -------------------------------------------------------
+  |
+  |->fff_resi:  // Dummy.
+  |
+  |->fff_resn:
+  |  restore_PC
+  |  fstp qword [BASE-1*TVS]
+  |  mov dword [BASE-1*TVS+8], LJ_TNUMX
+  |  jmp ->fff_res1
+  |
+  |  .ffunc_1 math_abs
+  |  cmp dword [BASE+8], LJ_TNUMX; jne ->fff_fallback
+  |
+  |  movsd xmm0, qword [BASE]
+  |  sseconst_abs xmm1
+  |  andps xmm0, xmm1
+  |->fff_resxmm0:
+  |  restore_PC
+  |  num2s xmm0, BASE, -1
+  |  // fallthrough
+  |
+  |->fff_res1:
+  |  mov RD, 1+1
+  |->fff_res:
+  |  mov MULTRES, RD
+  |->fff_res_:
+  |  test PC, FRAME_TYPE
+  |  jnz >7
+  |5:
+  |  cmp PC_RB, RDL                     // More results expected?
+  |  ja >6
+  |  // Adjust BASE. KBASE is assumed to be set for the calling frame.
+  |  restore_base BASE
+  |  set_vmstate_lfunc
+  |  ins_next
+  |
+  |6:  // Fill up results with nil.
+  |  setnil BASE, RDa, -2
+  |  add RD, 1
+  |  jmp <5
+  |
+  |7:  // Non-standard return case.
+  |  mov RAa, -TVS                      // Results start at BASE+RA = BASE-8.
+  |  jmp ->vm_return
+  |
+  |.ffunc_nsse math_sqrt, sqrtsd; jmp ->fff_resxmm0
+  |
+  |.ffunc math_log
+  |  cmp NARGS:RD, 1+1; jne ->fff_fallback      // Exactly one argument.
+  |  cmp dword [BASE+8], LJ_TNUMX; jne ->fff_fallback
+  |  fldln2; fld qword [BASE]; fyl2x; jmp ->fff_resn
+  |
+  |.ffunc_n math_log10, fldlg2; fyl2x;          jmp ->fff_resn
+  |
+  |.ffunc_n math_sin;   fsin;                   jmp ->fff_resn
+  |.ffunc_n math_cos;   fcos;                   jmp ->fff_resn
+  |.ffunc_n math_tan;   fptan; fpop;            jmp ->fff_resn
+  |
+  |.macro math_extern_call, func
+  |  mov RBa, BASE
+  |  call extern uj_vm_ .. func
+  |  mov BASE, RBa
+  |.endmacro
+  |
+  |.macro math_extern, func
+  |  .ffunc_nsse math_ .. func
+  |  math_extern_call func
+  |  jmp ->fff_resxmm0
+  |.endmacro
+  |
+  |  math_extern asin
+  |  math_extern acos
+  |  math_extern atan
+  |  math_extern sinh
+  |  math_extern cosh
+  |  math_extern tanh
+  |  math_extern exp
+  |  math_extern floor
+  |  math_extern ceil
+  |
+  |->ff_math_deg:
+  |.ffunc_nsse math_rad
+  |  i2func CFUNC:RBa, BASE
+  |  mulsd xmm0, qword CFUNC:RBa->upvalue[0]
+  |  jmp ->fff_resxmm0
+  |
+  |.ffunc_nn math_atan2;        fpatan;         jmp ->fff_resn
+  |.ffunc_nnr math_ldexp;       fscale; fpop1;  jmp ->fff_resn
+  |
+  |.ffunc_nsse math_frexp
+  |  restore_PC        // Prepare for exit before touching BASE - 1
+  |  mov CARG1, BASE   // Prepare 2nd argument (the 1st one is already in xmm0)
+  |  math_extern_call frexp // double lj_vm_frexp(double value, int *exp);
+  |  num2s xmm0, BASE, -1    // Copy 1st argument to where Lua expects it
+  |  cvtsi2sd xmm0, dword [BASE] // double value = (double)*(int32_t*)BASE;
+  |  num2s xmm0, BASE, 0     // Copy 2nd argument to where Lua expects it
+  |  mov RD, 1+2       // Finish return preparations...
+  |  jmp ->fff_res     // ...and return
+  |
+  |.ffunc_nsse math_modf
+  |  restore_PC
+  |  lea CARG1, [BASE - 1 * TVS]
+  |  math_extern_call modf
+  |  mov dword [BASE-1*TVS+8], LJ_TNUMX
+  |  num2s xmm0, BASE, 0
+  |  mov RD, 1+2
+  |  jmp ->fff_res
+  |
+  |.ffunc_nnr math_fmod
+  |1: ; fprem; fnstsw ax; and ax, 0x400; jnz <1
+  |  fpop1
+  |  jmp ->fff_resn
+  |
+  |.ffunc_nnsse math_pow
+  |  math_extern_call pow
+  |  jmp ->fff_resxmm0
+  |
+  |.macro math_minmax, name, sseop
+  |  .ffunc name
+  |  mov RA, 2
+  |  cmp dword [BASE+8], LJ_TNUMX; jne ->fff_fallback
+  |  movsd xmm0, qword [BASE]
+  |1:  // Handle numbers or integers.
+  |  cmp RA, NARGS:RD; jae ->fff_resxmm0
+  |  n2tvp_r AUX1, BASE, RAa, -1
+  |  cmp dword [AUX1+8], LJ_TNUMX; jne ->fff_fallback
+  |  movsd xmm1, qword [AUX1]
+  |  sseop xmm0, xmm1
+  |  add RA, 1
+  |  jmp <1
+  |.endmacro
+  |
+  |  math_minmax math_min, minsd
+  |  math_minmax math_max, maxsd
+  |
+  |//-- String library -----------------------------------------------------
+  |
+  |.ffunc_1 string_len
+  |  cmp dword [BASE+8], LJ_TSTR; jne ->fff_fallback
+  |  mov STR:RBa, qword [BASE]
+  |  cvtsi2sd xmm0, dword STR:RBa->len; jmp ->fff_resxmm0
+  |
+  |.ffunc string_byte                   // Only handle the 1-arg case here.
+  |  cmp NARGS:RD, 1+1;  jne ->fff_fallback
+  |  cmp dword [BASE+8], LJ_TSTR; jne ->fff_fallback
+  |  mov STR:RBa, qword [BASE]
+  |  restore_PC
+  |  cmp dword STR:RBa->len, 1
+  |  jb ->fff_res0                      // Return no results for empty string.
+  |  movzx RB, byte STR:RBa[1]
+  |  cvtsi2sd xmm0, RB; jmp ->fff_resxmm0
+  |
+  |.ffunc string_char                   // Only handle the 1-arg case here.
+  |  ffgccheck
+  |  cmp NARGS:RD, 1+1;  jne ->fff_fallback     // *Exactly* 1 arg.
+  |  cmp dword [BASE+8], LJ_TNUMX; jne ->fff_fallback
+  |  cvttsd2si RB, qword [BASE]
+  |  cmp RB, 255;  ja ->fff_fallback
+  |  mov TMP2, RB
+  |  mov TMP1, 1
+  |  lea RDa, TMP2                      // Points to stack. Little-endian.
+  |
+  |// -- Create new string object based on input parameters:
+  |// -- @RDa  : pointer to the char buffer containing the string.
+  |// -- @TMP1 : size of the string, i.e. number of chars in buffer to be taken.
+  |->fff_newstr:
+  |  mov L:RBa, SAVE_L
+  |  mov L:RBa->base, BASE
+  |  mov CARG3d, TMP1                   // Zero-extended to size_t.
+  |  mov CARG2, RDa
+  |  mov CARG1, L:RBa
+  |  save_PC
+  |  call extern uj_str_new             // (lua_State *L, char *str, size_t len)
+  |  // GCstr * returned in CRET.
+  |  mov BASE, L:RBa->base
+  |  restore_PC
+  |  gco2s STR:CRET, LJ_TSTR, BASE, -1
+  |  jmp ->fff_res1
+  |
+  |.ffunc string_sub
+  |  ffgccheck
+  |  mov TMP2, -1
+  |  cmp NARGS:RD, 1+2;  jb ->fff_fallback
+  |  jna >1
+  |  cmp dword [BASE+2*TVS+8], LJ_TNUMX; jne ->fff_fallback
+  |  cvttsd2si RB, qword [BASE+2*TVS]
+  |  mov TMP2, RB
+  |1:
+  |  cmp dword [BASE+0*TVS+8], LJ_TSTR ; jne ->fff_fallback
+  |  cmp dword [BASE+1*TVS+8], LJ_TNUMX; jne ->fff_fallback
+  |  mov STR:RBa, qword [BASE+0*TVS]
+  |  mov TMPa, STR:RBa
+  |  mov RB, STR:RBa->len
+  |  cvttsd2si RA, qword [BASE+1*TVS]
+  |  mov RC, TMP2
+  |  cmp RB, RC                         // len < end? (unsigned compare)
+  |  jb >5
+  |2:
+  |  test RA, RA                        // start <= 0?
+  |  jle >7
+  |3:
+  |  mov STR:RBa, TMPa
+  |  sub RC, RA                         // start > end?
+  |  jl ->fff_emptystr
+  |  lea RBa, [STR:RBa+RA+#STR-1]
+  |  add RC, 1
+  |4:
+  |  mov TMP1, RC
+  |  mov RDa, RBa
+  |  jmp ->fff_newstr
+  |
+  |5:  // Negative end or overflow.
+  |  jl >6
+  |  lea RC, [RC+RB+1]                  // end = end+(len+1)
+  |  jmp <2
+  |6:  // Overflow.
+  |  mov RC, RB                         // end = len
+  |  jmp <2
+  |
+  |7:  // Negative start or underflow.
+  |  je >8
+  |  add RA, RB                         // start = start+(len+1)
+  |  add RA, 1
+  |  jg <3                              // start > 0?
+  |8:  // Underflow.
+  |  mov RA, 1                          // start = 1
+  |  jmp <3
+  |
+  |->fff_emptystr:  // Range underflow.
+  |  xor RC, RC                         // Zero length. Any ptr in RB is ok.
+  |  jmp <4
+  |
+  |.ffunc string_rep                    // Only handle the 1-char case inline.
+  |  ffgccheck
+  |  cmp NARGS:RD, 2+1; jne ->fff_fallback      // Exactly 2 arguments.
+  |  cmp dword [BASE+0*TVS+8], LJ_TSTR ; jne ->fff_fallback
+  |  mov STR:RBa, qword [BASE+0*TVS]
+  |  cmp dword [BASE+1*TVS+8], LJ_TNUMX; jne ->fff_fallback
+  |  cvttsd2si RC, qword [BASE+1*TVS]
+  |  test RC, RC
+  |  jle ->fff_emptystr                 // Count <= 0? (or non-int)
+  |  cmp qword STR:RBa->len, 1
+  |  jb ->fff_emptystr                  // Zero length string?
+  |  jne ->fff_fallback_2               // Fallback for > 1-char strings.
+  |  cmp qword [DISPATCH+DISPATCH_GL(tmpbuf.cap)], RCa;  jb ->fff_fallback_2
+  |  movzx RA, byte STR:RBa[1]
+  |  mov RBa, qword [DISPATCH+DISPATCH_GL(tmpbuf.buf)]
+  |  mov TMP1, RC
+  |1:  // Fill buffer with char. Yes, this is suboptimal code (do you care?).
+  |  mov byte [RBa], RAL
+  |  add RBa, 1
+  |  sub RC, 1
+  |  jnz <1
+  |  mov RDa, qword [DISPATCH+DISPATCH_GL(tmpbuf.buf)]
+  |  jmp ->fff_newstr
+  |
+  |.ffunc_1 string_reverse
+  |  ffgccheck
+  |  cmp dword [BASE+8], LJ_TSTR; jne ->fff_fallback
+  |  mov STR:RBa, qword [BASE]
+  |  mov RCa, STR:RBa->len
+  |  test RCa, RCa; jz ->fff_emptystr                   // Check for zero length string.
+  |  cmp qword [DISPATCH+DISPATCH_GL(tmpbuf.cap)], RCa;  jb ->fff_fallback_1
+  |  add RBa, #STR
+  |  mov TMP1, RC
+  |  mov AUX1, qword [DISPATCH+DISPATCH_GL(tmpbuf.buf)]
+  |1:
+  |  movzx RA, byte [RBa]
+  |  add RBa, 1
+  |  sub RC, 1
+  |  mov byte [AUX1+RC], RAL
+  |  jnz <1
+  |  mov RDa, AUX1
+  |  jmp ->fff_newstr
+  |
+  |.macro ffstring_case, name, lo, hi
+  |  .ffunc_1 name
+  |  ffgccheck
+  |  cmp dword [BASE+8], LJ_TSTR; jne ->fff_fallback
+  |  mov STR:RBa, qword [BASE]
+  |  mov RCa, STR:RBa->len
+  |  cmp qword [DISPATCH+DISPATCH_GL(tmpbuf.cap)], RCa;  jb ->fff_fallback_1
+  |  add RBa, #STR
+  |  mov TMP1, RC
+  |  mov AUX1, qword [DISPATCH+DISPATCH_GL(tmpbuf.buf)]
+  |  jmp >3
+  |1:  // ASCII case conversion. Yes, this is suboptimal code (do you care?).
+  |  movzx RA, byte [RBa+RC]
+  |  cmp RA, lo
+  |  jb >2
+  |  cmp RA, hi
+  |  ja >2
+  |  xor RA, 0x20
+  |2:
+  |  mov byte [AUX1+RC], RAL
+  |3:
+  |  sub RC, 1
+  |  jns <1
+  |  mov RDa, AUX1
+  |  jmp ->fff_newstr
+  |.endmacro
+  |
+  |ffstring_case string_lower, 0x41, 0x5a
+  |ffstring_case string_upper, 0x61, 0x7a
+  |
+  |//-- Table library ------------------------------------------------------
+  |
+  |.ffunc_1 table_getn
+  |  cmp dword [BASE+8], LJ_TTAB; jne ->fff_fallback
+  |  mov RBa, BASE                      // Save BASE.
+  |  mov TAB:CARG1, qword [BASE]        // CARG1 := GCtab*
+  |  call extern lj_tab_len             // (GCtab *t)
+  |  // Length of table returned in eax (CRETd).
+  |  mov BASE, RBa                      // Restore BASE.
+  |  cvtsi2sd xmm0, CRETd; jmp ->fff_resxmm0
+  |
+  |//-- Bit library --------------------------------------------------------
+  |
+  |.define TOBIT_BIAS, 0x59c00000       // 2^52 + 2^51 (float, not double!).
+  |
+  |.macro .ffunc_bit, name, kind
+  |  .ffunc_1 name
+  |.if kind == 2
+  |  sseconst_tobit xmm1
+  |.endif
+  |  cmp dword [BASE+8], LJ_TNUMX; jne ->fff_fallback
+  |  movsd xmm0, qword [BASE]
+  |.if kind < 2
+  |  sseconst_tobit xmm1
+  |.endif
+  |  addsd xmm0, xmm1
+  |  movd RB, xmm0
+  |2:
+  |.endmacro
+  |
+  |.ffunc_bit bit_tobit, 0
+  |  jmp ->fff_resbit
+  |
+  |.macro .ffunc_bit_op, name, ins
+  |  .ffunc_bit name, 2
+  |  mov TMP2, NARGS:RD                 // Save for fallback.
+  |  n2tvp RDa, BASE, RDa, -2
+  |1:
+  |  cmp RDa, BASE
+  |  jbe ->fff_resbit
+  |  cmp dword [RDa+8], LJ_TNUMX; jne ->fff_fallback_bit_op
+  |  movsd xmm0, qword [RDa]
+  |  addsd xmm0, xmm1
+  |  movd RA, xmm0
+  |  ins RB, RA
+  |  sub RDa, 1*TVS
+  |  jmp <1
+  |.endmacro
+  |
+  |.ffunc_bit_op bit_band, and
+  |.ffunc_bit_op bit_bor, or
+  |.ffunc_bit_op bit_bxor, xor
+  |
+  |.ffunc_bit bit_bswap, 1
+  |  bswap RB
+  |  jmp ->fff_resbit
+  |
+  |.ffunc_bit bit_bnot, 1
+  |  not RB
+  |->fff_resbit:
+  |  cvtsi2sd xmm0, RB
+  |  jmp ->fff_resxmm0
+  |
+  |->fff_fallback_bit_op:
+  |  mov NARGS:RD, TMP2                 // Restore for fallback
+  |  jmp ->fff_fallback
+  |
+  |.macro .ffunc_bit_sh, name, ins
+  |  .ffunc_nnsse name
+  |  sseconst_tobit xmm2
+  |  addsd xmm0, xmm2
+  |  addsd xmm1, xmm2
+  |  movd RB, xmm0
+  |  movd RA, xmm1
+  |  ins RB, RAL
+  |  jmp ->fff_resbit
+  |.endmacro
+  |
+  |.ffunc_bit_sh bit_lshift, shl
+  |.ffunc_bit_sh bit_rshift, shr
+  |.ffunc_bit_sh bit_arshift, sar
+  |.ffunc_bit_sh bit_rol, rol
+  |.ffunc_bit_sh bit_ror, ror
+  |
+  |//-----------------------------------------------------------------------
+  |
+  |->fff_fallback_2:
+  |  mov NARGS:RD, 1+2                  // Other args are ignored, anyway.
+  |  jmp ->fff_fallback
+  |->fff_fallback_1:
+  |  mov NARGS:RD, 1+1                  // Other args are ignored, anyway.
+  |->fff_fallback:                      // Call fast function fallback handler.
+  |  // BASE = new base, RD = nargs+1
+  |  mov L:RBa, SAVE_L
+  |  restore_PC         // Fallback may overwrite PC.
+  |  save_PC                    // Redundant (but a defined value).
+  |  mov L:RBa->base, BASE
+  |  n2tvp RDa, BASE, RDa, -1
+  |  lea RAa, qword [RDa+LUA_MINSTACK*TVS]  // Ensure enough space for handler.
+  |  mov L:RBa->top, RDa
+  |  cmp RAa, L:RBa->maxstack
+  |  ja >3                              // Need to grow stack.
+  |1:
+  |  i2func CFUNC:RDa, BASE
+  |  mov CARG1, L:RBa
+  |  call qword CFUNC:RDa->f            // (lua_State *L)
+  |  mov BASE, L:RBa->base
+  |  // Either throws an error, or recovers and returns -1, 0 or nresults+1.
+  |  test RD, RD;  jg ->fff_res         // Returned nresults+1?
+  |  mov RAa, L:RBa->top
+  |  sub RAa, BASE
+  |  shr RAa, TVB
+  |  i2func LFUNC:RBa, BASE
+  |  test RDa, RDa
+  |  lea NARGS:RDa, [RAa+1]
+  |  jne ->vm_call_tail                 // Returned -1?
+  |  ins_callt                          // Returned 0: retry fast path.
+  |
+  |// Reconstruct previous base for vmeta_call during tailcall.
+  |->vm_call_tail:
+  |  test PC, FRAME_TYPE
+  |  jnz >2
+  |  mov XCHG, BASE                     // Stash the old BASE
+  |  restore_base BASE
+  |  mov RAa, XCHG                      // Set the old BASE to the appropriate register
+  |  jmp ->vm_call_dispatch             // Resolve again for tailcall.
+  |2:
+  |  mov RAa, BASE
+  |  mov RBa, PC
+  |  ftsz2offs RBa
+  |  sub BASE, RBa
+  |  jmp ->vm_call_dispatch             // Resolve again for tailcall.
+  |
+  |3:  // Grow stack for fallback handler.
+  |  mov CARG2, LUA_MINSTACK
+  |  mov CARG1, L:RBa
+  |  call extern uj_state_stack_grow     // (lua_State *L, int n)
+  |  mov BASE, L:RBa->base
+  |  jmp <1                             // Proceed with fallback handler.
+  |
+  |->fff_gcstep:                        // Call GC step function.
+  |  // BASE = new base, RD = nargs+1
+  |  pop RBa                            // Must keep stack at same level.
+  |  mov TMPa, RBa                      // Save return address
+  |  mov L:RBa, SAVE_L
+  |  save_PC                    // Redundant (but a defined value).
+  |  mov L:RBa->base, BASE
+  |  n2tvp RDa, BASE, RDa, -1
+  |  mov CARG1, L:RBa
+  |  mov L:RBa->top, RDa
+  |  call extern lj_gc_step             // (lua_State *L)
+  |  mov BASE, L:RBa->base
+  |  ptrdiff2nargs RDa, L:RBa->top, BASE  // int RDa = (short)((TValue*)top - (TValue*)base) + 1
+  |  mov RBa, TMPa
+  |  push RBa                           // Restore return address.
+  |  ret
+  |
+  |//-----------------------------------------------------------------------
+  |//-- Special dispatch targets -------------------------------------------
+  |//-----------------------------------------------------------------------
+  |
+  |->vm_record:                         // Dispatch target for recording phase.
+  |.if JIT
+  |  movzx RD, byte [DISPATCH+DISPATCH_GL(hookmask)]
+  |  // Decrement the hookcount for consistency, but always do the call.
+  |  test RDL, HOOK_ACTIVE
+  |  jnz >1
+  |  test RDL, LUA_MASKLINE|LUA_MASKCOUNT
+  |  jz >1
+  |  dec dword [DISPATCH+DISPATCH_GL(hookcount)]
+  |  jmp >1
+  |.endif
+  |
+  |->vm_rethook:                        // Dispatch target for return hooks.
+  |  movzx RD, byte [DISPATCH+DISPATCH_GL(hookmask)]
+  |  test RDL, HOOK_ACTIVE              // Hook already active?
+  |  jnz >5
+  |  jmp >1
+  |
+  |->vm_inshook:                        // Dispatch target for instr/line hooks.
+  |  movzx RD, byte [DISPATCH+DISPATCH_GL(hookmask)]
+  |  test RDL, HOOK_ACTIVE              // Hook already active?
+  |  jnz >5
+  |
+  |  test RDL, LUA_MASKLINE|LUA_MASKCOUNT
+  |  jz >5
+  |  dec dword [DISPATCH+DISPATCH_GL(hookcount)]
+  |  jz >1
+  |  test RDL, LUA_MASKLINE
+  |  jz >5
+  |1:
+  |  mov L:RBa, SAVE_L
+  |  mov L:RBa->base, BASE
+  |  mov CARG2, PC
+  |  mov CARG1, L:RBa
+  |  // SAVE_PC must hold the _previous_ PC. The callee updates it with PC.
+  |  call extern uj_hook_ins            // (lua_State *L, BCIns *pc)
+  |3:
+  |  mov BASE, L:RBa->base
+  |4:
+  |  restore_RA
+  |5:
+  |  movzx OP, PC_OP
+  |  restore_RD
+  |  redispatch_static OP
+  |
+  |->cont_hook:                         // Continue from hook yield.
+  |  inc_PC
+  |  mov RA, dword [RB-24]                    // TODO: 3*TVS?
+  |  mov MULTRES, RA                    // Restore MULTRES for *M ins.
+  |  jmp <4
+  |
+  |->vm_hotloop:                        // Hot loop counter underflow.
+  |.if JIT
+  |  sync_stack RBa
+  |  mov CARG2, PC
+  |  lea CARG1, [DISPATCH+GG_DISP2J]
+  |  mov qword [DISPATCH+DISPATCH_J(L)], L:RBa
+  |  save_PC
+  |  call extern lj_trace_hot           // (jit_State *J, const BCIns *pc)
+  |  jmp <3
+  |.endif
+  |
+  |->vm_callhook:                       // Dispatch target for call hooks.
+  |  save_PC
+  |.if JIT
+  |  jmp >1
+  |.endif
+  |
+  |->vm_hotcall:                        // Hot call counter underflow.
+  |.if JIT
+  |  save_PC
+  |  or PC, 1                           // Marker for hot call.
+  |1:
+  |.endif
+  |  n2tvp RDa, BASE, RDa, -1
+  |  mov L:RBa, SAVE_L
+  |  mov L:RBa->base, BASE
+  |  mov L:RBa->top, RDa
+  |  mov CARG2, PC
+  |  mov CARG1, L:RBa
+  |  call extern uj_hook_call           // (lua_State *L, const BCIns *pc)
+  |  // ASMFunction returned in CRET.
+  |  mov SAVE_PC, 0                     // Invalidate for subsequent line hook.
+  |.if JIT
+  |  and PC, -2
+  |.endif
+  |  mov BASE, L:RBa->base
+  |  mov RAa, CRET
+  |  ptrdiff2nargs RDa, L:RBa->top, BASE
+  |  mov RBa, RAa
+  |  restore_RA
+  |  jmp RBa
+  |
+  |//-----------------------------------------------------------------------
+  |//-- Trace exit handler -------------------------------------------------
+  |//-----------------------------------------------------------------------
+  |
+  |// Called from an exit stub with the exit number on the stack.
+  |// The 16 bit exit number is stored with two (sign-extended) push imm8.
+  |->vm_exit_handler:
+  |.if JIT
+  |  push r13; push r12
+  |  push r11; push r10; push r9; push r8
+  |  push rdi; push rsi; push rbp; lea rbp, [rsp+88]; push rbp
+  |  push rbx; push rdx; push rcx; push rax
+  |  movzx RC, byte [rbp-8]             // Reconstruct exit number.
+  |  mov RCH, byte [rbp-16]
+  |  mov [rbp-8], r15; mov [rbp-16], r14
+  |  // Caveat: DISPATCH is ebx.
+  |  mov DISPATCH, [rbp]
+  |  mov RA, dword [DISPATCH+DISPATCH_GL(vmstate)]      // Get trace number.
+  |  set_vmstate EXIT
+  |  mov dword [DISPATCH+DISPATCH_J(exitno)], RC
+  |  mov dword [DISPATCH+DISPATCH_J(parent)], RA
+  |  sub rsp, 16*8                      // Room for SSE regs.
+  |  add rbp, -128
+  |  movsd qword [rbp-8],   xmm15; movsd qword [rbp-16],  xmm14
+  |  movsd qword [rbp-24],  xmm13; movsd qword [rbp-32],  xmm12
+  |  movsd qword [rbp-40],  xmm11; movsd qword [rbp-48],  xmm10
+  |  movsd qword [rbp-56],  xmm9;  movsd qword [rbp-64],  xmm8
+  |  movsd qword [rbp-72],  xmm7;  movsd qword [rbp-80],  xmm6
+  |  movsd qword [rbp-88],  xmm5;  movsd qword [rbp-96],  xmm4
+  |  movsd qword [rbp-104], xmm3;  movsd qword [rbp-112], xmm2
+  |  movsd qword [rbp-120], xmm1;  movsd qword [rbp-128], xmm0
+  |  // Caveat: RB is ebp.
+  |  mov L:RBa, [DISPATCH+DISPATCH_GL(jit_L)]
+  |  mov BASE, [DISPATCH+DISPATCH_GL(jit_base)]
+  |  mov qword [DISPATCH+DISPATCH_J(L)], L:RBa
+  |  mov qword [DISPATCH+DISPATCH_GL(jit_L)], 0
+  |  mov L:RBa->base, BASE
+  |  mov CARG2, rsp
+  |  lea CARG1, [DISPATCH+GG_DISP2J]
+  |  call extern lj_trace_exit  // (jit_State *J, ExitState *ex)
+  |  // MULTRES or negated error code returned in eax (CRETd).
+  |  mov RAa, L:RBa->cframe
+  |  and RAa, CFRAME_RAWMASK
+  |  mov rsp, RAa                // Reposition stack to C frame.
+  |  mov SAVE_L, L:RBa           // Set SAVE_L (on-trace resume/yield).
+  |  mov BASE, L:RBa->base
+  |  mov PC, SAVE_PC             // Restore PC.
+  |  jmp >1
+  |.endif
+  |
+  |// Return from compiled trace to the interpreter.
+  |->vm_exit_interp:
+  |  // CRETd = MULTRES or negated error code, BASE, PC and DISPATCH set.
+  |.if JIT
+  |  // Restore additional callee-save registers only used in compiled code.
+  |  add rsp, 32                        // Reposition stack to C frame.
+  |1:
+  |  mov r13, TMPa
+  |  mov r12, TMPa2
+  |  test CRETd, CRETd; js >3         // Check for error from exit.
+  |  mov MULTRES, CRETd
+  |  setup_kbase BASE
+  |  mov qword [DISPATCH+DISPATCH_GL(jit_L)], 0
+  |  set_vmstate_lfunc
+  |  // Modified copy of ins_next which handles function header dispatch, too.
+  |  _ins_next
+  |  cmp OP, BC_FUNCF                   // Function header?
+  |  jb >2
+  |  mov RC, MULTRES                    // RC/RD holds nres+1.
+  |2:
+  |  jmp qword [DISPATCH+OP*8]
+  |
+  |3:  // Rethrow error from the right C frame.
+  |  neg CRETd
+  |  mov CARG1, L:RBa
+  |  mov CARG2, CRET
+  |  call extern uj_throw               // (lua_State *L, int errcode)
+  |.endif
+  |
+  |//-----------------------------------------------------------------------
+  |//-- VM errors  ---------------------------------------------------------
+  |//-----------------------------------------------------------------------
+  |
+  |// Please note that vm_err_* do not fix up guest stack top when switching
+  |// to C deferring this work to common run-time error handler. It means that
+  |// these routines should be used only from byte code semantics.
+  |
+  |// Throw an error about immutable table being modified
+  |->vm_err_immutable:
+  |  save_PC
+  |  mov CARG1, SAVE_L
+  |  mov L:CARG1->base, BASE
+  |  mov CARG2, UJ_ERR_IMMUT_MODIF
+  |  call extern uj_err // (lua_State *L, enum err_msg em)
+  |
+  |//-----------------------------------------------------------------------
+  |//-- Assertions ---------------------------------------------------------
+  |//-----------------------------------------------------------------------
+  |
+  |->assert_bad_for_arg_type:
+  |  int3
+  |
+  |//-----------------------------------------------------------------------
+  |//-- FFI helper functions -----------------------------------------------
+  |//-----------------------------------------------------------------------
+  |
+  |// Handler for callback functions. Callback slot number in ah/al.
+  |->vm_ffi_callback:
+  |.if FFI
+  |.type CTSTATE, CTState, PC
+  |  saveregs_  // ebp/rbp already saved. ebp now holds global_State *.
+  |  lea DISPATCH, [ebp+GG_G2DISP]
+  |  mov CTSTATE, GL:ebp->ctype_state
+  |  movzx eax, ax
+  |  mov CTSTATE->cb.slot, eax
+  |  mov CTSTATE->cb.gpr[0], CARG1
+  |  mov CTSTATE->cb.gpr[1], CARG2
+  |  mov CTSTATE->cb.gpr[2], CARG3
+  |  mov CTSTATE->cb.gpr[3], CARG4
+  |  movsd qword CTSTATE->cb.fpr[0], xmm0
+  |  movsd qword CTSTATE->cb.fpr[1], xmm1
+  |  movsd qword CTSTATE->cb.fpr[2], xmm2
+  |  movsd qword CTSTATE->cb.fpr[3], xmm3
+  |  lea rax, [rsp+CFRAME_SIZE]
+  |  mov CTSTATE->cb.gpr[4], CARG5
+  |  mov CTSTATE->cb.gpr[5], CARG6
+  |  movsd qword CTSTATE->cb.fpr[4], xmm4
+  |  movsd qword CTSTATE->cb.fpr[5], xmm5
+  |  movsd qword CTSTATE->cb.fpr[6], xmm6
+  |  movsd qword CTSTATE->cb.fpr[7], xmm7
+  |  mov CTSTATE->cb.stack, rax
+  |  mov CARG2, rsp
+  |  mov SAVE_PC, CTSTATE               // Any value outside of bytecode is ok.
+  |  mov CARG1, CTSTATE
+  |  call extern lj_ccallback_enter     // (CTState *cts, void *cf)
+  |  // lua_State * returned in CRET.
+  |  mov BASE, L:CRET->base
+  |  set_vmstate_lfunc
+  |  ptrdiff2nargs RDa, L:CRET->top, BASE
+  |  i2func LFUNC:RBa, BASE
+  |  ins_callt
+  |.endif
+  |
+  |->cont_ffi_callback:                 // Return from FFI callback.
+  |.if FFI
+  |  mov L:RAa, SAVE_L
+  |  mov CTSTATE, [DISPATCH+DISPATCH_GL(ctype_state)]
+  |  mov qword CTSTATE->L, L:RAa
+  |  mov L:RAa->base, BASE
+  |  mov L:RAa->top, RBa
+  |  mov CARG1, CTSTATE
+  |  mov CARG2, RCa
+  |  call extern lj_ccallback_leave     // (CTState *cts, TValue *o)
+  |  mov CRET, CTSTATE->cb.gpr[0]
+  |  movsd xmm0, qword CTSTATE->cb.fpr[0]
+  |  jmp ->vm_leave_unw
+  |.endif
+  |
+  |->vm_ffi_call:                       // Call C function via FFI.
+  |  // Caveat: needs special frame unwinding, see below.
+  |.if FFI
+  |  .type CCSTATE, CCallState, rbx
+  |  push rbp; mov rbp, rsp; push rbx; mov CCSTATE, CARG1
+  |
+  |  // Readjust stack.
+  |  mov eax, CCSTATE->spadj
+  |  sub rsp, rax
+  |
+  |  // Copy stack slots.
+  |  movzx ecx, byte CCSTATE->nsp
+  |  sub ecx, 1
+  |  js >2
+  |1:
+  |  mov rax, [CCSTATE+rcx*8+offsetof(CCallState, stack)]
+  |  mov [rsp+rcx*8+CCALL_SPS_EXTRA*8], rax
+  |  sub ecx, 1
+  |  jns <1
+  |2:
+  |
+  |  movzx eax, byte CCSTATE->nfpr
+  |  mov CARG1, CCSTATE->gpr[0]
+  |  mov CARG2, CCSTATE->gpr[1]
+  |  mov CARG3, CCSTATE->gpr[2]
+  |  mov CARG4, CCSTATE->gpr[3]
+  |  mov CARG5, CCSTATE->gpr[4]
+  |  mov CARG6, CCSTATE->gpr[5]
+  |  test eax, eax; jz >5
+  |  movaps xmm0, CCSTATE->fpr[0]
+  |  movaps xmm1, CCSTATE->fpr[1]
+  |  movaps xmm2, CCSTATE->fpr[2]
+  |  movaps xmm3, CCSTATE->fpr[3]
+  |  cmp eax, 4; jbe >5
+  |  movaps xmm4, CCSTATE->fpr[4]
+  |  movaps xmm5, CCSTATE->fpr[5]
+  |  movaps xmm6, CCSTATE->fpr[6]
+  |  movaps xmm7, CCSTATE->fpr[7]
+  |5:
+  |
+  |  call qword CCSTATE->func
+  |
+  |  mov CCSTATE->gpr[0], CRET
+  |  movaps CCSTATE->fpr[0], xmm0
+  |  mov CCSTATE->gpr[1], rdx
+  |  movaps CCSTATE->fpr[1], xmm1
+  |
+  |  mov rbx, [rbp-8]; leave; ret
+  |.endif
+  |// Note: vm_ffi_call must be the last function in this object file!
+  |
+  |//-----------------------------------------------------------------------
+}
+
+// Generate the code for a single instruction.
+static void build_ins(BuildCtx *ctx, BCOp op, int defop)
+{
+  int vk = 0;
+  |// Note: aligning all instructions does not pay off.
+  |=>defop:
+
+  switch (op) {
+
+  // -- Comparison ops ----------------------------------------------------
+  // Remember: all ops branch for a true comparison, fall through otherwise.
+
+  |// Common implementation for ISLT/ISGE/ISLE/ISGT,
+  |// differs only in the actual decision branch
+  |.macro jmp_comp, host_jmp
+  |  ins_AD
+  |  checknum RAa, ->vmeta_comp
+  |  checknum RDa, ->vmeta_comp
+  |  i2tvp RDa, BASE, RDa
+  |  i2tvp RAa, BASE, RAa
+  |  movsd xmm0, qword [RDa]
+  |  ucomisd xmm0, qword [RAa]
+  |  // Unordered: all of ZF CF PF set, ordered: PF clear.
+  |  // To preserve NaN semantics GE/GT branch on unordered, but LT/LE don't.
+  |  host_jmp >2
+  |1:
+  |  // proceed with jmp
+  |  ins_next
+  |2:
+  |  // skip jmp and fallthrough
+  |  inc_PC
+  |  ins_next
+  |.endmacro
+
+  case BC_ISLT:
+    |  jmp_comp jbe
+    break;
+
+  case BC_ISGE:
+    |  jmp_comp ja
+    break;
+
+  case BC_ISLE:
+    |  jmp_comp jb
+    break;
+
+  case BC_ISGT:
+    |  jmp_comp jae
+    break;
+
+  case BC_ISEQV: case BC_ISNEV:
+    vk = op == BC_ISEQV;
+    |  ins_AD   // RA = src1, RD = src2, JMP with RD = target
+    |  gettag RB, BASE, RDa
+    |  inc_PC
+    |  cmp RB, LJ_TNUMX; jne >5
+    |  checknum RAa, >5
+    |  i2tvp RAa, BASE, RAa
+    |  i2tvp RDa, BASE, RDa
+    |1:
+    |  movsd xmm0, qword [RAa]
+    |2:
+    |  ucomisd xmm0, qword [RDa]
+    |4:
+  iseqne_fp:
+    if (vk) {
+      |  jp >2                          // Unordered means not equal.
+      |  jne >2
+    } else {
+      |  jp >2                          // Unordered means not equal.
+      |  je >1
+    }
+  iseqne_end:
+    if (vk) {
+      |1:                               // EQ: Branch to the target.
+      |  restore_RD
+      |  branchPC RDa
+      |2:                               // NE: Fallthrough to next instruction.
+      |.if not FFI
+      |3:
+      |.endif
+    } else {
+      |.if not FFI
+      |3:
+      |.endif
+      |2:                               // NE: Branch to the target.
+      |  restore_RD
+      |  branchPC RDa
+      |1:                               // EQ: Fallthrough to next instruction.
+    }
+    |  ins_next
+    |
+    if (op == BC_ISEQV || op == BC_ISNEV) {
+      |5:  // Either or both types are not numbers.
+      |.if FFI
+      |  cmp RB, LJ_TCDATA; je ->vmeta_equal_cd
+      |  checktag LJ_TCDATA, BASE, RAa; je ->vmeta_equal_cd
+      |.endif
+      |  checktag RB, BASE, RAa         // Compare types.
+      |  jne <2                         // Not the same type?
+      |  cmp RB, LJ_TISPRI
+      |  jae <1                         // Same type and primitive type?
+      |
+      |  // Same types and not a primitive type. Compare GCobj or pvalue.
+      |  i2gcr GCOBJ:RAa, BASE, RAa // RA := GCobj*
+      |  i2gcr GCOBJ:RDa, BASE, RDa // RD := GCobj*
+      |  cmp RA, RD
+      |  je <1                          // Same GCobjs or pvalues?
+      |  cmp RB, LJ_TISTABUD
+      |  ja <2                          // Different objects and not table/ud?
+      |  cmp RB, LJ_TUDATA              // And not 64 bit lightuserdata.
+      |  jb <2
+      |
+      |  // Different tables or userdatas. Need to check __eq metamethod.
+      |  // Field metatable must be at same offset for GCtab and GCudata!
+      if (vk) {
+        |  xor RB, RB                   // ne = 0
+      } else {
+        |  mov RB, 1                    // ne = 1
+      }
+      |  tbl_check_mm RAa, eq, <2; jmp ->vmeta_equal
+    } else {
+      |.if FFI
+      |3:
+      |  cmp RB, LJ_TCDATA
+      |  jne <2
+      |  jmp ->vmeta_equal_cd
+      |.endif
+    }
+    break;
+  case BC_ISEQS: case BC_ISNES:
+    vk = op == BC_ISEQS;
+    |  ins_AND  // RA = src, RD = str const (~), JMP with RD = target
+    |  gettag RB, BASE, RAa
+    |  inc_PC
+    |  cmp RB, LJ_TSTR; jne >3
+    |  i2gcr STR:RAa, BASE, RAa // RA := GCstr*
+    |  kitva2r XCHG, RDa
+    |  cmp RAa, XCHG // __TODO: enlarge!
+  iseqne_test:
+    if (vk) {
+      |  jne >2
+    } else {
+      |  je >1
+    }
+    goto iseqne_end;
+  case BC_ISEQN: case BC_ISNEN:
+    vk = op == BC_ISEQN;
+    |  ins_AD   // RA = src, RD = num const, JMP with RD = target
+    |  gettag RB, BASE, RAa
+    |  inc_PC
+    |  cmp RB, LJ_TNUMX; jne >3
+    |  i2tvp RAa, BASE, RAa
+    |  i2tvp RDa, KBASE, RDa
+    |1:
+    |  movsd xmm0, qword [RDa]
+    |2:
+    |  ucomisd xmm0, qword [RAa]
+    |4:
+    goto iseqne_fp;
+  case BC_ISEQP: case BC_ISNEP:
+    vk = op == BC_ISEQP;
+    |  ins_AND  // RA = src, RD = primitive type (~), JMP with RD = target
+    |  gettag RB, BASE, RAa
+    |  inc_PC
+    |  cmp RB, RD
+    if (!LJ_HASFFI) goto iseqne_test;
+    if (vk) {
+      |  jne >3
+      |  restore_RD
+      |  branchPC RDa
+      |2:
+      |  ins_next
+      |3:
+      |  cmp RB, LJ_TCDATA; jne <2
+      |  jmp ->vmeta_equal_cd
+    } else {
+      |  je >2
+      |  cmp RB, LJ_TCDATA; je ->vmeta_equal_cd
+      |  restore_RD
+      |  branchPC RDa
+      |2:
+      |  ins_next
+    }
+    break;
+
+  // -- Unary test and copy ops -------------------------------------------
+
+  case BC_ISTC: case BC_ISFC: case BC_IST: case BC_ISF:
+    |  ins_AD  // RA = dst or unused, RD = src, JMP with RD = target
+    |  gettag RB, BASE, RDa
+    |  inc_PC
+    |  cmp RB, LJ_TISTRUECOND
+    if (op == BC_IST || op == BC_ISTC) {
+      |  jae >1
+    } else {
+      |  jb >1
+    }
+    if (op == BC_ISTC || op == BC_ISFC) {
+      |  i2tvp RAa, BASE, RAa
+      |  i2tvp RDa, BASE, RDa
+      |  movtv RAa, RDa
+    }
+    |  restore_RD
+    |  branchPC RDa
+    |1:                                        // Fallthrough to the next instruction.
+    |  ins_next
+    break;
+
+  // -- Unary ops ---------------------------------------------------------
+
+  case BC_MOV:
+    |  ins_AD   // RA = dst, RD = src
+    |  i2tvp RAa, BASE, RAa
+    |  i2tvp RDa, BASE, RDa
+    |  movtv RAa, RDa
+    |  ins_next
+    break;
+  case BC_NOT:
+    |  ins_AD   // RA = dst, RD = src
+    |  xor RBa, RBa
+    |  checktag LJ_TISTRUECOND, BASE, RDa
+    |  adc RB, LJ_TTRUE
+    |  settag RB, BASE, RAa
+    |  ins_next
+    break;
+  case BC_UNM:
+    |  ins_AD   // RA = dst, RD = src
+    |  checknum RDa, ->vmeta_unm
+    |  i2tvp RAa, BASE, RAa
+    |  i2tvp RDa, BASE, RDa
+    |  movsd xmm0, qword [RDa]
+    |  sseconst_sign xmm1
+    |  xorps xmm0, xmm1
+    |  num2s xmm0, RAa, 0
+    |  ins_next
+    break;
+  case BC_LEN:
+    |  ins_AD   // RA = dst, RD = src
+    |  checkstr RDa, >2
+    |  i2gcr STR:RDa, BASE, RDa // RD := GCstr*
+    |  xorps xmm0, xmm0
+    |  cvtsi2sd xmm0, dword STR:RDa->len
+    |1:
+    |  num2sv xmm0, BASE, RAa
+    |  ins_next
+    |2:
+    |  checktab RDa, ->vmeta_len
+    |  i2gcr TAB:CARG1, BASE, RDa // CARG1 := GCtab*
+#if LJ_52
+    |  tbl_check_mm CARG1, len, >3; jmp ->vmeta_len
+    |3:
+#endif
+    |->BC_LEN_Z:
+    |  mov RBa, BASE                    // Save BASE.
+    |  call extern lj_tab_len           // (GCtab *t)
+    |  // Length of table returned in eax (CRETd).
+    |  cvtsi2sd xmm0, CRETd
+    |  mov BASE, RBa                    // Restore BASE.
+    |  restore_RA
+    |  jmp <1
+    break;
+
+  // -- Binary ops --------------------------------------------------------
+
+    |.macro ins_arithpre, sseins, ssereg
+    |  ins_ABC
+    |  checknum RBa, ->vmeta_arith_vv
+    |  checknum RCa, ->vmeta_arith_vv
+    |  movsd xmm0,    qword [BASE + RBa*8]
+    |  sseins ssereg, qword [BASE + RCa*8]
+    |.endmacro
+    |
+    |.macro ins_arithpost
+    |  movsd qword [BASE+RAa*8]  , xmm0
+    |  mov   dword [BASE+RAa*8+8], LJ_TNUMX
+    |.endmacro
+    |
+    |.macro ins_arith, sseins
+    |  ins_arithpre sseins, xmm0
+    |  ins_arithpost
+    |  ins_next
+    |.endmacro
+    |
+
+    |  // RA = dst, RB = src1 or num const, RC = src2 or num const
+  case BC_ADD:
+    |  ins_arith addsd
+    break;
+  case BC_SUB:
+    |  ins_arith subsd
+    break;
+  case BC_MUL:
+    |  ins_arith mulsd
+    break;
+  case BC_DIV:
+    |  ins_arith divsd
+    break;
+  case BC_MOD:
+    |  ins_arithpre movsd, xmm1
+    |  math_extern_call mod
+    |  restore_RA
+    |  ins_arithpost
+    |  ins_next
+    break;
+  case BC_POW:
+    |  ins_arithpre movsd, xmm1
+    |  math_extern_call pow
+    |  restore_RA
+    |  ins_arithpost
+    |  ins_next
+    break;
+
+  case BC_CAT:
+    |  ins_ABC  // RA = dst, RB = src_start, RC = src_end
+    |  i2tvp CARG2, BASE, RBa
+    |  i2tvp CARG3, BASE, RCa
+    |->BC_CAT_Z:
+    |  mov L:CARG1, SAVE_L
+    |  mov L:CARG1->base, BASE
+    |  mov L:RBa, L:CARG1
+    |  save_PC
+    |  call extern uj_meta_cat // (lua_State *L, TValue *bottom, TValue *top)
+    |  // NULL (finished) or TValue * (metamethod base) returned in CRET.
+    |  mov BASE, L:RBa->base
+    |  test CRET, CRET
+    |  jnz ->vmeta_binop
+    |  mov L:CARG1, L:RBa
+    |  call extern lj_gc_check_fixtop // (lua_State *L)
+    |  mov BASE, L:RBa->base
+    |  restore_RB
+    |  restore_RA
+    |  i2tvp RAa, BASE, RAa
+    |  i2tvp RBa, BASE, RBa
+    |  movtv RAa, RBa
+    |  ins_next
+    break;
+
+  // -- Constant ops ------------------------------------------------------
+
+  case BC_KSTR:
+    |  ins_AND  // RA = dst, RD = str const (~)
+    |  kitva2r RDa, RDa // RD := GCstr*
+    |  gco2sv STR:RDa, LJ_TSTR, BASE, RAa
+    |  ins_next
+    break;
+  case BC_KCDATA:
+    |.if FFI
+    |  ins_AND  // RA = dst, RD = cdata const (~)
+    |  kitva2r RDa, RDa // RD := GCcdata*
+    |  gco2sv RDa, LJ_TCDATA, BASE, RAa
+    |  ins_next
+    |.endif
+    break;
+  case BC_KSHORT:
+    |  ins_AD   // RA = dst, RD = signed int16 literal
+    |  i2tvp RAa, BASE, RAa
+    |  movsx RD, RDW                    // Sign-extend literal.
+    |  cvtsi2sd xmm0, RD
+    |  num2s xmm0, RAa, 0
+    |  ins_next
+    break;
+  case BC_KNUM:
+    |  ins_AD   // RA = dst, RD = num const
+    |  i2tvp RAa, BASE, RAa
+    |  i2tvp RDa, KBASE, RDa
+    |  movtv RAa, RDa         // *RAa = *RDa
+    |  ins_next
+    break;
+  case BC_KPRI:
+    |  ins_AND  // RA = dst, RD = primitive type (~)
+    |  settag RD, BASE, RAa
+    |  ins_next
+    break;
+  case BC_KNIL:
+    |  ins_AD   // RA = dst_start, RD = dst_end
+    |  i2tvp RAa, BASE, RAa, 1
+    |  i2tvp RDa, BASE, RDa
+    |  setnil RAa, -1
+    |1:
+    |  setnil RAa
+    |  add RAa, 1*TVS
+    |  cmp RAa, RDa
+    |  jbe <1
+    |  ins_next
+    break;
+
+  // -- Upvalue and function ops ------------------------------------------
+
+  case BC_UGET:
+    |  ins_AD   // RA = dst, RD = upvalue #
+    |  i2tvp RAa, BASE, RAa
+    |  iuva2r RBa, RDa          // RB := GCupval*
+    |  mov RBa, UPVAL:RBa->v
+    |  movtv RAa, RBa
+    |  ins_next
+    break;
+  case BC_USETV:
+#define TV2MARKOFS \
+ ((int32_t)offsetof(GCupval, marked)-(int32_t)offsetof(GCupval, tv))
+    |  ins_AD   // RA = upvalue #, RD = src
+    |  iuva2r AUX1, RAa // RB := GCupval*
+    |  mov RBa, UPVAL:AUX1->v
+    |
+    |  i2tvp AUX2, BASE, RDa
+    |  movtv RBa, AUX2
+    |
+    |  i2gcr GCOBJ:RAa, BASE, RDa
+    |  gettag RD, BASE, RDa
+    |  cmp byte UPVAL:AUX1->closed, 0
+    |  jz >1
+    |  // Check barrier for closed upvalue.
+    |  test byte [RBa+TV2MARKOFS], LJ_GC_BLACK          // isblack(uv)
+    |  jnz >2
+    |1:
+    |  ins_next
+    |
+    |2:  // Upvalue is black. Check if new value is collectable and white.
+    |  sub RD, LJ_TISGCV
+    |  cmp RD, LJ_TNUMX - LJ_TISGCV                     // tvisgcv(v)
+    |  jbe <1
+    |  test byte GCOBJ:RAa->gch.marked, LJ_GC_WHITES    // iswhite(v)
+    |  jz <1
+    |  // Crossed a write barrier. Move the barrier forward.
+    |  mov CARG2, RBa
+    |  mov RBa, BASE                    // Save BASE.
+    |  lea GL:CARG1, [DISPATCH+GG_DISP2G]
+    |  call extern lj_gc_barrieruv      // (global_State *g, TValue *tv)
+    |  mov BASE, RBa                    // Restore BASE.
+    |  jmp <1
+    break;
+#undef TV2MARKOFS
+  case BC_USETS:
+    |  ins_AND  // RA = upvalue #, RD = str const (~)
+    |  iuva2r RBa, RAa // RB := GCupval*
+    |  kitva2r RAa, RDa // RA := GCobj*
+    |  mov RDa, UPVAL:RBa->v
+    |  gco2s GCOBJ:RAa, LJ_TSTR, RDa, 0
+    |  test byte UPVAL:RBa->marked, LJ_GC_BLACK         // isblack(uv)
+    |  jnz >2
+    |1:
+    |  ins_next
+    |
+    |2:  // Check if string is white and ensure upvalue is closed.
+    |  test byte GCOBJ:RAa->gch.marked, LJ_GC_WHITES    // iswhite(str)
+    |  jz <1
+    |  cmp byte UPVAL:RBa->closed, 0
+    |  jz <1
+    |  // Crossed a write barrier. Move the barrier forward.
+    |  mov RBa, BASE
+    |  mov CARG2, RDa
+    |  lea GL:CARG1, [DISPATCH+GG_DISP2G]
+    |  call extern lj_gc_barrieruv      // (global_State *g, TValue *tv)
+    |  mov BASE, RBa                    // Restore BASE.
+    |  jmp <1
+    break;
+  case BC_USETN:
+    |  ins_AD   // RA = upvalue #, RD = num const
+    |  iuva2r RBa, RAa // RB := GCupval*
+    |  i2tvp RDa, KBASE, RDa
+    |  movsd xmm0, qword [RDa]
+    |  mov RAa, UPVAL:RBa->v
+    |  num2s xmm0, RAa, 0
+    |  ins_next
+    break;
+  case BC_USETP:
+    |  ins_AND  // RA = upvalue #, RD = primitive type (~)
+    |  iuva2r RBa, RAa // RB := GCupval*
+    |  mov RAa, UPVAL:RBa->v
+    |  mov dword [RAa+8], RD
+    |  ins_next
+    break;
+  case BC_UCLO:
+    |  ins_AD   // RA = level, RD = target
+    |  branchPC RDa                     // Do this first to free RD.
+    |  mov L:RBa, SAVE_L
+    |  cmp qword L:RBa->openupval, 0
+    |  je >1
+    |  mov L:RBa->base, BASE
+    |  i2tvp CARG2, BASE, RAa
+    |  mov L:CARG1, L:RBa
+    |  call extern uj_upval_close      // (lua_State *L, TValue *level)
+    |  mov BASE, L:RBa->base
+    |1:
+    |  ins_next
+    break;
+
+  case BC_FNEW:
+    |  ins_AND  // RA = dst, RD = proto const (~) (holding function prototype)
+    |  mov L:RBa, SAVE_L
+    |  mov L:RBa->base, BASE
+    |  i2func LFUNC:CARG3, BASE
+    |  kitva2r CARG2, RDa // CARG2d := GCproto*
+    |  mov CARG1, L:RBa
+    |  save_PC
+    |  // (lua_State *L, GCproto *pt, GCfuncL *parent)
+    |  call extern uj_func_newL_gc
+    |  // GCfuncL * returned in CRET.
+    |  mov BASE, L:RBa->base
+    |  restore_RA
+    |  gco2sv CRET, LJ_TFUNC, BASE, RAa
+    |  ins_next
+    break;
+
+  // -- Table ops ---------------------------------------------------------
+
+  case BC_TNEW:
+    |  ins_AD   // RA = dst, RD = hbits|asize
+    |  newtab_gccheck
+    |  mov CARG3, RDa
+    |  and RDa, 0x7ff
+    |  shr CARG3, 11
+    |  cmp RDa, 0x7ff
+    |  je >2
+    |1:
+    |  mov L:CARG1, L:RBa
+    |  mov CARG2, RDa
+    |  call extern lj_tab_new  // (lua_State *L, int32_t asize, uint32_t hbits)
+    |  // Table * returned in CRET.
+    |  mov BASE, L:RBa->base
+    |  newtab2tv_ra TAB:CRET
+    |  ins_next
+    |2:  // Turn 0x7ff into 0x801.
+    |  mov RDa, 0x801
+    |  jmp <1
+    break;
+  case BC_TDUP:
+    |  ins_AND  // RA = dst, RD = table const (~) (holding template table)
+    |  newtab_gccheck
+    |  not RDa
+    |  kitva2r CARG2, RDa // CARG2d := GCtab*
+    |  mov L:CARG1, L:RBa
+    |  call extern lj_tab_dup           // (lua_State *L, Table *kt)
+    |  // Table * returned in CRET.
+    |  mov BASE, L:RBa->base
+    |  newtab2tv_ra TAB:CRET
+    |  ins_next
+    break;
+
+  case BC_GGET:
+    |  ins_AND  // RA = dst, RD = str const (~)
+    |  i2func LFUNC:RBa, BASE
+    |  mov TAB:RBa, LFUNC:RBa->env
+    |  kitva2r RCa, RDa // RC := GCstr*
+    |  jmp ->BC_TGETS_Z
+    break;
+  case BC_GSET:
+    |  ins_AND  // RA = src, RD = str const (~)
+    |  i2func LFUNC:RBa, BASE
+    |  mov TAB:RBa, LFUNC:RBa->env
+    |  checkimmutable_bc RBa
+    |  kitva2r RCa, RDa // RC := GCstr*
+    |  jmp ->BC_TSETS_Z
+    break;
+  case BC_TGETV:
+    |  ins_ABC  // RA = dst, RB = table, RC = key
+    |  checktab RBa, ->vmeta_tgetv
+    |  i2gcr TAB:RBa, BASE, RBa // RB := GCtab*
+    |
+    |  // Integer key?
+    |  // Convert number to int and back and compare.
+    |  checknum RCa, >4
+    |  i2tvp RCa, BASE, RCa
+    |  movsd xmm0, qword [RCa]
+    |  cvtsd2si RC, xmm0
+    |  cvtsi2sd xmm1, RC
+    |  ucomisd xmm0, xmm1
+    |  jne ->vmeta_tgetv          // Generic numeric key? Use fallback.
+    |  cmp RCa, TAB:RBa->asize      // Takes care of unordered, too.
+    |  jae ->vmeta_tgetv          // Not in array part? Use fallback.
+    |  shl RCa, TVB
+    |  add RCa, TAB:RBa->array
+    |  cmp dword [RCa+8], LJ_TNIL; je >2 // Avoid overwriting RB in fastpath.
+    |  // Get array slot.
+    |  i2tvp RAa, BASE, RAa
+    |  movtv RAa, RCa
+    |1:
+    |  ins_next
+    |
+    |2:  // Check for __index if table value is nil.
+    |  tbl_check_mm RBa, index, >3; jmp ->vmeta_tgetv
+    |3:
+    |  settag LJ_TNIL, BASE, RAa
+    |  jmp <1
+    |
+    |4:  // String key?
+    |  checkstr RCa, ->vmeta_tgetv
+    |  i2gcr STR:RCa, BASE, RCa // RC := GCstr*
+    |  jmp ->BC_TGETS_Z
+    break;
+  case BC_TGETS:
+    |  ins_ABC  // RA = dst, RB = table, RC = str const (~)
+    |  not RCa
+    |  kitva2r RCa, RCa // RC := GCstr*
+    |  checktab RBa, ->vmeta_tgets
+    |  i2gcr TAB:RBa, BASE, RBa // RB := GCtab*
+    |->BC_TGETS_Z:      // RB = GCtab*, RC = GCstr*.
+    |  tbl_find_key RBa, RCa, >1, >1
+    |  i2tvp RAa, BASE, RAa
+    |  movtv RAa, AUX1
+    |  ins_next
+    |1:
+    |  tbl_check_mm RBa, index, >2; jmp ->vmeta_tgets
+    |2:
+    |  settag LJ_TNIL, BASE, RAa
+    |  ins_next
+    break;
+  case BC_TGETB:
+    |  ins_ABC  // RA = dst, RB = table, RC = byte literal
+    |  checktab RBa, ->vmeta_tgetb
+    |  i2gcr TAB:RBa, BASE, RBa // RB := GCtab*
+    |  cmp RCa, TAB:RBa->asize
+    |  jae ->vmeta_tgetb
+    |  shl RCa, TVB
+    |  add RCa, TAB:RBa->array
+    |  cmp dword [RCa+8], LJ_TNIL; je >2 // Avoid overwriting RB in fastpath.
+    |  // Get array slot.
+    |  i2tvp RAa, BASE, RAa
+    |  movtv RAa, RCa
+    |1:
+    |  ins_next
+    |
+    |2:  // Check for __index if table value is nil.
+    |  tbl_check_mm RBa, index, >3; jmp ->vmeta_tgetb
+    |3:
+    |  settag LJ_TNIL, BASE, RAa
+    |  jmp <1
+    break;
+
+  case BC_TSETV:
+    |  ins_ABC  // RA = src, RB = table, RC = key
+    |  checktab RBa, ->vmeta_tsetv
+    |  i2gcr TAB:RBa, BASE, RBa // RB := GCtab*
+    |  checkimmutable_bc RBa
+    |
+    |  // Integer key?
+    |  // Convert number to int and back and compare.
+    |  checknum RCa, >4
+    |  i2tvp RCa, BASE, RCa
+    |  movsd xmm0, qword [RCa]
+    |  cvtsd2si RC, xmm0
+    |  cvtsi2sd xmm1, RC
+    |  ucomisd xmm0, xmm1
+    |  jne ->vmeta_tsetv                // Generic numeric key? Use fallback.
+    |  cmp RCa, TAB:RBa->asize          // Takes care of unordered, too.
+    |  jae ->vmeta_tsetv
+    |  shl RCa, TVB
+    |  add RCa, TAB:RBa->array
+    |  cmp dword [RCa+8], LJ_TNIL; je >3 // Previous value is nil?
+    |1:
+    |  test byte TAB:RBa->marked, LJ_GC_BLACK   // isblack(table)
+    |  jnz >5
+    |2:  // Set array slot.
+    |  i2tvp RAa, BASE, RAa
+    |  movtv RCa, RAa
+    |  ins_next
+    |
+    |3:  // Check for __newindex if previous value is nil.
+    |  tbl_check_mm RBa, newindex, <1; jmp ->vmeta_tsetv
+    |4:  // String key?
+    |  checkstr RCa, ->vmeta_tsetv
+    |  i2gcr STR:RCa, BASE, RCa // RC := GCstr*
+    |  jmp ->BC_TSETS_Z
+    |
+    |5:  // Possible table write barrier for the value. Skip valiswhite check.
+    |  barrierback TAB:RBa
+    |  jmp <2
+    break;
+  case BC_TSETS:
+    |  ins_ABC  // RA = src, RB = table, RC = str const (~)
+    |  not RCa
+    |  kitva2r RCa, RCa // RC := GCstr*
+    |  checktab RBa, ->vmeta_tsets
+    |  i2gcr TAB:RBa, BASE, RBa // RB := GCtab*
+    |  checkimmutable_bc RBa
+    |->BC_TSETS_Z:      // RB = GCtab*, RC = GCstr*.
+    |  mov byte TAB:RBa->nomm, 0                // Clear metamethod cache.
+    |  tbl_find_key RBa, RCa, >3, >5
+    |1:
+    |  test byte TAB:RBa->marked, LJ_GC_BLACK
+    |  jnz >6
+    |2:
+    |  i2tvp RAa, BASE, RAa
+    |  movtv AUX1, RAa
+    |  ins_next
+    |3:
+    |  // Key not found - jump to __newindex or create it
+    |  tbl_check_mm RBa, newindex, >4; jmp ->vmeta_tsets
+    |4:
+    |  mov TMPTV, STR:RCa
+    |  mov TMPTV_TAG, LJ_TSTR
+    |  mov TMPa, TAB:RBa
+    |  mov L:CARG1, SAVE_L
+    |  mov L:CARG1->base, BASE
+    |  lea CARG3, TMPTV
+    |  mov CARG2, TAB:RBa
+    |  mov L:RBa, L:CARG1
+    |  save_PC
+    |  call extern lj_tab_newkey        // (lua_State *L, GCtab *t, TValue *k)
+    |  // Handles write barrier for the new key. TValue * returned in CRET.
+    |  restore_RA
+    |  mov BASE, L:RBa->base
+    |  mov TAB:RBa, TMPa
+    |  mov AUX1, CRET
+    |  jmp <1
+    |5:
+    |  tbl_check_mm RBa, newindex, <1; jmp ->vmeta_tsets
+    |6:
+    |  barrierback TAB:RBa
+    |  jmp <2
+    break;
+  case BC_TSETB:
+    |  ins_ABC  // RA = src, RB = table, RC = byte literal
+    |  checktab RBa, ->vmeta_tsetb
+    |  i2gcr TAB:RBa, BASE, RBa // RB := GCtab*
+    |  checkimmutable_bc RBa
+    |  cmp RCa, TAB:RBa->asize
+    |  jae ->vmeta_tsetb
+    |  shl RCa, TVB
+    |  add RCa, TAB:RBa->array
+    |  cmp dword [RCa+8], LJ_TNIL; je >3 // Previous value is nil?
+    |1:
+    |  test byte TAB:RBa->marked, LJ_GC_BLACK   // isblack(table)
+    |  jnz >4
+    |2:  // Set array slot.
+    |  i2tvp RAa, BASE, RAa
+    |  movtv RCa, RAa
+    |  ins_next
+    |
+    |3:  // Check for __newindex if previous value is nil.
+    |  tbl_check_mm RBa, newindex, <1; jmp ->vmeta_tsetb
+    |
+    |4:  // Possible table write barrier for the value. Skip valiswhite check.
+    |  barrierback TAB:RBa
+    |  jmp <2
+    break;
+
+  case BC_TSETM: // TODO: review!
+    |  ins_AD   // RA = base (table at base-1), RD = num const (start index)
+    |  mov TMPa, KBASE                          // Need one more free register.
+    |  i2tvp RDa, KBASE, RDa
+    |  mov KBASEd, dword [RDa]                  // Integer constant is in lo-word.
+    |1:
+    |  i2tvp RAa, BASE, RAa
+    |  mov TAB:RBa, qword [RAa-1*TVS]           // Guaranteed table.
+    |  checkimmutable_bc RBa
+    |  test byte TAB:RBa->marked, LJ_GC_BLACK   // isblack(table)
+    |  jnz >6
+    |2:
+    |  mov RD, MULTRES
+    |  sub RD, 1
+    |  jz >4                            // Nothing to copy?
+    |  add RD, KBASEd                   // Compute needed size.
+    |  cmp RD, TAB:RBa->asize
+    |  ja >5                            // Doesn't fit into array part?
+    |  sub RD, KBASEd
+    |  shl KBASEd, TVB
+    |  add KBASE, TAB:RBa->array
+    |3:  // Copy result slots to table.
+    |  movtv KBASE, RAa
+    |  add RAa, TVS
+    |  add KBASE, TVS
+    |  sub RD, 1
+    |  jnz <3
+    |4:
+    |  mov KBASE, TMPa
+    |  ins_next
+    |
+    |5:  // Need to resize array part.
+    |  mov L:CARG1, SAVE_L
+    |  mov L:CARG1->base, BASE
+    |  mov CARG2, TAB:RBa
+    |  mov CARG3, RDa
+    |  mov L:RBa, L:CARG1
+    |  save_PC
+    |  call extern lj_tab_reasize       // (lua_State *L, GCtab *t, int nasize)
+    |  mov BASE, L:RBa->base
+    |  restore_RA
+    |  jmp <1                           // Retry.
+    |
+    |6:  // Possible table write barrier for any value. Skip valiswhite check.
+    |  barrierback TAB:RBa
+    |  jmp <2
+    break;
+
+  // -- Calls and vararg handling -----------------------------------------
+  // BC_CALL. Right before BC_CALL's semantic is executed, Lua stack frame
+  // for the caller looks like this:
+  //
+  // BASE - 1  |  tp  | func | <-- caller's tvalue
+  // BASE      |    tvalue   | <-- caller base
+  // ...       |/////////////| <-- some slots allocated during caller's execution
+  // BASE + RA |    tvalue   | <-- callee (LFUNC or a callable object with __call metamethod)
+  // ...       |/////////////| <-- callee's args (BASE + RA + RC - 1)
+  // TOP       |\\\\\\\\\\\\\| <-- first free slot on the Lua stack
+  //
+  // Caller's tvalue consists of actual func being executed and tp which holds
+  // PC of the caller's caller (see ins_call). This can be either actual bytecode
+  // PC (for Lua functions) or ftsz holding type and size of caller's frame
+  // (for C functions). See lj_obj.h and lj_frame.h for more details.
+  //
+  // After the first phase of BC_CALL's execution (assuming all __call-related
+  // things were sorted out) BASE moves to BASE + RA + 1:
+  //
+  // OLD_BASE - 1 |  tp  | func | <-- caller's tvalue
+  // OLD_BASE     |    tvalue   | <-- caller base
+  // ...          |/////////////| <-- some slots allocated during caller's execution
+  // BASE - 1     |    tvalue   | <-- callee (about to start executing)
+  // BASE         |    tvalue   | <-- callee base (first callee argument)
+  // ...          |/////////////| <-- more callee's args
+  // TOP          |\\\\\\\\\\\\\| <-- first free slot on the Lua stack
+  //
+  // Finally, ins_call saves caller's PC to tp area of callee's tvalue, loads
+  // callee's own pc to VM's PC and starts execution of the callee.
+  //
+  // BC_CALLT (tail call). Initial stack frame layout is the same as for BC_CALL.
+  // Unlike BC_CALL, BC_CALLT does not move the BASE. Instead it loads callee's
+  // func to BASE - 1 replacing original caller's func and copies all callee's
+  // arguments starting at BASE corrupting caller's stack. This works fine as
+  // the tail call guarantees that there is no caller's code to execute after
+  // callee is executed. So after the first phase of BC_CALLT's execution stack
+  // looks like this:
+  //
+  // BASE - 1 |  tp  | func | <-- callee's func, original caller's tp
+  // BASE     |    tvalue   | <-- callee base (first callee argument)
+  // ...      |/////////////| <-- more callee's args
+  // TOP      |\\\\\\\\\\\\\| <-- first free slot on the Lua stack
+  //
+  // Please note that tp is preserved from the original caller to keep
+  // integrity of stack frames. In the figure above tp still holds PC of the
+  // original caller's caller. Finally ins_callt is used to start executing
+  // callee right away.
+
+  case BC_CALL: case BC_CALLM:
+    |  ins_A_C      // RA = base, (RB = nresults+1,) RC = nargs+1 | extra_nargs
+    |  set_vmstate INTERP // BC_CALL*: INTERP until a new BASE is setup
+    if (op == BC_CALLM) {
+      |  add NARGS:RD, MULTRES
+    }
+    |  i2gcr LFUNC:RBa, BASE, RAa // RB := GCfuncL*
+    |  checkfunc RAa, ->vmeta_call_ra
+    |  i2tvp BASE, BASE, RAa, 1
+    |  ins_call
+    break;
+
+  case BC_CALLMT:
+    |  ins_AD   // RA = base, RD = extra_nargs
+    |  add NARGS:RD, MULTRES
+    |  // Fall through. Assumes BC_CALLT follows and ins_AD is a no-op.
+    break;
+  case BC_CALLT:
+    |  ins_AD          // RA = base, RD = nargs+1
+    |  mov KBASE, BASE // Use KBASE for move + vmeta_call hint.
+    |  i2gcr LFUNC:RBa, BASE, RAa
+    |  checkfunc RAa, ->vmeta_call_ra
+    |  i2tvp RAa, BASE, RAa, 1
+    |
+    |->BC_CALLT_Z:
+    |  set_vmstate INTERP // BC_CALLMT/BC_CALLT: INTERP until a new BASE is setup
+    |  restore_PC
+    |  test PC, FRAME_TYPE
+    |  jnz >7
+    |1:
+    |  mov MULTRES, NARGS:RD
+    |  sub NARGS:RD, 1
+    |  jz >3
+    |2:  // Move args down.
+    |  movtv KBASE, RAa
+    |  add RAa, 1*TVS
+    |  add KBASE, 1*TVS
+    |  sub NARGS:RD, 1
+    |  jnz <2
+    |
+    |3:
+    |  mov NARGS:RD, MULTRES
+    |  cmp byte LFUNC:RBa->ffid, FF_C // Calling a fast function?
+    |  ja >5
+    |4:
+    |  mov qword [BASE-1*TVS], LFUNC:RBa // Copy function down
+    |  ins_callt
+    |
+    |5:  // Tailcall to a fast function.
+    |  test PC, FRAME_TYPE         // Lua frame below?
+    |  jnz <4
+    |  restore_base RAa
+    |  setup_kbase RAa
+    |  jmp <4
+    |
+    |7:  // Tailcall from a vararg function.
+    |  sub PC, FRAME_VARG
+    |  test PC, FRAME_TYPEP
+    |  jnz >8                           // Vararg frame below?
+    |  sub BASE, PC                     // Need to relocate BASE/KBASE down.
+    |  mov KBASE, BASE
+    |  restore_PC
+    |  jmp <1
+    |8:
+    |  add PC, FRAME_VARG
+    |  jmp <1
+    break;
+
+  case BC_ITERC:
+    |  ins_A    // RA = base, (RB = nresults+1,) RC = nargs+1 (2+1)
+    |  i2tvp RAa, BASE, RAa, 1  // TValue *RAa := &stack[RA+1];
+    |  movtv RAa, RAa-3*TVS           // Copy state. fb[0] = fb[-3].
+    |  movtv RAa+1*TVS, RAa-2*TVS     // Copy control var. fb[1] = fb[-2].
+    |  movtv RAa-1*TVS, RAa-4*TVS     // Copy callable. fb[-1] = fb[-4].
+    |  mov LFUNC:RBa, qword [RAa-4*TVS]
+    |  mov RC, dword [RAa-4*TVS+8]
+    |  cmp RC, LJ_TFUNC                 // Handle like a regular 2-arg call.
+    |  mov NARGS:RD, 2+1
+    |  jne ->vmeta_call
+    |  mov BASE, RAa
+    |  ins_call
+    break;
+
+  case BC_ITERN:
+    |  ins_A    // RA = base, (RB = nresults+1, RC = nargs+1 (2+1))
+    |  mov TMPa2, KBASE                 // Need two more free registers.
+    |  mov TMPa, DISPATCH
+    |  i2gcr TAB:RBa, BASE, RAa, -2
+    |  __i2gcr RC, BASE, RAa, -1
+    |  mov DISPATCHd, TAB:RBa->asize
+    |  mov KBASE, TAB:RBa->array
+    |1:  // Traverse array part.
+    |  cmp RC, DISPATCHd; jae >4                // Index points after array part?
+    |  n2tvp_r AUX1, KBASE, RCa
+    |  cmp dword [AUX1+8], LJ_TNIL; je >3
+    |  cvtsi2sd xmm0, RC
+    |  // Copy array slot to returned value.
+    |  i2tvp AUX1, BASE, RAa, 1
+    |  n2tvp_r AUX2, KBASE, RCa
+    |  movtv AUX1, AUX2
+    |  add RC, 1
+    |  // Return array index as a numeric key.
+    |  num2sv xmm0, BASE, RAa
+    |  i2tvp AUX1, BASE, RAa, -1
+    |  mov dword [AUX1], RC             // Update control var.
+    |2:
+    |  mov DISPATCH, TMPa
+    |  mov KBASE, TMPa2
+    |  ins_next
+    |
+    |3:  // Skip holes in array part.
+    |  add RC, 1
+    |  jmp <1
+    |
+    |4:  // Traverse hash part.
+    |  sub RC, DISPATCHd
+    |5:
+    |  cmp RCa, TAB:RBa->hmask; ja >7   // End of iteration?
+    |  imul KBASE, RCa, #NODE
+    |  add NODE:KBASE, TAB:RBa->node
+    |  cmp dword NODE:KBASE->val.value_tag, LJ_TNIL; je >6
+    |  lea DISPATCHd, [RC+DISPATCHd+1]
+    |  // Copy key and value from hash slot.
+    |  lea RBa, NODE:KBASE->key
+    |  lea RCa, NODE:KBASE->val
+    |  i2tvp AUX1, BASE, RAa
+    |  movtv AUX1, RBa
+    |  i2tvp AUX1, BASE, RAa, 1
+    |  movtv AUX1, RCa
+    |  i2tvp AUX1, BASE, RAa, -1
+    |  mov dword [AUX1], DISPATCHd
+    |  jmp <2
+    |
+    |6:  // Skip holes in hash part.
+    |  add RC, 1
+    |  jmp <5
+    |
+    |7:
+    |  i2tvp AUX1, BASE, RAa
+    |  mov dword TVALUE:AUX1->value_tag, LJ_TNIL
+    |  jmp <2
+    break;
+
+  case BC_ISNEXT:
+    |  ins_AD   // RA = base, RD = target (points to ITERN)
+    |  i2tvp RAa, BASE, RAa
+    |  cmp dword [RAa-3*TVS+8], LJ_TFUNC; jne >5
+    |  mov CFUNC:RBa, qword [RAa-3*TVS]
+    |  cmp dword [RAa-2*TVS+8], LJ_TTAB ; jne >5
+    |  cmp dword [RAa-1*TVS+8], LJ_TNIL ; jne >5
+    |  cmp byte CFUNC:RBa->ffid, FF_next_N; jne >5
+    |  branchPC RDa
+    |  mov dword [RAa-1*TVS]  , 0x00000000 // Initialize control var.
+    |  mov dword [RAa-1*TVS+4], LJ_ITERN_MARK
+    |  mov dword [RAa-1*TVS+8], LJ_TNUMX
+    |1:
+    |  ins_next
+    |5:  // Despecialize bytecode if any of the checks fail.
+    |  mov PC_OP, BC_JMP
+    |  mov AUX1, PC
+    |  branchPC RDa
+    |  mov byte [PC], BC_ITERC
+    |  mov byte [PC+4], BC_ITERL
+    |  // BC_ITERL target should be also restored, because
+    |  // it may be erased by BC_JITRNL trace number.
+    |  // target_pos = iterl_pos + 1 + offset
+    |  // offset = target_pos - iterl_pos - 1 = PC/4 - (PC_2 + 4)/4 - 1
+    |  // offset = (PC - PC_2) >> 2 - 2
+    |  sub AUX1, PC
+    |  shr AUX1, 2
+    |  sub AUX1, 2
+    |  // offset = D_operand - BCBIAS_J => D_operand = offset + BCBIAS_J
+    |  add AUX1, BCBIAS_J
+    |  mov word [PC+6], AUX1w
+    |  jmp <1
+    break;
+
+  case BC_VARG:
+    |  ins_ABC  // RA = base, RB = nresults+1, RC = numparams
+    |  mov TMPa, KBASE                  // Need one more free register.
+    |  n2tvp KBASE, BASE, RCa
+    |  lea KBASE, [KBASE+(TVS+FRAME_VARG)]
+    |  i2tvp RAa, BASE, RAa
+    |  mov AUX1, qword [BASE-1*TVS+8]   // AUX1 = stack[-1].fr.tp.ftsz
+    |  sub KBASE, AUX1
+    |  // Note: KBASE may now be even _above_ BASE if nargs was < numparams.
+    |  test RBa, RBa
+    |  jz >5                            // Copy all varargs?
+    |  n2tvp RBa, RAa, RBa, -1
+    |  cmp KBASE, BASE                  // No vararg slots?
+    |  jnb >2
+    |1:  // Copy vararg slots to destination slots.
+    |  movtv RAa, KBASE-1*TVS
+    |  add KBASE, 1*TVS
+    |  add RAa, 1*TVS
+    |  cmp RAa, RBa                     // All destination slots filled?
+    |  jnb >3
+    |  cmp KBASE, BASE                  // No more vararg slots?
+    |  jb <1
+    |2:  // Fill up remainder with nil.
+    |  setnil RAa
+    |  add RAa, 1*TVS
+    |  cmp RAa, RBa
+    |  jb <2
+    |3:
+    |  mov KBASE, TMPa
+    |  ins_next
+    |
+    |5:  // Copy all varargs.
+    |  mov MULTRES, 1                   // MULTRES = 0+1
+    |  mov RCa, BASE
+    |  sub RCa, KBASE
+    |  jbe <3                           // No vararg slots?
+    |  mov RBa, RCa
+    |  shr RBa, TVB
+    |  add RBa, 1
+    |  mov MULTRES, RB                  // MULTRES = #varargs+1
+    |  mov L:RBa, SAVE_L
+    |  add RCa, RAa
+    |  cmp RCa, L:RBa->maxstack
+    |  ja >7                            // Need to grow stack?
+    |6:  // Copy all vararg slots.
+    |  movtv RAa, KBASE-1*TVS
+    |  add KBASE, 1*TVS
+    |  add RAa, 1*TVS
+    |  cmp KBASE, BASE                  // No more vararg slots?
+    |  jb <6
+    |  jmp <3
+    |
+    |7:  // Grow stack for varargs.
+    |  mov L:RBa->base, BASE
+    |  mov L:RBa->top, RAa
+    |  save_PC
+    |  sub KBASE, BASE                  // Need delta, because BASE may change.
+    |  mov CARG2d, MULTRES
+    |  sub CARG2, 1
+    |  mov CARG1, L:RBa
+    |  call extern uj_state_stack_grow   // (lua_State *L, int n)
+    |  mov BASE, L:RBa->base
+    |  mov RAa, L:RBa->top
+    |  add KBASE, BASE
+    |  jmp <6
+    break;
+
+  // -- Returns -----------------------------------------------------------
+
+  case BC_RETM:
+    |  ins_AD   // RA = results, RD = extra_nresults
+    |  add RD, MULTRES                  // MULTRES >=1, so RD >=1.
+    |  // Fall through. Assumes BC_RET follows and ins_AD is a no-op.
+    break;
+
+  case BC_RET: case BC_RET0: case BC_RET1:
+    |  ins_AD       // RA = results, RD = nresults+1
+    if (op != BC_RET0) {
+      |  shl RA, TVB_X2   // Convert x2-encoded index to index*sizeof(TValue)
+    }
+    |1:
+    |  set_vmstate INTERP // BC_RET*: INTERP until the old BASE is restored
+    |  restore_PC
+    |  mov MULTRES, RD                  // Save nresults+1.
+    |  test PC, FRAME_TYPE              // Check frame type marker.
+    |  jnz >7                           // Not returning to a fixarg Lua func?
+    switch (op) {
+    case BC_RET:
+      |->BC_RET_Z:
+      |  mov KBASE, BASE                // Use KBASE for result move.
+      |  sub RD, 1
+      |  jz >3
+      |2:  // Move results down.
+      |  movtv KBASE-1*TVS, KBASE+RA
+      |  add KBASE, 1*TVS
+      |  sub RD, 1
+      |  jnz <2
+      |3:
+      |  mov RD, MULTRES                // Note: MULTRES may be >255.
+      |  restore_RB
+      |5:
+      |  cmp RB, RD                     // More results expected?
+      |  ja >6
+      break;
+    case BC_RET1:
+      |  movtv BASE-1*TVS, BASE+RA
+      // fallthrough
+    case BC_RET0:
+      if (op == BC_RET0) {
+        |  setnil BASE, -1
+      }
+      |5:
+      |  cmp PC_RB, RDL                 // More results expected?
+      |  ja >6
+    default:
+      break;
+    }
+    |  restore_base BASE
+    |  setup_kbase BASE
+    |  set_vmstate_lfunc
+    |  checktimeout // BC_RET, BC_RET0, BC_RET1, BC_RETM, vm_returnc, vm_resume, coroutine.resume
+    |  ins_next
+    |
+    |6:  // Fill up results with nil.
+    if (op == BC_RET) {
+      |  setnil KBASE, -1 // Note: relies on shifted base.
+      |  add KBASE, TVS
+    } else {
+      |  setnil BASE, RDa, -2
+    }
+    |  add RD, 1
+    |  jmp <5
+    |
+    |7:  // Non-standard return case.
+    |  lea RBa, [PC-FRAME_VARG]
+    |  test RBa, FRAME_TYPEP
+    |  jnz ->vm_return
+    |  // Return from vararg function: relocate BASE down and RA up.
+    |  sub BASE, RBa
+    if (op != BC_RET0) {
+      |  add RAa, RBa
+    }
+    |  jmp <1
+    break;
+
+  // -- Loops and branches ------------------------------------------------
+
+  |.define FOR_IDX,  RAa
+  |.define FOR_STOP, RAa+1*TVS
+  |.define FOR_STEP, RAa+2*TVS
+  |.define FOR_EXT,  RAa+3*TVS
+
+  case BC_FORL:
+    |.if JIT
+    |  hotloop FORL_COUNTER_OFFSET
+    |.endif
+    | // Fall through. Assumes BC_IFORL follows and ins_AJ is a no-op.
+    break;
+
+  case BC_JFORI:
+  case BC_JFORL:
+#if !LJ_HASJIT
+    break;
+#endif
+  case BC_FORI:
+  case BC_IFORL:
+    vk = (op == BC_IFORL || op == BC_JFORL);
+    |  checktimeout // BC_FORL, BC_JFORL, BC_IFORL, BC_JFORI, BC_FORI
+    |  ins_AJ   // RA = base, RD = target (after end of loop or start of loop)
+    |  i2tvp RAa, BASE, RAa
+    if (!vk) {
+      |  cmp dword [FOR_IDX+8] , LJ_TNUMX; jne ->vmeta_for
+      |  cmp dword [FOR_STOP+8], LJ_TNUMX; jne ->vmeta_for
+    } else {
+#ifndef NDEBUG
+      |  cmp dword [FOR_STOP+8], LJ_TNUMX; jne ->assert_bad_for_arg_type
+      |  cmp dword [FOR_STEP+8], LJ_TNUMX; jne ->assert_bad_for_arg_type
+#endif
+    }
+    if (!vk) {
+      |  cmp dword [FOR_STEP+8], LJ_TNUMX; jne ->vmeta_for
+    }
+    |  movsd xmm0, qword [FOR_IDX]
+    |  movsd xmm1, qword [FOR_STOP]
+    if (vk) {
+      |  addsd xmm0, qword [FOR_STEP]
+      |  num2s xmm0, FOR_IDX, 0
+    }
+    |  mov RB, dword [FOR_STEP + 4] // Load hiword of for step.
+    |  test RB, RB
+    |  js >3
+    |  ucomisd xmm1, xmm0
+    |1:
+    |  num2s xmm0, FOR_EXT, 0
+    if (op == BC_FORI) {
+      |  jnb >2
+      |  branchPC RDa
+    } else if (op == BC_JFORI) {
+      |  branchPC RDa
+      |  restore_RD
+      |  jnb =>BC_JLOOP
+    } else if (op == BC_IFORL) {
+      |  jb >2
+      |  branchPC RDa
+    } else {
+      |  jnb =>BC_JLOOP
+    }
+    |2:
+    |  ins_next
+    |3:  // Invert comparison if step is negative.
+    |  ucomisd xmm0, xmm1
+    |  jmp <1
+    break;
+
+  case BC_ITRNL:
+  case BC_ITERL:
+    |.if JIT
+    |  hotloop ITERL_COUNTER_OFFSET
+    |.endif
+    | // Fall through. Assumes BC_IITERL follows and ins_AJ is a no-op.
+    break;
+
+  case BC_JITRNL:
+  case BC_JITERL:
+#if !LJ_HASJIT
+    break;
+#endif
+  case BC_IITRNL:
+  case BC_IITERL:
+    |  checktimeout // BC_[I|J]ITERL, BC_[I|J]ITRNL
+    |  ins_AJ   // RA = base, RD = target
+    |  i2tvp RAa, BASE, RAa // RA := TValue*
+    |  cmp dword [RAa+8], LJ_TNIL; je >1 // Stop if iterator returned nil.
+    if (op == BC_JITERL) {
+      |  movtv RAa-1*TVS, RAa
+      |  jmp =>BC_JLOOP
+    } else if (op == BC_JITRNL) {
+      |  jmp =>BC_JLOOP
+    } else if (op == BC_ITRNL || op == BC_IITRNL) {
+      |  branchPC RDa
+    } else {
+      |  branchPC RDa                   // Otherwise save control var + branch.
+      |  movtv RAa-1*TVS, RAa
+    }
+    |1:
+    |  ins_next
+    break;
+
+  case BC_LOOP:
+    |  ins_A    // RA = base, RD = target (loop extent)
+    |  // Note: RA/RD is only used by trace recorder to determine scope/extent
+    |  // This opcode does NOT jump, it's only purpose is to detect a hot loop.
+    |.if JIT
+    |  hotloop LOOP_COUNTER_OFFSET
+    |.endif
+    | // Fall through. Assumes BC_ILOOP follows and ins_A is a no-op.
+    break;
+
+  case BC_ILOOP:
+    |  checktimeout // BC_LOOP, BC_ILOOP
+    |  ins_A        // RA = base, RD = target (loop extent)
+    |  ins_next
+    break;
+
+  case BC_JLOOP:
+    |.if JIT
+    |  ins_AD   // RA = base (ignored), RD = traceno
+    |  mov RAa, qword [DISPATCH+DISPATCH_J(trace)]
+    |  mov TRACE:RDa, qword [RAa+RD*8]
+    |  mov RDa, TRACE:RDa->mcode
+    |  mov L:RBa, SAVE_L
+    |  mov qword [DISPATCH+DISPATCH_GL(jit_base)], BASE
+    |  mov qword [DISPATCH+DISPATCH_GL(jit_L)], L:RBa
+    |  mov qword [DISPATCH+DISPATCH_GL(tmpbuf.L)], L:RBa
+    |  // Save additional callee-save registers only used in compiled code.
+    |  mov TMPa2, r12
+    |  mov TMPa, r13
+    |  sub rsp, 32
+    |  jmp RDa
+    |.endif
+    break;
+
+  case BC_JMP:
+    |  ins_AJ   // RA = unused, RD = target
+    |  branchPC RDa
+    |  ins_next
+    break;
+
+  // -- Function headers --------------------------------------------------
+
+   //
+   // Reminder: A function may be called with func/args above L->maxstack,
+   // i.e. occupying LJ_STACK_EXTRA slots. And vmeta_call may add one extra slot,
+   // too. This means all FUNC* ops (including fast functions) must check
+   // for stack overflow _before_ adding more slots!
+   //
+
+  case BC_FUNCF:
+    |.if JIT
+    |  hotcall PROLOGUE_COUNTER_OFFSET
+    |.endif
+  case BC_FUNCV:  // NYI: compiled vararg functions.
+    | // Fall through. Assumes BC_IFUNCF/BC_IFUNCV follow and ins_AD is a no-op.
+    break;
+
+  case BC_JFUNCF:
+#if !LJ_HASJIT
+    break;
+#endif
+  case BC_IFUNCF:
+    |  ins_AD  // BASE = new base, RA = framesize, RD = nargs+1
+    |  setup_kbase BASE
+    |  mov L:RBa, SAVE_L
+    |  set_vmstate_lfunc
+    |  i2tvp RAa, BASE, RAa     // Top of frame.
+    |  cmp RAa, L:RBa->maxstack
+    |  ja ->vm_growstack_f
+    |  checktimeout // BC_FUNCF, BC_FUNCV, BC_JFUNCF, BC_IFUNCF (must be after stack check!)
+    |  movzx RA, byte [PC-4+PC2PROTO(numparams)]
+    |  cmp NARGS:RD, RA                 // Check for missing parameters.
+    |  jbe >3
+    |2:
+    if (op == BC_JFUNCF) {
+      |  restore_RD
+      |  jmp =>BC_JLOOP
+    } else {
+      |  ins_next
+    }
+    |
+    |3:  // Clear missing parameters.
+    |  setnil BASE, RDa, -1
+    |  add NARGS:RD, 1
+    |  cmp NARGS:RD, RA
+    |  jbe <3
+    |  jmp <2
+    break;
+
+  case BC_JFUNCV:
+#if !LJ_HASJIT
+    break;
+#endif
+    | int3  // NYI: compiled vararg functions
+    break;  // NYI: compiled vararg functions.
+
+  case BC_IFUNCV:
+    |  ins_AD  // BASE = new base, RA = framesize, RD = nargs+1
+    |
+    |  // Construct ftsz
+    |  mov RBa, RDa
+    |  shl RBa, TVB
+    |  lea RBa, [RBa+FRAME_VARG]
+    |
+    |  n2tvp RDa, BASE, RDa
+    |  i2func LFUNC:KBASE, BASE
+    |  mov qword [RDa-1*TVS+8], RBa                     // Store delta + FRAME_VARG.
+    |  mov qword [RDa-1*TVS], LFUNC:KBASE               // Store copy of LFUNC.
+    |  mov L:RBa, SAVE_L
+    |  set_vmstate_lfunc
+    |  i2tvp RAa, RDa, RAa
+    |  cmp RAa, L:RBa->maxstack
+    |  ja ->vm_growstack_v              // Need to grow stack.
+    |  checktimeout // BC_IFUNCV (must be after stack check!)
+    |  mov RAa, BASE
+    |  mov BASE, RDa
+    |  movzx RB, byte [PC-4+PC2PROTO(numparams)]
+    |  test RB, RB
+    |  jz >2
+    |1:  // Copy fixarg slots up to new frame.
+    |  add RAa, TVS
+    |  cmp RAa, BASE
+    |  jnb >3                           // Less args than parameters?
+    |  movtv RDa, RAa-1*TVS
+    |  add RDa, TVS
+    |  setnil RAa, -1                   // Clear old fixarg slot (help the GC).
+    |  sub RB, 1
+    |  jnz <1
+    |2:
+    if (op == BC_JFUNCV) {
+      |  restore_RD
+      |  jmp =>BC_JLOOP
+    } else {
+      |  setup_kbase BASE
+      |  ins_next
+    }
+    |
+    |3:  // Clear missing parameters.
+    |  setnil RDa
+    |  add RDa, 1*TVS
+    |  sub RB, 1
+    |  jnz <3
+    |  jmp <2
+    break;
+
+  case BC_FUNCC:
+  case BC_FUNCCW:
+    |  ins_AD  // BASE = new base, RA = ins RA|RD (unused), RD = nargs+1
+    |  i2func CFUNC:RBa, BASE
+    |  mov KBASE, CFUNC:RBa->f
+    |  mov L:RBa, SAVE_L
+    |  n2tvp RDa, BASE, RDa, -1
+    |  mov L:RBa->base, BASE
+    |  mov L:RBa->top, RDa
+    |  lea RAa, qword [RDa+LUA_MINSTACK*TVS]
+    |  cmp RAa, L:RBa->maxstack
+    if (op == BC_FUNCCW) {
+      |  mov CARG2, KBASE
+    }
+    |  mov CARG1, L:RBa
+    |  ja ->vm_growstack_c              // Need to grow stack.
+    |  checktimeout // BC_FUNCC, BC_FUNCCW (must be after stack check!)
+    |  set_vmstate_cfunc
+    if (op == BC_FUNCC) {
+      |  call KBASE                     // (lua_State *L)
+    } else {
+      |  // (lua_State *L, lua_CFunction f)
+      |  call qword [DISPATCH+DISPATCH_GL(wrapf)]
+    }
+    |  set_vmstate INTERP // BC_FUNCC*: INTERP until jump to BC_RET* or vm_return
+    |  // nresults returned in eax (CRETd).
+    |  mov BASE, L:RBa->base
+    |  n2tvp_r RAa, BASE, CRETd
+    |  neg RAa
+    |  add RAa, L:RBa->top              // RA = (L->top-(L->base+nresults))*8
+    |  restore_PC               // Fetch PC of caller.
+    |  jmp ->vm_returnc
+    break;
+  case BC_HOTCNT:
+    |  sub word [PC - HOTCNT_COUNTER_OFFSET], HOTCOUNT_STEP
+    |  ins_next
+    break;
+  case BC_COVERG:
+#ifdef UJIT_COVERAGE
+    |  mov L:RBa, SAVE_L
+    |  mov L:RBa->base, BASE   // Write new BASE
+    |  mov CARG2, PC
+    |  mov CARG1, L:RBa
+    |  call extern uj_coverage_stream_line  // (lua_State *L, const BCIns *pc)
+    |  mov BASE, L:RBa->base   // Restore BASE
+#endif
+    |  ins_next
+    break;
+  // ----------------------------------------------------------------------
+
+  default:
+    fprintf(stderr, "Error: undefined opcode BC_%s\n", bc_names[op]);
+    exit(2);
+    break;
+  }
+}
+
+static int build_backend(BuildCtx *ctx)
+{
+  int op;
+  dasm_growpc(Dst, BC__MAX);
+  build_subroutines(ctx);
+  |.code_op
+  for (op = 0; op < BC__MAX; op++)
+    build_ins(ctx, (BCOp)op, op);
+  return BC__MAX;
+}
+
+/* Emit pseudo frame-info for all assembler functions. */
+static void emit_asm_debug(BuildCtx *ctx)
+{
+  int fcofs = (int)((uint8_t *)ctx->glob[GLOB_vm_ffi_call] - ctx->code);
+#define SZPTR   "8"
+#define BSZPTR  "3"
+#define REG_SP  "0x7"
+#define REG_RA  "0x10"
+  switch (ctx->mode) {
+  case BUILD_elfasm:
+    fprintf(ctx->fp, "\t.section .debug_frame,\"\",@progbits\n");
+    fprintf(ctx->fp,
+        ".Lframe0:\n"
+        "\t.long .LECIE0-.LSCIE0\n"
+        ".LSCIE0:\n"
+        "\t.long 0xffffffff\n"
+        "\t.byte 0x1\n"
+        "\t.string \"\"\n"
+        "\t.uleb128 0x1\n"
+        "\t.sleb128 -" SZPTR "\n"
+        "\t.byte " REG_RA "\n"
+        "\t.byte 0xc\n\t.uleb128 " REG_SP "\n\t.uleb128 " SZPTR "\n"
+        "\t.byte 0x80+" REG_RA "\n\t.uleb128 0x1\n"
+        "\t.align " SZPTR "\n"
+        ".LECIE0:\n\n");
+    fprintf(ctx->fp,
+        ".LSFDE0:\n"
+        "\t.long .LEFDE0-.LASFDE0\n"
+        ".LASFDE0:\n"
+        "\t.long .Lframe0\n"
+        "\t.quad .Lbegin\n"
+        "\t.quad %d\n"
+        "\t.byte 0xe\n\t.uleb128 %d\n"          /* def_cfa_offset */
+        "\t.byte 0x86\n\t.uleb128 0x2\n"        /* offset rbp */
+        "\t.byte 0x83\n\t.uleb128 0x3\n"        /* offset rbx */
+        "\t.byte 0x8f\n\t.uleb128 0x4\n"        /* offset r15 */
+        "\t.byte 0x8e\n\t.uleb128 0x5\n"        /* offset r14 */
+        "\t.align " SZPTR "\n"
+        ".LEFDE0:\n\n", fcofs, (int)sizeof(struct cframe));
+#if LJ_HASFFI
+    fprintf(ctx->fp,
+        ".LSFDE1:\n"
+        "\t.long .LEFDE1-.LASFDE1\n"
+        ".LASFDE1:\n"
+        "\t.long .Lframe0\n"
+        "\t.quad lj_vm_ffi_call\n"
+        "\t.quad %d\n"
+        "\t.byte 0xe\n\t.uleb128 16\n"          /* def_cfa_offset */
+        "\t.byte 0x86\n\t.uleb128 0x2\n"        /* offset rbp */
+        "\t.byte 0xd\n\t.uleb128 0x6\n"         /* def_cfa_register rbp */
+        "\t.byte 0x83\n\t.uleb128 0x3\n"        /* offset rbx */
+        "\t.align " SZPTR "\n"
+        ".LEFDE1:\n\n", (int)ctx->codesz - fcofs);
+#endif
+    fprintf(ctx->fp, "\t.section .eh_frame,\"a\",@progbits\n");
+    fprintf(ctx->fp,
+        ".Lframe1:\n"
+        "\t.long .LECIE1-.LSCIE1\n"
+        ".LSCIE1:\n"
+        "\t.long 0\n"
+        "\t.byte 0x1\n"
+        "\t.string \"zPR\"\n"
+        "\t.uleb128 0x1\n"
+        "\t.sleb128 -" SZPTR "\n"
+        "\t.byte " REG_RA "\n"
+        "\t.uleb128 6\n"                        /* augmentation length */
+        "\t.byte 0x1b\n"                        /* pcrel|sdata4 */
+        "\t.long uj_dwarf_personality-.\n"
+        "\t.byte 0x1b\n"                        /* pcrel|sdata4 */
+        "\t.byte 0xc\n\t.uleb128 " REG_SP "\n\t.uleb128 " SZPTR "\n"
+        "\t.byte 0x80+" REG_RA "\n\t.uleb128 0x1\n"
+        "\t.align " SZPTR "\n"
+        ".LECIE1:\n\n");
+    fprintf(ctx->fp,
+        ".LSFDE2:\n"
+        "\t.long .LEFDE2-.LASFDE2\n"
+        ".LASFDE2:\n"
+        "\t.long .LASFDE2-.Lframe1\n"
+        "\t.long .Lbegin-.\n"
+        "\t.long %d\n"
+        "\t.uleb128 0\n"                        /* augmentation length */
+        "\t.byte 0xe\n\t.uleb128 %d\n"          /* def_cfa_offset */
+        "\t.byte 0x86\n\t.uleb128 0x2\n"        /* offset rbp */
+        "\t.byte 0x83\n\t.uleb128 0x3\n"        /* offset rbx */
+        "\t.byte 0x8f\n\t.uleb128 0x4\n"        /* offset r15 */
+        "\t.byte 0x8e\n\t.uleb128 0x5\n"        /* offset r14 */
+        "\t.align " SZPTR "\n"
+        ".LEFDE2:\n\n", fcofs, (int)CFRAME_SIZE);
+#if LJ_HASFFI
+    fprintf(ctx->fp,
+        ".Lframe2:\n"
+        "\t.long .LECIE2-.LSCIE2\n"
+        ".LSCIE2:\n"
+        "\t.long 0\n"
+        "\t.byte 0x1\n"
+        "\t.string \"zR\"\n"
+        "\t.uleb128 0x1\n"
+        "\t.sleb128 -" SZPTR "\n"
+        "\t.byte " REG_RA "\n"
+        "\t.uleb128 1\n"                        /* augmentation length */
+        "\t.byte 0x1b\n"                        /* pcrel|sdata4 */
+        "\t.byte 0xc\n\t.uleb128 " REG_SP "\n\t.uleb128 " SZPTR "\n"
+        "\t.byte 0x80+" REG_RA "\n\t.uleb128 0x1\n"
+        "\t.align " SZPTR "\n"
+        ".LECIE2:\n\n");
+    fprintf(ctx->fp,
+        ".LSFDE3:\n"
+        "\t.long .LEFDE3-.LASFDE3\n"
+        ".LASFDE3:\n"
+        "\t.long .LASFDE3-.Lframe2\n"
+        "\t.long lj_vm_ffi_call-.\n"
+        "\t.long %d\n"
+        "\t.uleb128 0\n"                        /* augmentation length */
+        "\t.byte 0xe\n\t.uleb128 16\n"          /* def_cfa_offset */
+        "\t.byte 0x86\n\t.uleb128 0x2\n"        /* offset rbp */
+        "\t.byte 0xd\n\t.uleb128 0x6\n"         /* def_cfa_register rbp */
+        "\t.byte 0x83\n\t.uleb128 0x3\n"        /* offset rbx */
+        "\t.align " SZPTR "\n"
+        ".LEFDE3:\n\n", (int)ctx->codesz - fcofs);
+#endif
+    break;
+  default:  /* Difficult for other modes. */
+    break;
+  }
+}
+

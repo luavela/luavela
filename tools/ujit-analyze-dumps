@@ -1,0 +1,254 @@
+#!/usr/bin/perl
+#
+# This is a tool for retrieving aggregated info and/or comparing datasets
+# produced by the ujit-parse-dump tool.
+# Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+
+use 5.010;
+use strict;
+use warnings;
+
+use Getopt::Long;
+
+use constant {
+    DEFAULT_GENERATION => 1,
+};
+
+our $SUB_print_data;
+BEGIN {
+    eval "use Text::Table";
+    $SUB_print_data = !$@? \&main::print_data_neat : \&print_data_raw;
+}
+
+my $generation = DEFAULT_GENERATION;
+my $count_dir;
+my @diff_dir;
+
+my $help = 0;
+
+Getopt::Long::GetOptions(
+    'generation|gen|g=i' => \$generation,
+    'count|c=s'          => \$count_dir,
+    'diff|d=s{2}'        => \@diff_dir,
+
+    'help' => \$help,
+);
+
+if ($help) {
+    say <<HELP;
+$0 - perform various analysis of parsed uJIT compiler dumps
+
+SYNOPSIS
+
+$0 [--count dir] [--diff dir1 dir2] [--generation num]
+
+Supported options are:
+
+ --count dir        Output number of traces for each root trace start location
+                    for dump from dir
+ --diff  dir1 dir2  Output number of traces for each root trace start location
+                    for dumps from dir1 and dir2
+ --generation num   Analyze num-th trace generation (default: @{[DEFAULT_GENERATION]})
+ --help             Show this message and exit
+HELP
+    exit;
+}
+
+if (defined $count_dir) {
+    do_count($count_dir, $generation);
+}
+
+if (@diff_dir != 0) {
+    do_diff(\@diff_dir, $generation);
+}
+
+exit;
+
+#
+# Action routines
+#
+
+sub do_count {
+    my $count_dir  = shift;
+    my $generation = shift;
+
+    assert_directory($count_dir);
+
+    my $total  = 0;
+    my @sorted = map {
+        $total += $_->{num_traces};
+        [ @$_{qw/location root_trace_id num_traces/} ]
+    } sort {
+        $b->{num_traces} <=> $a->{num_traces}
+    } parse_trace_dir($count_dir, $generation);
+
+    &$SUB_print_data(['Location', 'Root ID', '# traces'], [
+        ['TOTAL', 'N/A', $total], @sorted,
+    ]);
+}
+
+sub do_diff {
+    my $diff_dir   = shift;
+    my $generation = shift;
+
+    assert_directory($diff_dir->[0]);
+    assert_directory($diff_dir->[1]);
+
+    my %bushes1 = map {
+        ($_->{location} => $_)
+    } parse_trace_dir($diff_dir->[0], $generation);
+
+    my %bushes2 = map {
+        ($_->{location} => $_)
+    } parse_trace_dir($diff_dir->[1], $generation);
+
+    my $total1 = 0;
+    my $total2 = 0;
+    my @sorted = map {
+        $total1 += $_->{num_traces1};
+        $total2 += $_->{num_traces2};
+        [ @$_{qw/location root_trace_id1 root_trace_id2 num_traces1 num_traces2 ratio/} ]
+    } sort {
+        $b->{num_traces1} <=> $a->{num_traces1}
+    } map {
+        my $bush1 = $bushes1{$_} // {};
+        my $bush2 = $bushes2{$_} // {};
+
+        my $num_traces1 = $bush1->{num_traces} // 0;
+        my $num_traces2 = $bush2->{num_traces} // 0;
+        {
+            location       => $_,
+            root_trace_id1 => $bush1->{root_trace_id} // 'N/A',
+            root_trace_id2 => $bush2->{root_trace_id} // 'N/A',
+            num_traces1    => $num_traces1,
+            num_traces2    => $num_traces2,
+            ratio          => count_ratio($num_traces1, $num_traces2),
+        };
+    } keys { map {($_ => 1)} (keys(%bushes1), keys(%bushes2)) };
+
+    my @headers = (
+        'Location',
+        'Root ID 1',
+        'Root ID 2',
+        '# traces 1',
+        '# traces 2',
+        'Ratio',
+    );
+    my @total_row = (
+        'TOTAL', 'N/A', 'N/A', $total1, $total2, count_ratio($total1, $total2),
+    );
+    &$SUB_print_data(\@headers, [ \@total_row, @sorted ]);
+}
+
+#
+# Aux routines
+#
+
+sub parse_trace_dir {
+    my $dir = shift;
+    my $gen = shift;
+
+    my $prefix = "gen-$gen-trace-";
+
+    opendir(my $DIR, $dir);
+
+    my @bushes = map {
+        parse_trace_bush($_)
+    } map {
+        /\b$prefix\d+\.txt$/? "$dir/$_" : ()
+    } readdir $DIR;
+
+    closedir $DIR;
+
+    return @bushes;
+}
+
+sub parse_trace_bush {
+    my $TRACE_PREFIX = '---- TRACE';
+
+    my $tbush_fname     = shift;
+    my ($root_trace_id) = ($tbush_fname =~ /-(\d+)\.txt$/);
+
+    if (!$root_trace_id) {
+        die "Cannot read root trace ID from the dump name '$tbush_fname'";
+    }
+
+    my $num_traces = 1;
+    my $size_mcode = 0;
+
+    open my $FH_tbush, '<', $tbush_fname;
+    if (!$FH_tbush) {
+        die "Cannot open dump file '$tbush_fname': $!";
+    }
+    my $first_line = <$FH_tbush>;
+    chomp $first_line;
+
+    my ($location) = ($first_line =~ /^$TRACE_PREFIX $root_trace_id start (.+)$/);
+    if (!$location) {
+        die "Cannot read root trace start location from the first line: $first_line";
+    }
+
+    while (my $line = <$FH_tbush>) {
+        chomp $line;
+        if ($line =~ /$TRACE_PREFIX \d+ start /) {
+            $num_traces++;
+        } elsif ($line =~ /$TRACE_PREFIX \d+ mcode (\d+)\$/) {
+            $size_mcode += int($1);
+        }
+    }
+
+    close $FH_tbush;
+
+    return {
+        root_trace_id => $root_trace_id,
+        location      => $location,
+        num_traces    => $num_traces,
+        size_mcode    => $size_mcode,
+    };
+}
+
+sub print_data_raw {
+    my ($headers, $rows) = @_;
+
+    say join "\t", @$headers;
+    foreach my $row (@$rows) {
+        say join "\t", @$row;
+    }
+}
+
+# Borrowed from http://use.perl.org/use.perl.org/_Ovid/journal/36762.html,
+# don't ask
+sub print_data_neat {
+    my ($headers, $rows) = @_;
+
+    my @rule      = qw(- +);
+    my @headers   = \'| ';
+    push @headers => map { $_ => \' | ' } @$headers;
+    pop  @headers;
+    push @headers => \' |';
+
+    my $table = Text::Table->new(@headers);
+    $table->load(@$rows);
+    print
+        $table->rule(@rule),
+        $table->title,
+        $table->rule(@rule),
+        map({ $table->body($_) } 0 .. @$rows),
+        $table->rule(@rule);
+}
+
+sub count_ratio {
+    my $value1 = shift;
+    my $value2 = shift;
+    return $value1? sprintf('%.2f%%', $value2 / $value1 * 100 ) : 'N/A';
+}
+
+sub assert_file {
+  my $path = shift;
+  die "ERROR: file does not exist: $path" unless -f $path;
+}
+
+sub assert_directory {
+  my $path = shift;
+  die "ERROR: directory does not exist: $path" unless -d $path;
+}

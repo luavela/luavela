@@ -1,0 +1,490 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - Lua 5.3.5 - src/lmathlib.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">src</a> - lmathlib.c</td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">Lua 5.3.5</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">179</td>
+            <td class="headerCovTableEntry">180</td>
+            <td class="headerCovTableEntryHi">99.4 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2018-10-07 17:32:53</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="headerItem">Legend:</td>
+            <td class="headerValueLeg">            Lines:
+            <span class="coverLegendCov">hit</span>
+            <span class="coverLegendNoCov">not hit</span>
+</td>
+            <td></td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<span class="lineNum">       1 </span>            : /*
+<span class="lineNum">       2 </span>            : ** $Id: lmathlib.c,v 1.119.1.1 2017/04/19 17:20:42 roberto Exp $
+<span class="lineNum">       3 </span>            : ** Standard mathematical library
+<span class="lineNum">       4 </span>            : ** See Copyright Notice in lua.h
+<span class="lineNum">       5 </span>            : */
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #define lmathlib_c
+<span class="lineNum">       8 </span>            : #define LUA_LIB
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #include &quot;lprefix.h&quot;
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      14 </span>            : #include &lt;math.h&gt;
+<span class="lineNum">      15 </span>            : 
+<span class="lineNum">      16 </span>            : #include &quot;lua.h&quot;
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &quot;lauxlib.h&quot;
+<span class="lineNum">      19 </span>            : #include &quot;lualib.h&quot;
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span>            : 
+<span class="lineNum">      22 </span>            : #undef PI
+<span class="lineNum">      23 </span>            : #define PI      (l_mathop(3.141592653589793238462643383279502884))
+<span class="lineNum">      24 </span>            : 
+<span class="lineNum">      25 </span>            : 
+<span class="lineNum">      26 </span>            : #if !defined(l_rand)            /* { */
+<span class="lineNum">      27 </span>            : #if defined(LUA_USE_POSIX)
+<span class="lineNum">      28 </span>            : #define l_rand()        random()
+<span class="lineNum">      29 </span>            : #define l_srand(x)      srandom(x)
+<span class="lineNum">      30 </span>            : #define L_RANDMAX       2147483647      /* (2^31 - 1), following POSIX */
+<span class="lineNum">      31 </span>            : #else
+<span class="lineNum">      32 </span>            : #define l_rand()        rand()
+<span class="lineNum">      33 </span>            : #define l_srand(x)      srand(x)
+<span class="lineNum">      34 </span>            : #define L_RANDMAX       RAND_MAX
+<span class="lineNum">      35 </span>            : #endif
+<span class="lineNum">      36 </span>            : #endif                          /* } */
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span><span class="lineCov">          6 : static int math_abs (lua_State *L) {</span>
+<span class="lineNum">      40 </span><span class="lineCov">          6 :   if (lua_isinteger(L, 1)) {</span>
+<span class="lineNum">      41 </span><span class="lineCov">          3 :     lua_Integer n = lua_tointeger(L, 1);</span>
+<span class="lineNum">      42 </span><span class="lineCov">          3 :     if (n &lt; 0) n = (lua_Integer)(0u - (lua_Unsigned)n);</span>
+<span class="lineNum">      43 </span><span class="lineCov">          3 :     lua_pushinteger(L, n);</span>
+<span class="lineNum">      44 </span>            :   }
+<span class="lineNum">      45 </span>            :   else
+<span class="lineNum">      46 </span><span class="lineCov">          3 :     lua_pushnumber(L, l_mathop(fabs)(luaL_checknumber(L, 1)));</span>
+<span class="lineNum">      47 </span><span class="lineCov">          6 :   return 1;</span>
+<span class="lineNum">      48 </span>            : }
+<span class="lineNum">      49 </span>            : 
+<span class="lineNum">      50 </span><span class="lineCov">          1 : static int math_sin (lua_State *L) {</span>
+<span class="lineNum">      51 </span><span class="lineCov">          1 :   lua_pushnumber(L, l_mathop(sin)(luaL_checknumber(L, 1)));</span>
+<span class="lineNum">      52 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">      53 </span>            : }
+<span class="lineNum">      54 </span>            : 
+<span class="lineNum">      55 </span><span class="lineCov">          1 : static int math_cos (lua_State *L) {</span>
+<span class="lineNum">      56 </span><span class="lineCov">          1 :   lua_pushnumber(L, l_mathop(cos)(luaL_checknumber(L, 1)));</span>
+<span class="lineNum">      57 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">      58 </span>            : }
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span><span class="lineCov">          1 : static int math_tan (lua_State *L) {</span>
+<span class="lineNum">      61 </span><span class="lineCov">          1 :   lua_pushnumber(L, l_mathop(tan)(luaL_checknumber(L, 1)));</span>
+<span class="lineNum">      62 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">      63 </span>            : }
+<span class="lineNum">      64 </span>            : 
+<span class="lineNum">      65 </span><span class="lineCov">          1 : static int math_asin (lua_State *L) {</span>
+<span class="lineNum">      66 </span><span class="lineCov">          1 :   lua_pushnumber(L, l_mathop(asin)(luaL_checknumber(L, 1)));</span>
+<span class="lineNum">      67 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">      68 </span>            : }
+<span class="lineNum">      69 </span>            : 
+<span class="lineNum">      70 </span><span class="lineCov">          1 : static int math_acos (lua_State *L) {</span>
+<span class="lineNum">      71 </span><span class="lineCov">          1 :   lua_pushnumber(L, l_mathop(acos)(luaL_checknumber(L, 1)));</span>
+<span class="lineNum">      72 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">      73 </span>            : }
+<span class="lineNum">      74 </span>            : 
+<span class="lineNum">      75 </span><span class="lineCov">          2 : static int math_atan (lua_State *L) {</span>
+<span class="lineNum">      76 </span><span class="lineCov">          2 :   lua_Number y = luaL_checknumber(L, 1);</span>
+<span class="lineNum">      77 </span><span class="lineCov">          2 :   lua_Number x = luaL_optnumber(L, 2, 1);</span>
+<span class="lineNum">      78 </span><span class="lineCov">          2 :   lua_pushnumber(L, l_mathop(atan2)(y, x));</span>
+<span class="lineNum">      79 </span><span class="lineCov">          2 :   return 1;</span>
+<span class="lineNum">      80 </span>            : }
+<span class="lineNum">      81 </span>            : 
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span><span class="lineCov">         59 : static int math_toint (lua_State *L) {</span>
+<span class="lineNum">      84 </span>            :   int valid;
+<span class="lineNum">      85 </span><span class="lineCov">         59 :   lua_Integer n = lua_tointegerx(L, 1, &amp;valid);</span>
+<span class="lineNum">      86 </span><span class="lineCov">         59 :   if (valid)</span>
+<span class="lineNum">      87 </span><span class="lineCov">         54 :     lua_pushinteger(L, n);</span>
+<span class="lineNum">      88 </span>            :   else {
+<span class="lineNum">      89 </span><span class="lineCov">          5 :     luaL_checkany(L, 1);</span>
+<span class="lineNum">      90 </span><span class="lineCov">          5 :     lua_pushnil(L);  /* value is not convertible to integer */</span>
+<span class="lineNum">      91 </span>            :   }
+<span class="lineNum">      92 </span><span class="lineCov">         59 :   return 1;</span>
+<span class="lineNum">      93 </span>            : }
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span><span class="lineCov">          7 : static void pushnumint (lua_State *L, lua_Number d) {</span>
+<span class="lineNum">      97 </span>            :   lua_Integer n;
+<span class="lineNum">      98 </span><span class="lineCov">          7 :   if (lua_numbertointeger(d, &amp;n))  /* does 'd' fit in an integer? */</span>
+<span class="lineNum">      99 </span><span class="lineCov">          7 :     lua_pushinteger(L, n);  /* result is integer */</span>
+<span class="lineNum">     100 </span>            :   else
+<span class="lineNum">     101 </span><span class="lineNoCov">          0 :     lua_pushnumber(L, d);  /* result is float */</span>
+<span class="lineNum">     102 </span><span class="lineCov">          7 : }</span>
+<span class="lineNum">     103 </span>            : 
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span><span class="lineCov">          4 : static int math_floor (lua_State *L) {</span>
+<span class="lineNum">     106 </span><span class="lineCov">          4 :   if (lua_isinteger(L, 1))</span>
+<span class="lineNum">     107 </span><span class="lineCov">          1 :     lua_settop(L, 1);  /* integer is its own floor */</span>
+<span class="lineNum">     108 </span>            :   else {
+<span class="lineNum">     109 </span><span class="lineCov">          3 :     lua_Number d = l_mathop(floor)(luaL_checknumber(L, 1));</span>
+<span class="lineNum">     110 </span><span class="lineCov">          3 :     pushnumint(L, d);</span>
+<span class="lineNum">     111 </span>            :   }
+<span class="lineNum">     112 </span><span class="lineCov">          4 :   return 1;</span>
+<span class="lineNum">     113 </span>            : }
+<span class="lineNum">     114 </span>            : 
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span><span class="lineCov">          4 : static int math_ceil (lua_State *L) {</span>
+<span class="lineNum">     117 </span><span class="lineCov">          4 :   if (lua_isinteger(L, 1))</span>
+<span class="lineNum">     118 </span><span class="lineCov">          1 :     lua_settop(L, 1);  /* integer is its own ceil */</span>
+<span class="lineNum">     119 </span>            :   else {
+<span class="lineNum">     120 </span><span class="lineCov">          3 :     lua_Number d = l_mathop(ceil)(luaL_checknumber(L, 1));</span>
+<span class="lineNum">     121 </span><span class="lineCov">          3 :     pushnumint(L, d);</span>
+<span class="lineNum">     122 </span>            :   }
+<span class="lineNum">     123 </span><span class="lineCov">          4 :   return 1;</span>
+<span class="lineNum">     124 </span>            : }
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            : 
+<span class="lineNum">     127 </span><span class="lineCov">          9 : static int math_fmod (lua_State *L) {</span>
+<span class="lineNum">     128 </span><span class="lineCov">          9 :   if (lua_isinteger(L, 1) &amp;&amp; lua_isinteger(L, 2)) {</span>
+<span class="lineNum">     129 </span><span class="lineCov">          5 :     lua_Integer d = lua_tointeger(L, 2);</span>
+<span class="lineNum">     130 </span><span class="lineCov">          5 :     if ((lua_Unsigned)d + 1u &lt;= 1u) {  /* special cases: -1 or 0 */</span>
+<span class="lineNum">     131 </span><span class="lineCov">          2 :       luaL_argcheck(L, d != 0, 2, &quot;zero&quot;);</span>
+<span class="lineNum">     132 </span><span class="lineCov">          1 :       lua_pushinteger(L, 0);  /* avoid overflow with 0x80000... / -1 */</span>
+<span class="lineNum">     133 </span>            :     }
+<span class="lineNum">     134 </span>            :     else
+<span class="lineNum">     135 </span><span class="lineCov">          3 :       lua_pushinteger(L, lua_tointeger(L, 1) % d);</span>
+<span class="lineNum">     136 </span>            :   }
+<span class="lineNum">     137 </span>            :   else
+<span class="lineNum">     138 </span><span class="lineCov">          4 :     lua_pushnumber(L, l_mathop(fmod)(luaL_checknumber(L, 1),</span>
+<span class="lineNum">     139 </span>            :                                      luaL_checknumber(L, 2)));
+<span class="lineNum">     140 </span><span class="lineCov">          8 :   return 1;</span>
+<span class="lineNum">     141 </span>            : }
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span>            : /*
+<span class="lineNum">     145 </span>            : ** next function does not use 'modf', avoiding problems with 'double*'
+<span class="lineNum">     146 </span>            : ** (which is not compatible with 'float*') when lua_Number is not
+<span class="lineNum">     147 </span>            : ** 'double'.
+<span class="lineNum">     148 </span>            : */
+<span class="lineNum">     149 </span><span class="lineCov">          2 : static int math_modf (lua_State *L) {</span>
+<span class="lineNum">     150 </span><span class="lineCov">          2 :   if (lua_isinteger(L ,1)) {</span>
+<span class="lineNum">     151 </span><span class="lineCov">          1 :     lua_settop(L, 1);  /* number is its own integer part */</span>
+<span class="lineNum">     152 </span><span class="lineCov">          1 :     lua_pushnumber(L, 0);  /* no fractional part */</span>
+<span class="lineNum">     153 </span>            :   }
+<span class="lineNum">     154 </span>            :   else {
+<span class="lineNum">     155 </span><span class="lineCov">          1 :     lua_Number n = luaL_checknumber(L, 1);</span>
+<span class="lineNum">     156 </span>            :     /* integer part (rounds toward zero) */
+<span class="lineNum">     157 </span><span class="lineCov">          1 :     lua_Number ip = (n &lt; 0) ? l_mathop(ceil)(n) : l_mathop(floor)(n);</span>
+<span class="lineNum">     158 </span><span class="lineCov">          1 :     pushnumint(L, ip);</span>
+<span class="lineNum">     159 </span>            :     /* fractional part (test needed for inf/-inf) */
+<span class="lineNum">     160 </span><span class="lineCov">          1 :     lua_pushnumber(L, (n == ip) ? l_mathop(0.0) : (n - ip));</span>
+<span class="lineNum">     161 </span>            :   }
+<span class="lineNum">     162 </span><span class="lineCov">          2 :   return 2;</span>
+<span class="lineNum">     163 </span>            : }
+<span class="lineNum">     164 </span>            : 
+<span class="lineNum">     165 </span>            : 
+<span class="lineNum">     166 </span><span class="lineCov">          2 : static int math_sqrt (lua_State *L) {</span>
+<span class="lineNum">     167 </span><span class="lineCov">          2 :   lua_pushnumber(L, l_mathop(sqrt)(luaL_checknumber(L, 1)));</span>
+<span class="lineNum">     168 </span><span class="lineCov">          2 :   return 1;</span>
+<span class="lineNum">     169 </span>            : }
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span><span class="lineCov">          3 : static int math_ult (lua_State *L) {</span>
+<span class="lineNum">     173 </span><span class="lineCov">          3 :   lua_Integer a = luaL_checkinteger(L, 1);</span>
+<span class="lineNum">     174 </span><span class="lineCov">          3 :   lua_Integer b = luaL_checkinteger(L, 2);</span>
+<span class="lineNum">     175 </span><span class="lineCov">          3 :   lua_pushboolean(L, (lua_Unsigned)a &lt; (lua_Unsigned)b);</span>
+<span class="lineNum">     176 </span><span class="lineCov">          3 :   return 1;</span>
+<span class="lineNum">     177 </span>            : }
+<span class="lineNum">     178 </span>            : 
+<span class="lineNum">     179 </span><span class="lineCov">          4 : static int math_log (lua_State *L) {</span>
+<span class="lineNum">     180 </span><span class="lineCov">          4 :   lua_Number x = luaL_checknumber(L, 1);</span>
+<span class="lineNum">     181 </span>            :   lua_Number res;
+<span class="lineNum">     182 </span><span class="lineCov">          4 :   if (lua_isnoneornil(L, 2))</span>
+<span class="lineNum">     183 </span><span class="lineCov">          1 :     res = l_mathop(log)(x);</span>
+<span class="lineNum">     184 </span>            :   else {
+<span class="lineNum">     185 </span><span class="lineCov">          3 :     lua_Number base = luaL_checknumber(L, 2);</span>
+<span class="lineNum">     186 </span>            : #if !defined(LUA_USE_C89)
+<span class="lineNum">     187 </span><span class="lineCov">          3 :     if (base == l_mathop(2.0))</span>
+<span class="lineNum">     188 </span><span class="lineCov">          1 :       res = l_mathop(log2)(x); else</span>
+<span class="lineNum">     189 </span>            : #endif
+<span class="lineNum">     190 </span><span class="lineCov">          2 :     if (base == l_mathop(10.0))</span>
+<span class="lineNum">     191 </span><span class="lineCov">          1 :       res = l_mathop(log10)(x);</span>
+<span class="lineNum">     192 </span>            :     else
+<span class="lineNum">     193 </span><span class="lineCov">          1 :       res = l_mathop(log)(x)/l_mathop(log)(base);</span>
+<span class="lineNum">     194 </span>            :   }
+<span class="lineNum">     195 </span><span class="lineCov">          4 :   lua_pushnumber(L, res);</span>
+<span class="lineNum">     196 </span><span class="lineCov">          4 :   return 1;</span>
+<span class="lineNum">     197 </span>            : }
+<span class="lineNum">     198 </span>            : 
+<span class="lineNum">     199 </span><span class="lineCov">          2 : static int math_exp (lua_State *L) {</span>
+<span class="lineNum">     200 </span><span class="lineCov">          2 :   lua_pushnumber(L, l_mathop(exp)(luaL_checknumber(L, 1)));</span>
+<span class="lineNum">     201 </span><span class="lineCov">          2 :   return 1;</span>
+<span class="lineNum">     202 </span>            : }
+<span class="lineNum">     203 </span>            : 
+<span class="lineNum">     204 </span><span class="lineCov">          1 : static int math_deg (lua_State *L) {</span>
+<span class="lineNum">     205 </span><span class="lineCov">          1 :   lua_pushnumber(L, luaL_checknumber(L, 1) * (l_mathop(180.0) / PI));</span>
+<span class="lineNum">     206 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">     207 </span>            : }
+<span class="lineNum">     208 </span>            : 
+<span class="lineNum">     209 </span><span class="lineCov">          1 : static int math_rad (lua_State *L) {</span>
+<span class="lineNum">     210 </span><span class="lineCov">          1 :   lua_pushnumber(L, luaL_checknumber(L, 1) * (PI / l_mathop(180.0)));</span>
+<span class="lineNum">     211 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">     212 </span>            : }
+<span class="lineNum">     213 </span>            : 
+<span class="lineNum">     214 </span>            : 
+<span class="lineNum">     215 </span><span class="lineCov">          4 : static int math_min (lua_State *L) {</span>
+<span class="lineNum">     216 </span><span class="lineCov">          4 :   int n = lua_gettop(L);  /* number of arguments */</span>
+<span class="lineNum">     217 </span>            :   int imin = 1;  /* index of current minimum value */
+<span class="lineNum">     218 </span>            :   int i;
+<span class="lineNum">     219 </span><span class="lineCov">          4 :   luaL_argcheck(L, n &gt;= 1, 1, &quot;value expected&quot;);</span>
+<span class="lineNum">     220 </span><span class="lineCov">          4 :   for (i = 2; i &lt;= n; i++) {</span>
+<span class="lineNum">     221 </span><span class="lineCov">          4 :     if (lua_compare(L, i, imin, LUA_OPLT))</span>
+<span class="lineNum">     222 </span>            :       imin = i;
+<span class="lineNum">     223 </span>            :   }
+<span class="lineNum">     224 </span><span class="lineCov">          3 :   lua_pushvalue(L, imin);</span>
+<span class="lineNum">     225 </span><span class="lineCov">          3 :   return 1;</span>
+<span class="lineNum">     226 </span>            : }
+<span class="lineNum">     227 </span>            : 
+<span class="lineNum">     228 </span>            : 
+<span class="lineNum">     229 </span><span class="lineCov">          6 : static int math_max (lua_State *L) {</span>
+<span class="lineNum">     230 </span><span class="lineCov">          6 :   int n = lua_gettop(L);  /* number of arguments */</span>
+<span class="lineNum">     231 </span>            :   int imax = 1;  /* index of current maximum value */
+<span class="lineNum">     232 </span>            :   int i;
+<span class="lineNum">     233 </span><span class="lineCov">          6 :   luaL_argcheck(L, n &gt;= 1, 1, &quot;value expected&quot;);</span>
+<span class="lineNum">     234 </span><span class="lineCov">          8 :   for (i = 2; i &lt;= n; i++) {</span>
+<span class="lineNum">     235 </span><span class="lineCov">          8 :     if (lua_compare(L, imax, i, LUA_OPLT))</span>
+<span class="lineNum">     236 </span>            :       imax = i;
+<span class="lineNum">     237 </span>            :   }
+<span class="lineNum">     238 </span><span class="lineCov">          5 :   lua_pushvalue(L, imax);</span>
+<span class="lineNum">     239 </span><span class="lineCov">          5 :   return 1;</span>
+<span class="lineNum">     240 </span>            : }
+<span class="lineNum">     241 </span>            : 
+<span class="lineNum">     242 </span>            : /*
+<span class="lineNum">     243 </span>            : ** This function uses 'double' (instead of 'lua_Number') to ensure that
+<span class="lineNum">     244 </span>            : ** all bits from 'l_rand' can be represented, and that 'RANDMAX + 1.0'
+<span class="lineNum">     245 </span>            : ** will keep full precision (ensuring that 'r' is always less than 1.0.)
+<span class="lineNum">     246 </span>            : */
+<span class="lineNum">     247 </span><span class="lineCov">         13 : static int math_random (lua_State *L) {</span>
+<span class="lineNum">     248 </span>            :   lua_Integer low, up;
+<span class="lineNum">     249 </span><span class="lineCov">         13 :   double r = (double)l_rand() * (1.0 / ((double)L_RANDMAX + 1.0));</span>
+<span class="lineNum">     250 </span><span class="lineCov">         13 :   switch (lua_gettop(L)) {  /* check number of arguments */</span>
+<span class="lineNum">     251 </span><span class="lineCov">          4 :     case 0: {  /* no arguments */</span>
+<span class="lineNum">     252 </span><span class="lineCov">          4 :       lua_pushnumber(L, (lua_Number)r);  /* Number between 0 and 1 */</span>
+<span class="lineNum">     253 </span><span class="lineCov">          4 :       return 1;</span>
+<span class="lineNum">     254 </span>            :     }
+<span class="lineNum">     255 </span><span class="lineCov">          4 :     case 1: {  /* only upper limit */</span>
+<span class="lineNum">     256 </span>            :       low = 1;
+<span class="lineNum">     257 </span><span class="lineCov">          4 :       up = luaL_checkinteger(L, 1);</span>
+<span class="lineNum">     258 </span><span class="lineCov">          4 :       break;</span>
+<span class="lineNum">     259 </span>            :     }
+<span class="lineNum">     260 </span><span class="lineCov">          4 :     case 2: {  /* lower and upper limits */</span>
+<span class="lineNum">     261 </span><span class="lineCov">          4 :       low = luaL_checkinteger(L, 1);</span>
+<span class="lineNum">     262 </span><span class="lineCov">          4 :       up = luaL_checkinteger(L, 2);</span>
+<span class="lineNum">     263 </span><span class="lineCov">          4 :       break;</span>
+<span class="lineNum">     264 </span>            :     }
+<span class="lineNum">     265 </span><span class="lineCov">          1 :     default: return luaL_error(L, &quot;wrong number of arguments&quot;);</span>
+<span class="lineNum">     266 </span>            :   }
+<span class="lineNum">     267 </span>            :   /* random integer in the interval [low, up] */
+<span class="lineNum">     268 </span><span class="lineCov">          8 :   luaL_argcheck(L, low &lt;= up, 1, &quot;interval is empty&quot;);</span>
+<span class="lineNum">     269 </span><span class="lineCov">          5 :   luaL_argcheck(L, low &gt;= 0 || up &lt;= LUA_MAXINTEGER + low, 1,</span>
+<span class="lineNum">     270 </span>            :                    &quot;interval too large&quot;);
+<span class="lineNum">     271 </span><span class="lineCov">          5 :   r *= (double)(up - low) + 1.0;</span>
+<span class="lineNum">     272 </span><span class="lineCov">          5 :   lua_pushinteger(L, (lua_Integer)r + low);</span>
+<span class="lineNum">     273 </span><span class="lineCov">          5 :   return 1;</span>
+<span class="lineNum">     274 </span>            : }
+<span class="lineNum">     275 </span>            : 
+<span class="lineNum">     276 </span>            : 
+<span class="lineNum">     277 </span><span class="lineCov">          2 : static int math_randomseed (lua_State *L) {</span>
+<span class="lineNum">     278 </span><span class="lineCov">          2 :   l_srand((unsigned int)(lua_Integer)luaL_checknumber(L, 1));</span>
+<span class="lineNum">     279 </span><span class="lineCov">          2 :   (void)l_rand(); /* discard first value to avoid undesirable correlations */</span>
+<span class="lineNum">     280 </span><span class="lineCov">          2 :   return 0;</span>
+<span class="lineNum">     281 </span>            : }
+<span class="lineNum">     282 </span>            : 
+<span class="lineNum">     283 </span>            : 
+<span class="lineNum">     284 </span><span class="lineCov">         15 : static int math_type (lua_State *L) {</span>
+<span class="lineNum">     285 </span><span class="lineCov">         15 :   if (lua_type(L, 1) == LUA_TNUMBER) {</span>
+<span class="lineNum">     286 </span><span class="lineCov">         14 :       if (lua_isinteger(L, 1))</span>
+<span class="lineNum">     287 </span><span class="lineCov">          9 :         lua_pushliteral(L, &quot;integer&quot;);</span>
+<span class="lineNum">     288 </span>            :       else
+<span class="lineNum">     289 </span><span class="lineCov">          5 :         lua_pushliteral(L, &quot;float&quot;);</span>
+<span class="lineNum">     290 </span>            :   }
+<span class="lineNum">     291 </span>            :   else {
+<span class="lineNum">     292 </span><span class="lineCov">          1 :     luaL_checkany(L, 1);</span>
+<span class="lineNum">     293 </span><span class="lineCov">          1 :     lua_pushnil(L);</span>
+<span class="lineNum">     294 </span>            :   }
+<span class="lineNum">     295 </span><span class="lineCov">         15 :   return 1;</span>
+<span class="lineNum">     296 </span>            : }
+<span class="lineNum">     297 </span>            : 
+<span class="lineNum">     298 </span>            : 
+<span class="lineNum">     299 </span>            : /*
+<span class="lineNum">     300 </span>            : ** {==================================================================
+<span class="lineNum">     301 </span>            : ** Deprecated functions (for compatibility only)
+<span class="lineNum">     302 </span>            : ** ===================================================================
+<span class="lineNum">     303 </span>            : */
+<span class="lineNum">     304 </span>            : #if defined(LUA_COMPAT_MATHLIB)
+<span class="lineNum">     305 </span>            : 
+<span class="lineNum">     306 </span><span class="lineCov">          1 : static int math_cosh (lua_State *L) {</span>
+<span class="lineNum">     307 </span><span class="lineCov">          1 :   lua_pushnumber(L, l_mathop(cosh)(luaL_checknumber(L, 1)));</span>
+<span class="lineNum">     308 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">     309 </span>            : }
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span><span class="lineCov">          1 : static int math_sinh (lua_State *L) {</span>
+<span class="lineNum">     312 </span><span class="lineCov">          1 :   lua_pushnumber(L, l_mathop(sinh)(luaL_checknumber(L, 1)));</span>
+<span class="lineNum">     313 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">     314 </span>            : }
+<span class="lineNum">     315 </span>            : 
+<span class="lineNum">     316 </span><span class="lineCov">          1 : static int math_tanh (lua_State *L) {</span>
+<span class="lineNum">     317 </span><span class="lineCov">          1 :   lua_pushnumber(L, l_mathop(tanh)(luaL_checknumber(L, 1)));</span>
+<span class="lineNum">     318 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">     319 </span>            : }
+<span class="lineNum">     320 </span>            : 
+<span class="lineNum">     321 </span><span class="lineCov">          1 : static int math_pow (lua_State *L) {</span>
+<span class="lineNum">     322 </span><span class="lineCov">          1 :   lua_Number x = luaL_checknumber(L, 1);</span>
+<span class="lineNum">     323 </span><span class="lineCov">          1 :   lua_Number y = luaL_checknumber(L, 2);</span>
+<span class="lineNum">     324 </span><span class="lineCov">          1 :   lua_pushnumber(L, l_mathop(pow)(x, y));</span>
+<span class="lineNum">     325 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">     326 </span>            : }
+<span class="lineNum">     327 </span>            : 
+<span class="lineNum">     328 </span><span class="lineCov">          1 : static int math_frexp (lua_State *L) {</span>
+<span class="lineNum">     329 </span>            :   int e;
+<span class="lineNum">     330 </span><span class="lineCov">          1 :   lua_pushnumber(L, l_mathop(frexp)(luaL_checknumber(L, 1), &amp;e));</span>
+<span class="lineNum">     331 </span><span class="lineCov">          1 :   lua_pushinteger(L, e);</span>
+<span class="lineNum">     332 </span><span class="lineCov">          1 :   return 2;</span>
+<span class="lineNum">     333 </span>            : }
+<span class="lineNum">     334 </span>            : 
+<span class="lineNum">     335 </span><span class="lineCov">          1 : static int math_ldexp (lua_State *L) {</span>
+<span class="lineNum">     336 </span><span class="lineCov">          1 :   lua_Number x = luaL_checknumber(L, 1);</span>
+<span class="lineNum">     337 </span><span class="lineCov">          1 :   int ep = (int)luaL_checkinteger(L, 2);</span>
+<span class="lineNum">     338 </span><span class="lineCov">          1 :   lua_pushnumber(L, l_mathop(ldexp)(x, ep));</span>
+<span class="lineNum">     339 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">     340 </span>            : }
+<span class="lineNum">     341 </span>            : 
+<span class="lineNum">     342 </span><span class="lineCov">          1 : static int math_log10 (lua_State *L) {</span>
+<span class="lineNum">     343 </span><span class="lineCov">          1 :   lua_pushnumber(L, l_mathop(log10)(luaL_checknumber(L, 1)));</span>
+<span class="lineNum">     344 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">     345 </span>            : }
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span>            : #endif
+<span class="lineNum">     348 </span>            : /* }================================================================== */
+<span class="lineNum">     349 </span>            : 
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span>            : 
+<span class="lineNum">     352 </span>            : static const luaL_Reg mathlib[] = {
+<span class="lineNum">     353 </span>            :   {&quot;abs&quot;,   math_abs},
+<span class="lineNum">     354 </span>            :   {&quot;acos&quot;,  math_acos},
+<span class="lineNum">     355 </span>            :   {&quot;asin&quot;,  math_asin},
+<span class="lineNum">     356 </span>            :   {&quot;atan&quot;,  math_atan},
+<span class="lineNum">     357 </span>            :   {&quot;ceil&quot;,  math_ceil},
+<span class="lineNum">     358 </span>            :   {&quot;cos&quot;,   math_cos},
+<span class="lineNum">     359 </span>            :   {&quot;deg&quot;,   math_deg},
+<span class="lineNum">     360 </span>            :   {&quot;exp&quot;,   math_exp},
+<span class="lineNum">     361 </span>            :   {&quot;tointeger&quot;, math_toint},
+<span class="lineNum">     362 </span>            :   {&quot;floor&quot;, math_floor},
+<span class="lineNum">     363 </span>            :   {&quot;fmod&quot;,   math_fmod},
+<span class="lineNum">     364 </span>            :   {&quot;ult&quot;,   math_ult},
+<span class="lineNum">     365 </span>            :   {&quot;log&quot;,   math_log},
+<span class="lineNum">     366 </span>            :   {&quot;max&quot;,   math_max},
+<span class="lineNum">     367 </span>            :   {&quot;min&quot;,   math_min},
+<span class="lineNum">     368 </span>            :   {&quot;modf&quot;,   math_modf},
+<span class="lineNum">     369 </span>            :   {&quot;rad&quot;,   math_rad},
+<span class="lineNum">     370 </span>            :   {&quot;random&quot;,     math_random},
+<span class="lineNum">     371 </span>            :   {&quot;randomseed&quot;, math_randomseed},
+<span class="lineNum">     372 </span>            :   {&quot;sin&quot;,   math_sin},
+<span class="lineNum">     373 </span>            :   {&quot;sqrt&quot;,  math_sqrt},
+<span class="lineNum">     374 </span>            :   {&quot;tan&quot;,   math_tan},
+<span class="lineNum">     375 </span>            :   {&quot;type&quot;, math_type},
+<span class="lineNum">     376 </span>            : #if defined(LUA_COMPAT_MATHLIB)
+<span class="lineNum">     377 </span>            :   {&quot;atan2&quot;, math_atan},
+<span class="lineNum">     378 </span>            :   {&quot;cosh&quot;,   math_cosh},
+<span class="lineNum">     379 </span>            :   {&quot;sinh&quot;,   math_sinh},
+<span class="lineNum">     380 </span>            :   {&quot;tanh&quot;,   math_tanh},
+<span class="lineNum">     381 </span>            :   {&quot;pow&quot;,   math_pow},
+<span class="lineNum">     382 </span>            :   {&quot;frexp&quot;, math_frexp},
+<span class="lineNum">     383 </span>            :   {&quot;ldexp&quot;, math_ldexp},
+<span class="lineNum">     384 </span>            :   {&quot;log10&quot;, math_log10},
+<span class="lineNum">     385 </span>            : #endif
+<span class="lineNum">     386 </span>            :   /* placeholders */
+<span class="lineNum">     387 </span>            :   {&quot;pi&quot;, NULL},
+<span class="lineNum">     388 </span>            :   {&quot;huge&quot;, NULL},
+<span class="lineNum">     389 </span>            :   {&quot;maxinteger&quot;, NULL},
+<span class="lineNum">     390 </span>            :   {&quot;mininteger&quot;, NULL},
+<span class="lineNum">     391 </span>            :   {NULL, NULL}
+<span class="lineNum">     392 </span>            : };
+<span class="lineNum">     393 </span>            : 
+<span class="lineNum">     394 </span>            : 
+<span class="lineNum">     395 </span>            : /*
+<span class="lineNum">     396 </span>            : ** Open math library
+<span class="lineNum">     397 </span>            : */
+<span class="lineNum">     398 </span><span class="lineCov">         83 : LUAMOD_API int luaopen_math (lua_State *L) {</span>
+<span class="lineNum">     399 </span><span class="lineCov">         83 :   luaL_newlib(L, mathlib);</span>
+<span class="lineNum">     400 </span><span class="lineCov">         83 :   lua_pushnumber(L, PI);</span>
+<span class="lineNum">     401 </span><span class="lineCov">         83 :   lua_setfield(L, -2, &quot;pi&quot;);</span>
+<span class="lineNum">     402 </span><span class="lineCov">         83 :   lua_pushnumber(L, (lua_Number)HUGE_VAL);</span>
+<span class="lineNum">     403 </span><span class="lineCov">         83 :   lua_setfield(L, -2, &quot;huge&quot;);</span>
+<span class="lineNum">     404 </span><span class="lineCov">         83 :   lua_pushinteger(L, LUA_MAXINTEGER);</span>
+<span class="lineNum">     405 </span><span class="lineCov">         83 :   lua_setfield(L, -2, &quot;maxinteger&quot;);</span>
+<span class="lineNum">     406 </span><span class="lineCov">         83 :   lua_pushinteger(L, LUA_MININTEGER);</span>
+<span class="lineNum">     407 </span><span class="lineCov">         83 :   lua_setfield(L, -2, &quot;mininteger&quot;);</span>
+<span class="lineNum">     408 </span><span class="lineCov">         83 :   return 1;</span>
+<span class="lineNum">     409 </span>            : }
+<span class="lineNum">     410 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

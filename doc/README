@@ -1,0 +1,7 @@
+This is an internal documentation directory.
+
+dlmalloc-2.8.4
+    This is the prototype implementation of lj_alloc memory allocator. It was 'heavily customized', resulting in loss of cross-platform support and all valuable comments.
+    In this case, the comments are actually valuable, since allocator implementation is twisted and utilizes some complicated (yet efficient) algorithms and data structures.
+    Reference implementation is much easier to understand and easy to apply, since majority of names were unchanged.
+    NOTE: This is a third-party software, see copyright notice inside.

@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - Lua 5.3.5 - src/linit.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">src</a> - linit.c</td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">Lua 5.3.5</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2018-10-07 17:32:53</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="headerItem">Legend:</td>
+            <td class="headerValueLeg">            Lines:
+            <span class="coverLegendCov">hit</span>
+            <span class="coverLegendNoCov">not hit</span>
+</td>
+            <td></td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<span class="lineNum">       1 </span>            : /*
+<span class="lineNum">       2 </span>            : ** $Id: linit.c,v 1.39.1.1 2017/04/19 17:20:42 roberto Exp $
+<span class="lineNum">       3 </span>            : ** Initialization of libraries for lua.c and other clients
+<span class="lineNum">       4 </span>            : ** See Copyright Notice in lua.h
+<span class="lineNum">       5 </span>            : */
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : 
+<span class="lineNum">       8 </span>            : #define linit_c
+<span class="lineNum">       9 </span>            : #define LUA_LIB
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : /*
+<span class="lineNum">      12 </span>            : ** If you embed Lua in your program and need to open the standard
+<span class="lineNum">      13 </span>            : ** libraries, call luaL_openlibs in your program. If you need a
+<span class="lineNum">      14 </span>            : ** different set of libraries, copy this file to your project and edit
+<span class="lineNum">      15 </span>            : ** it to suit your needs.
+<span class="lineNum">      16 </span>            : **
+<span class="lineNum">      17 </span>            : ** You can also *preload* libraries, so that a later 'require' can
+<span class="lineNum">      18 </span>            : ** open the library, which is already linked to the application.
+<span class="lineNum">      19 </span>            : ** For that, do the following code:
+<span class="lineNum">      20 </span>            : **
+<span class="lineNum">      21 </span>            : **  luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
+<span class="lineNum">      22 </span>            : **  lua_pushcfunction(L, luaopen_modname);
+<span class="lineNum">      23 </span>            : **  lua_setfield(L, -2, modname);
+<span class="lineNum">      24 </span>            : **  lua_pop(L, 1);  // remove PRELOAD table
+<span class="lineNum">      25 </span>            : */
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : #include &quot;lprefix.h&quot;
+<span class="lineNum">      28 </span>            : 
+<span class="lineNum">      29 </span>            : 
+<span class="lineNum">      30 </span>            : #include &lt;stddef.h&gt;
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : #include &quot;lua.h&quot;
+<span class="lineNum">      33 </span>            : 
+<span class="lineNum">      34 </span>            : #include &quot;lualib.h&quot;
+<span class="lineNum">      35 </span>            : #include &quot;lauxlib.h&quot;
+<span class="lineNum">      36 </span>            : 
+<span class="lineNum">      37 </span>            : 
+<span class="lineNum">      38 </span>            : /*
+<span class="lineNum">      39 </span>            : ** these libs are loaded by lua.c and are readily available to any Lua
+<span class="lineNum">      40 </span>            : ** program
+<span class="lineNum">      41 </span>            : */
+<span class="lineNum">      42 </span>            : static const luaL_Reg loadedlibs[] = {
+<span class="lineNum">      43 </span>            :   {&quot;_G&quot;, luaopen_base},
+<span class="lineNum">      44 </span>            :   {LUA_LOADLIBNAME, luaopen_package},
+<span class="lineNum">      45 </span>            :   {LUA_COLIBNAME, luaopen_coroutine},
+<span class="lineNum">      46 </span>            :   {LUA_TABLIBNAME, luaopen_table},
+<span class="lineNum">      47 </span>            :   {LUA_IOLIBNAME, luaopen_io},
+<span class="lineNum">      48 </span>            :   {LUA_OSLIBNAME, luaopen_os},
+<span class="lineNum">      49 </span>            :   {LUA_STRLIBNAME, luaopen_string},
+<span class="lineNum">      50 </span>            :   {LUA_MATHLIBNAME, luaopen_math},
+<span class="lineNum">      51 </span>            :   {LUA_UTF8LIBNAME, luaopen_utf8},
+<span class="lineNum">      52 </span>            :   {LUA_DBLIBNAME, luaopen_debug},
+<span class="lineNum">      53 </span>            : #if defined(LUA_COMPAT_BITLIB)
+<span class="lineNum">      54 </span>            :   {LUA_BITLIBNAME, luaopen_bit32},
+<span class="lineNum">      55 </span>            : #endif
+<span class="lineNum">      56 </span>            :   {NULL, NULL}
+<span class="lineNum">      57 </span>            : };
+<span class="lineNum">      58 </span>            : 
+<span class="lineNum">      59 </span>            : 
+<span class="lineNum">      60 </span><span class="lineCov">         83 : LUALIB_API void luaL_openlibs (lua_State *L) {</span>
+<span class="lineNum">      61 </span>            :   const luaL_Reg *lib;
+<span class="lineNum">      62 </span>            :   /* &quot;require&quot; functions from 'loadedlibs' and set results to global table */
+<span class="lineNum">      63 </span><span class="lineCov">        996 :   for (lib = loadedlibs; lib-&gt;func; lib++) {</span>
+<span class="lineNum">      64 </span><span class="lineCov">        913 :     luaL_requiref(L, lib-&gt;name, lib-&gt;func, 1);</span>
+<span class="lineNum">      65 </span><span class="lineCov">        913 :     lua_pop(L, 1);  /* remove lib */</span>
+<span class="lineNum">      66 </span>            :   }
+<span class="lineNum">      67 </span><span class="lineCov">         83 : }</span>
+<span class="lineNum">      68 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - Lua 5.3.5 - src/lcorolib.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">src</a> - lcorolib.c</td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">Lua 5.3.5</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">72</td>
+            <td class="headerCovTableEntry">81</td>
+            <td class="headerCovTableEntryMed">88.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2018-10-07 17:32:53</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="headerItem">Legend:</td>
+            <td class="headerValueLeg">            Lines:
+            <span class="coverLegendCov">hit</span>
+            <span class="coverLegendNoCov">not hit</span>
+</td>
+            <td></td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<span class="lineNum">       1 </span>            : /*
+<span class="lineNum">       2 </span>            : ** $Id: lcorolib.c,v 1.10.1.1 2017/04/19 17:20:42 roberto Exp $
+<span class="lineNum">       3 </span>            : ** Coroutine Library
+<span class="lineNum">       4 </span>            : ** See Copyright Notice in lua.h
+<span class="lineNum">       5 </span>            : */
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #define lcorolib_c
+<span class="lineNum">       8 </span>            : #define LUA_LIB
+<span class="lineNum">       9 </span>            : 
+<span class="lineNum">      10 </span>            : #include &quot;lprefix.h&quot;
+<span class="lineNum">      11 </span>            : 
+<span class="lineNum">      12 </span>            : 
+<span class="lineNum">      13 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      14 </span>            : 
+<span class="lineNum">      15 </span>            : #include &quot;lua.h&quot;
+<span class="lineNum">      16 </span>            : 
+<span class="lineNum">      17 </span>            : #include &quot;lauxlib.h&quot;
+<span class="lineNum">      18 </span>            : #include &quot;lualib.h&quot;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : 
+<span class="lineNum">      21 </span><span class="lineCov">       5952 : static lua_State *getco (lua_State *L) {</span>
+<span class="lineNum">      22 </span><span class="lineCov">       5952 :   lua_State *co = lua_tothread(L, 1);</span>
+<span class="lineNum">      23 </span><span class="lineCov">       5952 :   luaL_argcheck(L, co, 1, &quot;thread expected&quot;);</span>
+<span class="lineNum">      24 </span><span class="lineCov">       5950 :   return co;</span>
+<span class="lineNum">      25 </span>            : }
+<span class="lineNum">      26 </span>            : 
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span><span class="lineCov">       5972 : static int auxresume (lua_State *L, lua_State *co, int narg) {</span>
+<span class="lineNum">      29 </span>            :   int status;
+<span class="lineNum">      30 </span><span class="lineCov">       5972 :   if (!lua_checkstack(co, narg)) {</span>
+<span class="lineNum">      31 </span><span class="lineNoCov">          0 :     lua_pushliteral(L, &quot;too many arguments to resume&quot;);</span>
+<span class="lineNum">      32 </span><span class="lineNoCov">          0 :     return -1;  /* error flag */</span>
+<span class="lineNum">      33 </span>            :   }
+<span class="lineNum">      34 </span><span class="lineCov">       5972 :   if (lua_status(co) == LUA_OK &amp;&amp; lua_gettop(co) == 0) {</span>
+<span class="lineNum">      35 </span><span class="lineCov">          2 :     lua_pushliteral(L, &quot;cannot resume dead coroutine&quot;);</span>
+<span class="lineNum">      36 </span><span class="lineCov">          2 :     return -1;  /* error flag */</span>
+<span class="lineNum">      37 </span>            :   }
+<span class="lineNum">      38 </span><span class="lineCov">       5970 :   lua_xmove(L, co, narg);</span>
+<span class="lineNum">      39 </span><span class="lineCov">       5970 :   status = lua_resume(co, L, narg);</span>
+<span class="lineNum">      40 </span><span class="lineCov">       5970 :   if (status == LUA_OK || status == LUA_YIELD) {</span>
+<span class="lineNum">      41 </span><span class="lineCov">       5968 :     int nres = lua_gettop(co);</span>
+<span class="lineNum">      42 </span><span class="lineCov">       5968 :     if (!lua_checkstack(L, nres + 1)) {</span>
+<span class="lineNum">      43 </span><span class="lineNoCov">          0 :       lua_pop(co, nres);  /* remove results anyway */</span>
+<span class="lineNum">      44 </span><span class="lineNoCov">          0 :       lua_pushliteral(L, &quot;too many results to resume&quot;);</span>
+<span class="lineNum">      45 </span><span class="lineNoCov">          0 :       return -1;  /* error flag */</span>
+<span class="lineNum">      46 </span>            :     }
+<span class="lineNum">      47 </span><span class="lineCov">       5968 :     lua_xmove(co, L, nres);  /* move yielded values */</span>
+<span class="lineNum">      48 </span><span class="lineCov">       5968 :     return nres;</span>
+<span class="lineNum">      49 </span>            :   }
+<span class="lineNum">      50 </span>            :   else {
+<span class="lineNum">      51 </span><span class="lineCov">          2 :     lua_xmove(co, L, 1);  /* move error message */</span>
+<span class="lineNum">      52 </span><span class="lineCov">          2 :     return -1;  /* error flag */</span>
+<span class="lineNum">      53 </span>            :   }
+<span class="lineNum">      54 </span>            : }
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : 
+<span class="lineNum">      57 </span><span class="lineCov">       5948 : static int luaB_coresume (lua_State *L) {</span>
+<span class="lineNum">      58 </span><span class="lineCov">       5948 :   lua_State *co = getco(L);</span>
+<span class="lineNum">      59 </span>            :   int r;
+<span class="lineNum">      60 </span><span class="lineCov">       5947 :   r = auxresume(L, co, lua_gettop(L) - 1);</span>
+<span class="lineNum">      61 </span><span class="lineCov">       5947 :   if (r &lt; 0) {</span>
+<span class="lineNum">      62 </span><span class="lineCov">          3 :     lua_pushboolean(L, 0);</span>
+<span class="lineNum">      63 </span><span class="lineCov">          3 :     lua_insert(L, -2);</span>
+<span class="lineNum">      64 </span><span class="lineCov">          3 :     return 2;  /* return false + error message */</span>
+<span class="lineNum">      65 </span>            :   }
+<span class="lineNum">      66 </span>            :   else {
+<span class="lineNum">      67 </span><span class="lineCov">       5944 :     lua_pushboolean(L, 1);</span>
+<span class="lineNum">      68 </span><span class="lineCov">       5944 :     lua_insert(L, -(r + 1));</span>
+<span class="lineNum">      69 </span><span class="lineCov">       5944 :     return r + 1;  /* return true + 'resume' returns */</span>
+<span class="lineNum">      70 </span>            :   }
+<span class="lineNum">      71 </span>            : }
+<span class="lineNum">      72 </span>            : 
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span><span class="lineCov">         25 : static int luaB_auxwrap (lua_State *L) {</span>
+<span class="lineNum">      75 </span><span class="lineCov">         25 :   lua_State *co = lua_tothread(L, lua_upvalueindex(1));</span>
+<span class="lineNum">      76 </span><span class="lineCov">         25 :   int r = auxresume(L, co, lua_gettop(L));</span>
+<span class="lineNum">      77 </span><span class="lineCov">         25 :   if (r &lt; 0) {</span>
+<span class="lineNum">      78 </span><span class="lineCov">          1 :     if (lua_type(L, -1) == LUA_TSTRING) {  /* error object is a string? */</span>
+<span class="lineNum">      79 </span><span class="lineCov">          1 :       luaL_where(L, 1);  /* add extra info */</span>
+<span class="lineNum">      80 </span><span class="lineCov">          1 :       lua_insert(L, -2);</span>
+<span class="lineNum">      81 </span><span class="lineCov">          1 :       lua_concat(L, 2);</span>
+<span class="lineNum">      82 </span>            :     }
+<span class="lineNum">      83 </span><span class="lineCov">          1 :     return lua_error(L);  /* propagate error */</span>
+<span class="lineNum">      84 </span>            :   }
+<span class="lineNum">      85 </span>            :   return r;
+<span class="lineNum">      86 </span>            : }
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : 
+<span class="lineNum">      89 </span><span class="lineCov">         28 : static int luaB_cocreate (lua_State *L) {</span>
+<span class="lineNum">      90 </span>            :   lua_State *NL;
+<span class="lineNum">      91 </span><span class="lineCov">         28 :   luaL_checktype(L, 1, LUA_TFUNCTION);</span>
+<span class="lineNum">      92 </span><span class="lineCov">         26 :   NL = lua_newthread(L);</span>
+<span class="lineNum">      93 </span><span class="lineCov">         26 :   lua_pushvalue(L, 1);  /* move function to top */</span>
+<span class="lineNum">      94 </span><span class="lineCov">         26 :   lua_xmove(L, NL, 1);  /* move function from L to NL */</span>
+<span class="lineNum">      95 </span><span class="lineCov">         26 :   return 1;</span>
+<span class="lineNum">      96 </span>            : }
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineCov">          8 : static int luaB_cowrap (lua_State *L) {</span>
+<span class="lineNum">     100 </span><span class="lineCov">          8 :   luaB_cocreate(L);</span>
+<span class="lineNum">     101 </span><span class="lineCov">          7 :   lua_pushcclosure(L, luaB_auxwrap, 1);</span>
+<span class="lineNum">     102 </span><span class="lineCov">          7 :   return 1;</span>
+<span class="lineNum">     103 </span>            : }
+<span class="lineNum">     104 </span>            : 
+<span class="lineNum">     105 </span>            : 
+<span class="lineNum">     106 </span><span class="lineCov">       5954 : static int luaB_yield (lua_State *L) {</span>
+<span class="lineNum">     107 </span><span class="lineCov">       5954 :   return lua_yield(L, lua_gettop(L));</span>
+<span class="lineNum">     108 </span>            : }
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">          4 : static int luaB_costatus (lua_State *L) {</span>
+<span class="lineNum">     112 </span><span class="lineCov">          4 :   lua_State *co = getco(L);</span>
+<span class="lineNum">     113 </span><span class="lineCov">          3 :   if (L == co) lua_pushliteral(L, &quot;running&quot;);</span>
+<span class="lineNum">     114 </span>            :   else {
+<span class="lineNum">     115 </span><span class="lineCov">          3 :     switch (lua_status(co)) {</span>
+<span class="lineNum">     116 </span><span class="lineCov">          1 :       case LUA_YIELD:</span>
+<span class="lineNum">     117 </span><span class="lineCov">          1 :         lua_pushliteral(L, &quot;suspended&quot;);</span>
+<span class="lineNum">     118 </span><span class="lineCov">          1 :         break;</span>
+<span class="lineNum">     119 </span><span class="lineCov">          2 :       case LUA_OK: {</span>
+<span class="lineNum">     120 </span>            :         lua_Debug ar;
+<span class="lineNum">     121 </span><span class="lineCov">          2 :         if (lua_getstack(co, 0, &amp;ar) &gt; 0)  /* does it have frames? */</span>
+<span class="lineNum">     122 </span><span class="lineNoCov">          0 :           lua_pushliteral(L, &quot;normal&quot;);  /* it is running */</span>
+<span class="lineNum">     123 </span><span class="lineCov">          2 :         else if (lua_gettop(co) == 0)</span>
+<span class="lineNum">     124 </span><span class="lineCov">          1 :             lua_pushliteral(L, &quot;dead&quot;);</span>
+<span class="lineNum">     125 </span>            :         else
+<span class="lineNum">     126 </span><span class="lineCov">          1 :           lua_pushliteral(L, &quot;suspended&quot;);  /* initial state */</span>
+<span class="lineNum">     127 </span>            :         break;
+<span class="lineNum">     128 </span>            :       }
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :       default:  /* some error occurred */</span>
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :         lua_pushliteral(L, &quot;dead&quot;);</span>
+<span class="lineNum">     131 </span><span class="lineNoCov">          0 :         break;</span>
+<span class="lineNum">     132 </span>            :     }
+<span class="lineNum">     133 </span>            :   }
+<span class="lineNum">     134 </span><span class="lineCov">          3 :   return 1;</span>
+<span class="lineNum">     135 </span>            : }
+<span class="lineNum">     136 </span>            : 
+<span class="lineNum">     137 </span>            : 
+<span class="lineNum">     138 </span><span class="lineCov">          1 : static int luaB_yieldable (lua_State *L) {</span>
+<span class="lineNum">     139 </span><span class="lineCov">          1 :   lua_pushboolean(L, lua_isyieldable(L));</span>
+<span class="lineNum">     140 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">     141 </span>            : }
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            : 
+<span class="lineNum">     144 </span><span class="lineCov">          1 : static int luaB_corunning (lua_State *L) {</span>
+<span class="lineNum">     145 </span><span class="lineCov">          1 :   int ismain = lua_pushthread(L);</span>
+<span class="lineNum">     146 </span><span class="lineCov">          1 :   lua_pushboolean(L, ismain);</span>
+<span class="lineNum">     147 </span><span class="lineCov">          1 :   return 2;</span>
+<span class="lineNum">     148 </span>            : }
+<span class="lineNum">     149 </span>            : 
+<span class="lineNum">     150 </span>            : 
+<span class="lineNum">     151 </span>            : static const luaL_Reg co_funcs[] = {
+<span class="lineNum">     152 </span>            :   {&quot;create&quot;, luaB_cocreate},
+<span class="lineNum">     153 </span>            :   {&quot;resume&quot;, luaB_coresume},
+<span class="lineNum">     154 </span>            :   {&quot;running&quot;, luaB_corunning},
+<span class="lineNum">     155 </span>            :   {&quot;status&quot;, luaB_costatus},
+<span class="lineNum">     156 </span>            :   {&quot;wrap&quot;, luaB_cowrap},
+<span class="lineNum">     157 </span>            :   {&quot;yield&quot;, luaB_yield},
+<span class="lineNum">     158 </span>            :   {&quot;isyieldable&quot;, luaB_yieldable},
+<span class="lineNum">     159 </span>            :   {NULL, NULL}
+<span class="lineNum">     160 </span>            : };
+<span class="lineNum">     161 </span>            : 
+<span class="lineNum">     162 </span>            : 
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span><span class="lineCov">         83 : LUAMOD_API int luaopen_coroutine (lua_State *L) {</span>
+<span class="lineNum">     165 </span><span class="lineCov">         83 :   luaL_newlib(L, co_funcs);</span>
+<span class="lineNum">     166 </span><span class="lineCov">         83 :   return 1;</span>
+<span class="lineNum">     167 </span>            : }
+<span class="lineNum">     168 </span>            : 
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

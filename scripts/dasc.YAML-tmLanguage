@@ -1,0 +1,154 @@
+# [PackageDev] target_format: plist, ext: tmLanguage
+---
+
+#
+# SublimeText/AAAPackageDev YAML syntax file
+# Maintainer: Anton Soldatov
+# Latest Revision: 05 Dec 2015
+#
+# BUILD+INSTALL
+# 
+# Convert with AAAPackageDev package to dasc.tmLanguage plist file and copy
+# to $SUBLIME_DIR/Packages/User.
+#
+# CAVEAT
+# 
+#  * All *-decl patterns are treated as function name entities to auto-enable symbol lookup in files
+#  * Support for ffunc* macros is incomplete
+#  * C part of *.dasc files is completely ignored
+#
+
+name: LuaJIT/uJIT DynASM
+scopeName: source.dasc
+fileTypes: [dasc]
+uuid: 538edf5d-a105-425e-a6b6-f0fa082531d4
+
+patterns:
+
+- include: '#host-asm-mnemonic'
+- include: '#host-asm-type-name'
+- include: '#host-asm-registry-name'
+
+- include: '#dynasm-registry-name'
+- include: '#dynasm-stash-name'
+- include: '#dynasm-macro-with-args-decl'
+- include: '#dynasm-simple-macro-decl'
+- include: '#dynasm-other-macro-keyword'
+- include: '#dynasm-type-hint'
+- include: '#dynasm-bc-semantics-decl'
+- include: '#dynasm-global-label-decl'
+- include: '#dynasm-global-label-ref'
+- include: '#dynasm-local-label-name'
+- include: '#dynasm-local-label-ref'
+
+- include: '#lj-constant'
+
+- include: '#literal-number'
+- include: '#comment'
+
+repository:
+
+  host-asm-mnemonic: # Borrowed from dasm.vim
+    match: (?:\b(adc|add|addsd|and|call|cmova|cmp|cvtsd2si|cvtsi2sd|cvtsi2sd|cvttsd2si|dec|divsd|extern|fld|fpop|fucomip|imul|int3|ja|jae|jb|jbe|je|jg|jl|jle|jmp|jnb|jne|jns|jnz|jp|js|jz|lea|mov|mov64|movaps|movd|movdqu|movsd|movsx|movsxd|movzx|mulsd|neg|not|or|pop|push|ret|sar|shl|shr|sub|subsd|test|ucomisd|xor|xorps)\b)
+    captures:
+      '1': {name: keyword.operator.dasc}
+  host-asm-type-name:
+    match: (?:\b(byte|[dq]?word)\b)
+    captures:
+      '1': {name: entity.name.tag.dasc}
+  host-asm-registry-name:
+    match: (?:\b([re]?[abcd]x|[abcd]h|[abcd]l|[re]bp|[re]sp|[re][sd]i|r\d+d?|xmm\d+)\b)
+    captures:
+      '1': {name: variable.language.dasc}
+
+  dynasm-registry-name:
+    match: (?:\b(OP|PC|K?BASEd?|DISPATCHd?|R[ABCD]a?|R[ABCD][WHL]|CARG\d[df]?|AUX\d|TMPa?\d?|XCHGd?)\b)
+    captures:
+      '1': {name: variable.language.dasc}
+  dynasm-stash-name:
+    match: (?:\b((?:SAVE_|TMP)[\dA-Za-z]+)\b)
+    captures:
+      '1': {name: variable.language.dasc}
+  dynasm-macro-with-args-decl:
+    begin: (\.macro)\s+([\.\dA-Za-z_]+)
+    end: ;|$
+    beginCaptures:
+      '1': {name: keyword.other.dasc}
+      '2': {name: entity.name.function.dasc}
+    patterns:
+      - include: '#comment'
+      - match: ([\dA-Za-z_]+)
+        captures:
+          '1': {name: variable.parameter.dasc}
+  dynasm-simple-macro-decl:
+    match: ((?:\.type|\.define)\s+[^,]+),
+    captures:
+      '1': {name: entity.name.function.dasc}
+  dynasm-other-macro-keyword:
+    match: (?:(\.(?:actionlist|arch|code_sub|else|endif|endmacro|externnames|globalnames|globals|if|section))\b)
+    captures:
+      '1': {name: keyword.other.dasc}
+  dynasm-type-hint:
+    match: '[\s\[\]]([A-Z_]+)(:)'
+    captures:
+      '1': {name: keyword.other.dasc}
+      '2': {name: keyword.operator.dasc}
+  dynasm-bc-semantics-decl:
+    match: ^\s*(case)\s+(BC_[\dA-Za-z_]+)(:)
+    captures:
+      '1': {name: keyword.control.dasc}
+      '2': {name: entity.name.function.dasc}
+      '3': {name: keyword.operator.dasc}
+  dynasm-global-label-decl:
+    match: \|(->(?:BC|cont|fff|vm|vmeta)_[\dA-Za-z_]+)(:)
+    captures:
+      '1': {name: entity.name.function.dasc}
+      '2': {name: keyword.operator.dasc}
+  dynasm-global-label-ref:
+    match: \s(->(?:BC|cont|fff|vm|vmeta)_[\dA-Za-z_]+)
+    captures:
+      '1': {name: entity.name.tag.dasc}  
+  dynasm-local-label-name:
+    match: \|(\d+)(:)
+    captures:
+      '1': {name: keyword.control.dasc}
+      '2': {name: keyword.operator.dasc}
+  dynasm-local-label-ref:
+    match: '([<>]\d+)\b'
+    captures:
+      '1': {name: keyword.control.dasc}
+
+  lj-constant:
+    match: (?:\b(LJ[\dA-Z_]+)\b)
+    captures:
+      '1': {name: constant.language.dasc}
+
+  literal-number: # Borrowed from https://github.com/Benvie/JavaScriptNext.tmLanguage/blob/master/JavaScriptNext.YAML-tmLanguage
+    patterns:
+    - name: invalid.illegal.numeric.hex.dasc
+      match: (?i)(?:\B[-+]|\b)0x[0-9a-f]*\.(\B|\b[0-9]+)
+
+    - name: invalid.illegal.numeric.octal.dasc
+      match: (?:\B[-+]|\b)0[0-9]+\.(\B|\b[0-9]+)
+
+    - name: constant.numeric.dasc
+      match: >-
+        (?xi)
+          (?:\B[-+])?
+          (?:
+            \b0b[0-1]*|                 # binary
+            \b0o[0-7]*|                 # octal
+            \b0x[0-9a-f]*|              # hex
+            (
+              \B\.[0-9]+|               # e.g. .999
+              \b[0-9]+(\.[0-9]*)?       # e.g. 999.999, 999. or 999
+            )(e[-+]?[0-9]+)?            # e.g. e+123, E-123
+          )
+
+  comment:
+    match: ((\/\/).*\n?)
+    captures:
+      '1': {name: comment.line.double-slash.dasc}
+      '2': {name: punctuation.definition.comment.line.dasc}
+
+...

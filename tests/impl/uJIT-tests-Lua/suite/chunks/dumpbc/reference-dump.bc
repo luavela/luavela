@@ -1,0 +1,311 @@
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:21-57
+0001    HOTCNT 
+0002    KSHORT   0  42
+0003    KNUM     1   0      ; -42.42
+0004    ISGE     0   1
+0005    JMP      2 => 0009
+0006    GGET     2   0      ; "print"
+0007    KSTR     3   1      ; "cond01"
+0008    CALL     2   1   2
+0009    ISGT     0   1
+0010    JMP      2 => 0014
+0011    GGET     2   0      ; "print"
+0012    KSTR     3   2      ; "cond02"
+0013    CALL     2   1   2
+0014    ISGE     1   0
+0015    JMP      2 => 0019
+0016    GGET     2   0      ; "print"
+0017    KSTR     3   3      ; "cond03"
+0018    CALL     2   1   2
+0019    ISGT     1   0
+0020    JMP      2 => 0024
+0021    GGET     2   0      ; "print"
+0022    KSTR     3   4      ; "cond04"
+0023    CALL     2   1   2
+0024    ISNEV    0   1
+0025    JMP      2 => 0029
+0026    GGET     2   0      ; "print"
+0027    KSTR     3   5      ; "cond05"
+0028    CALL     2   1   2
+0029    ISEQV    0   1
+0030    JMP      2 => 0034
+0031    GGET     2   0      ; "print"
+0032    KSTR     3   6      ; "cond06"
+0033    CALL     2   1   2
+0034    ISLT     0   1
+0035    JMP      2 => 0039
+0036    GGET     2   0      ; "print"
+0037    KSTR     3   7      ; "cond07"
+0038    CALL     2   1   2
+0039    ISLE     0   1
+0040    JMP      2 => 0044
+0041    GGET     2   0      ; "print"
+0042    KSTR     3   8      ; "cond08"
+0043    CALL     2   1   2
+0044    ISLT     1   0
+0045    JMP      2 => 0049
+0046    GGET     2   0      ; "print"
+0047    KSTR     3   9      ; "cond09"
+0048    CALL     2   1   2
+0049    ISLE     1   0
+0050    JMP      2 => 0054
+0051    GGET     2   0      ; "print"
+0052    KSTR     3  10      ; "cond10"
+0053    CALL     2   1   2
+0054    ISNEP    0   2
+0055    JMP      2 => 0059
+0056    GGET     2   0      ; "print"
+0057    KSTR     3  11      ; "cond11"
+0058    CALL     2   1   2
+0059    ISEQP    0   2
+0060    JMP      2 => 0064
+0061    GGET     2   0      ; "print"
+0062    KSTR     3  12      ; "cond12"
+0063    CALL     2   1   2
+0064    ISNEP    0   1
+0065    JMP      2 => 0069
+0066    GGET     2   0      ; "print"
+0067    KSTR     3  13      ; "cond13"
+0068    CALL     2   1   2
+0069    ISEQP    0   1
+0070    JMP      2 => 0074
+0071    GGET     2   0      ; "print"
+0072    KSTR     3  14      ; "cond14"
+0073    CALL     2   1   2
+0074    ISNEP    0   0
+0075    JMP      2 => 0079
+0076    GGET     2   0      ; "print"
+0077    KSTR     3  15      ; "cond15"
+0078    CALL     2   1   2
+0079    ISEQP    0   0
+0080    JMP      2 => 0084
+0081    GGET     2   0      ; "print"
+0082    KSTR     3  16      ; "cond16"
+0083    CALL     2   1   2
+0084    ISNEN    0   1      ; 42
+0085    JMP      2 => 0089
+0086    GGET     2   0      ; "print"
+0087    KSTR     3  17      ; "cond17"
+0088    CALL     2   1   2
+0089    ISEQN    0   1      ; 42
+0090    JMP      2 => 0094
+0091    GGET     2   0      ; "print"
+0092    KSTR     3  18      ; "cond18"
+0093    CALL     2   1   2
+0094    ISNEN    0   2      ; 2e+52
+0095    JMP      2 => 0099
+0096    GGET     2   0      ; "print"
+0097    KSTR     3  19      ; "cond19"
+0098    CALL     2   1   2
+0099    ISEQN    0   2      ; 2e+52
+0100    JMP      2 => 0104
+0101    GGET     2   0      ; "print"
+0102    KSTR     3  20      ; "cond20"
+0103    CALL     2   1   2
+0104    ISNES    0  21      ; "string"
+0105    JMP      2 => 0109
+0106    GGET     2   0      ; "print"
+0107    KSTR     3  22      ; "cond21"
+0108    CALL     2   1   2
+0109    ISEQS    0  21      ; "string"
+0110    JMP      2 => 0114
+0111    GGET     2   0      ; "print"
+0112    KSTR     3  23      ; "cond22"
+0113    CALL     2   1   2
+0114    RET0     0   1
+
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:59-73
+0001    HOTCNT 
+0002    KSHORT   0  42
+0003    KNUM     1   0      ; -42.42
+0004    ISF          0
+0005    JMP      2 => 0009
+0006    GGET     2   0      ; "print"
+0007    KSTR     3   1      ; "cond23"
+0008    CALL     2   1   2
+0009    IST          0
+0010    JMP      2 => 0014
+0011    GGET     2   0      ; "print"
+0012    KSTR     3   2      ; "cond24"
+0013    CALL     2   1   2
+0014    ISFC     2   0
+0015    JMP      2 => 0017
+0016    MOV      2   1
+0017    IST          0
+0018    JMP      3 => 0021
+0019    MOV      3   1
+0020    JMP      4 => 0024
+0021    KPRI     3   1
+0022    JMP      4 => 0024
+0023    KPRI     3   2
+0024    ISTC     4   0
+0025    JMP      4 => 0027
+0026    MOV      4   1
+0027    ISF          0
+0028    JMP      5 => 0033
+0029    MOV      5   1
+0030    JMP      6 => 0034
+0031    KPRI     5   1
+0032    JMP      6 => 0034
+0033    KPRI     5   2
+0034    MOV      6   0
+0035    MOV      7   1
+0036    MOV      8   2
+0037    MOV      9   3
+0038    MOV     10   4
+0039    MOV     11   5
+0040    RET      6   7
+
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:75-83
+0001    HOTCNT 
+0002    KSHORT   0  42
+0003    MOV      1   0
+0004    NOT      2   0
+0005    UNM      3   0
+0006    LEN      4   0
+0007    VARG     5   0   0
+0008    RETM     5   0
+
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:85-88
+0001    HOTCNT 
+0002    POW      2   0   1
+0003    MOV      3   0
+0004    MOV      4   1
+0005    MOV      5   2
+0006    CAT      3   3   5
+0007    RET0     0   1
+
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:92-105
+0001    HOTCNT 
+0002    KSHORT   0  42
+0003    KNUM     1   0      ; -42.42
+0004    KNUM     2   1      ; 2e+52
+0005    KSTR     3   0      ; "2E+52"
+0006    KPRI     4   0
+0007    KPRI     5   1
+0008    KPRI     6   2
+0009    KNIL     7   8
+0010    RET0     0   1
+
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:107-123
+0001    HOTCNT 
+0002    TNEW     0 2048
+0003    GGET     1   0      ; "x"
+0004    KSTR     2   0      ; "x"
+0005    TSETV    2   0   1
+0006    TDUP     1   1
+0007    GGET     2   2      ; "a"
+0008    GSET     2   2      ; "a"
+0009    KSTR     3   3      ; "z"
+0010    TGETV    2   0   3
+0011    TGETS    2   0   0  ; "x"
+0012    TGETB    2   0   1
+0013    TSETV    2   0   3
+0014    TSETS    2   0   0  ; "x"
+0015    TSETB    2   0   1
+0016    TNEW     4   3
+0017    GGET     5   4      ; "comparison_ops"
+0018    CALL     5   0   1
+0019    TSETM    5   0      ; 1
+0020    RET1     4   2
+
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:130-139
+0001    HOTCNT 
+0002    UGET     2   0      ; grades
+0003    USETS    0   0      ; grades ; "xxxGRADESxxx"
+0004    USETN    0   0      ; grades ; 2e+52
+0005    USETP    0   0      ; grades
+0006    USETP    0   1      ; grades
+0007    USETP    0   2      ; grades
+0008    USETV    0   2      ; grades
+0009    TGETV    3   2   0
+0010    TGETV    4   2   1
+0011    ISLT     4   3
+0012    JMP      3 => 0015
+0013    KPRI     3   1
+0014    JMP      4 => 0016
+0015    KPRI     3   2
+0016    RET1     3   2
+
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:129-140
+0001    HOTCNT 
+0002    GGET     2   0      ; "table"
+0003    TGETS    2   2   1  ; "sort"
+0004    MOV      3   0
+0005    FNEW     4   2      ; ./chunks/dumpbc/chunk.lua:130
+0006    CALL     2   1   3
+0007    UCLO     0 => 0008
+0008    RET0     0   1
+
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:125-141
+0001    HOTCNT 
+0002    TDUP     0   0
+0003    TDUP     1   1
+0004    FNEW     2   2      ; ./chunks/dumpbc/chunk.lua:129
+0005    GSET     2   3      ; "sortbygrade"
+0006    RET0     0   1
+
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:143-147
+0001    HOTCNT 
+0002    GGET     0   0      ; "print"
+0003    VARG     1   0   0
+0004    CALLM    0   1   0
+0005    GGET     0   0      ; "print"
+0006    KSHORT   1  42
+0007    CALL     0   1   2
+0008    GGET     0   0      ; "print"
+0009    KSTR     1   1      ; "42"
+0010    CALLT    0   2
+
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:148-150
+0001    HOTCNT 
+0002    GGET     0   0      ; "print"
+0003    KSHORT   1  42
+0004    VARG     2   0   0
+0005    CALLMT   0   1
+
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:152-168
+0001    HOTCNT 
+0002    TDUP     0   0
+0003    GGET     1   1      ; "pairs"
+0004    MOV      2   0
+0005    CALL     1   4   2
+0006    ISNEXT   4 => 0011
+0007    GGET     6   2      ; "print"
+0008    KSTR     7   3      ; "ok"
+0009    CALL     6   1   2
+0010    HOTCNT 
+0011    ITERN    4   3   3
+0012    ITRNL    4 => 0007
+0013    GGET     1   1      ; "pairs"
+0014    MOV      2   0
+0015    CALL     1   4   2
+0016    JMP      4 => 0021
+0017    GGET     7   2      ; "print"
+0018    KSTR     8   3      ; "ok"
+0019    CALL     7   1   2
+0020    HOTCNT 
+0021    ITERC    4   4   3
+0022    ITERL    4 => 0017
+0023    KSHORT   1 100
+0024    KSHORT   2   1
+0025    KSHORT   3  -1
+0026    FORI     1 => 0032
+0027    GGET     5   2      ; "print"
+0028    KSTR     6   3      ; "ok"
+0029    CALL     5   1   2
+0030    HOTCNT 
+0031    FORL     1 => 0027
+0032    GGET     1   4      ; "next"
+0033    MOV      2   0
+0034    CALL     1   2   2
+0035    ISF          1
+0036    JMP      2 => 0043
+0037    HOTCNT 
+0038    LOOP     1 => 0043
+0039    GGET     1   2      ; "print"
+0040    KSTR     2   3      ; "ok"
+0041    CALL     1   1   2
+0042    JMP      1 => 0032
+0043    RET0     0   1
+

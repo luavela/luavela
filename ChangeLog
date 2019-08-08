@@ -1,0 +1,657 @@
+version 0.24-dev0
+  * Added missing documentation page
+
+version 0.23-dev0
+  * Added an ability to copy values between tables on-trace without guarded loads:
+  - Implemented MOVTV optimization
+  - Added mechanism of IR hints for easier tracking of certain object properties
+  - Added support for movdqu in the machine code emitter
+  * Cleaned up lj_debug:
+  - Moved interfaces not related to runtime introspection to uj_proto
+  - Reimplemented rarely used interfaces as static routines in appropriate translation units
+  * Updated luaconf.h to be closer to other Lua implementations with some extra housekeeping:
+  - Restored configurable LUA_PATH_DEFAULT and LUA_CPATH_DEFAULT (managed at the build system level)
+  - Restored LUA_COMPAT_* definitions
+  - Removed excessive defines: LUA_CORE, LUA_LIB, LUA_PATH_CONFIG, LUAI_MAXSTACK, UJIT_CLI
+  - Removed leftovers from the amalgamated build
+  - CMAKE_INSTALL_PREFIX is no longer hardcoded
+  * Added IRs for working with global temporary string buffer:
+  - Recorded string.format for %d and %s specifiers
+  - Removed restriction on the number of recorded concatenations
+  - Changed deallocation strategy for global temporary string buffer
+  - Added corresponding tests
+  * Reimplemented string.format using global string buffer, unified allocation strategy for uj_sbuf_reserve and sbuf_fit
+  * Added ujit.table.rindex for recursively indexing tables:
+  - Added IR_TVARG and IR_TVARGF to handle a variable length list of TValue arguments
+  - Added IR_TVLOAD to specialize return values of built-in functions that do not have a fixed return type
+  * Added introspection API ujit.debug.gettableinfo
+  * Implemented out-of-source build for uJIT, tools, 3rd party components
+  * Extended math library with validation functions
+  - Created ujit.math module
+  - Implemented isinf, ispinf, isninf, isnan, isfinite in ujit.math
+  - Implemented ujit.math.nan constant for representing IEEE 754 NaN
+  - Added IR_FPAND
+  * Implemented running of tests_full target when doing out-of-source build
+  - run-luacheck now accepts --lua-bin and --lfs-lib arguments
+  - Various improvements in CMake scripts
+  * Unified aux scripts:
+  - Ported run-clang-tidy to Perl and banished Python-written predecessor from uJIT infrastructure
+  - Slightly improved run-luacheck
+  - Updated ujit.rc
+  * Applied missing commits from LuaJIT 2.0.5: e205ad0 f50bf75 d62459f 4e30836 ff64836 3ab9f5a 9910ded 6be5ffd b74ddaf 1914de7 aef4edd a5f8a48 747feb6 37e1e70 5837c2a 2f0001f cc4f5d0 ddadbe8 367cba2 7579b16 9dc785e e5f4cb1 4808e62 ef087aa 8715ae6 424940f a5b1c4d 575bfe5 7f454ae
+  * Changes necessary for Git migration:
+  - SetVersion.cmake now uses Git to get tag and branch info
+  - Changed .hgignore to .gitignore
+  - Sorted patterns in .gitignore lexicographically
+  * Introduced ujit.string library with ujit.string.trim and ujit.string.split implemented
+  * Disabled closure.lua test from Lua-5.1 test suite when JIT is on
+  * Upgraded GCC to 8.3.0
+  * Adjusted ujit-gdb.py extension
+  - Added uj-tab-collisions
+  - Merged load-trace-dwarf.py into ujit-gdb.py
+  - Changed ujit-gdb.py installation directory to GDB default autoload safe-path
+  * Used "$(MAKE)" instead of "make" in CMake to pass parameters of parent make process to child processes
+  * Moved dumpanalyze to dedicated repository
+  * Cleaned up the code base for open sourcing
+  * Upgraded GCC to 7.4.0
+  * Restored luaL_openlib interface, added appropriate unit tests
+  * Improvements in uj_sbuf:
+  - Added interfaces for pushing GCstr and C string
+  - Simplified parameter passing by storing allocating lua_State in sbuf struct
+  * Fixed assembler for CNEWI and unsinking of FFI constant pointers
+  * Revised uJIT-specific build flags
+  * Implemented support of compiling uJIT without JIT, FFI, Lua 5.2 compatibility
+  * Replaced checkpatch.pl with clang-format within uJIT infrastructure
+  * Slightly refactored cli/opt
+  * Restored recording of several math library functions:
+  - Restored emission of IR_ATAN2
+  - Implemented recording for asin, acos, atan, atan2, sinh, cosh, tanh
+  * Refactored and restyled lj_ff; removed some excessive related includes
+  * Converted docs to rst format
+  * Fixed variable info with platform-level coverage enabled
+  * Fixed streaming of base addresses during profiling
+  * Fixed type deducing for unions in ujit-gdb.py
+  * Fixed machine code dumper to print full 64-bit addresses
+  * Fixed build with Intel VTune
+  * Fixed immutability check in BC_GSET
+  * Unified prefixes in lextlib.h
+  * Changed interface for ujit.iprof.start
+  * Fixed stability issues with ujit.table.rindex
+  * Improved detection of *LOAD IRs that should escape MOVTV optimization
+  * Fixed clang_tidy_core not being run
+  * Documented CI publishing task and hardcoded 'uJIT' as title of index.rst
+  * Enforced setting immutability flag when copying prototypes
+
+version 0.22-dev0
+  * Introduced instrumenting profiler
+  - Added corresponding Lua interfaces
+  - Implemented ujit.iprof.PLAIN profiling mode
+  * Propagated CRET alias within vm_x86.dasc
+  * Migrated from lua-TestMore suite to lua-Harness
+  * Implemented next() recording
+  * Implemented pairs(), BC_ISNEXT, BC_ITERN recording
+  * Enhancements in generating and parsing memprof:
+  - Symbol table is streamed before memprof events to reduce memory footprint during parsing
+  - Symbol table is explicitly terminated with a dedicated final symbol
+  - Refactored of ujit-parse-memprof
+  * Migrated all cmocka-based tests to TAP provided in libcmocka-1.1.1
+  * Added ujit.table.size built-in for counting non-nil values in a table
+  * Set -std=c11 and enabled -pedantic (with needed fixes in the code)
+  * ujit-parse-memprof.pl ported to Lua
+  * Improved byte code dumping:
+  - Added -B option which prints source code alongside the bytecode
+  - Added uj-bc gdb command which dumps byte code of the current frame
+  * Added comments about restore_base and fixed a typo in vm_x86.dasc
+  * Exclude tests from ALL target
+  * Upgraded test suite for LuaJIT and migrated it to the unified format
+  * Migrated test suite for Lua 5.1 to the unified format
+  * Applied missing FFI-related commits from LuaJIT 2.0.3 and 2.0.4:
+  - LuaJIT 2.0.4: 1f578bd, 704280f, a31c317, 41156fe, 247ead6, 66515a0, f948fe0, 5e7b9bb, fe288e7, ef82bb0, cc5075e, 4ed3ee1, 19b69f2, c735293
+  - LuaJIT 2.0.3: 1994a24, 3db3cc1, 5d25645, 782787f, 93c2b93, 99d588b, b2a13dd, 053041a
+  * Re-enabled support for FFI
+  * Added CCI_NOFPRCLOBBER to lj_tab_size
+  * Upgraded CERN MAD test suite:
+  - Upgraded the suite with the latest changes from the origin
+  - Reenabled some incorrectly disabled tests
+  * Various enhancements to the lua-Harness suite
+  * Fixed incorrect stores of numeric keys to the table hash part
+  * Fixed luacheck warnings in iponweb/lua/chunks/pairs files
+  * Improvements in uj_meta:
+  - Decreased complexity of meta_index
+  - Some refactoring and cleanup
+  * Migrated CMocka-based tests to the unified format
+  * Migrated UJit::Tests tests to the unified format
+  * Fixed snap_usedef() data-flow analysis for BC_CAT
+  * Disabled flaky time-sensitive test for memprof
+  * Restored linting Lua code with luacheck
+  * Excluded 'jitpairs' from -O4
+
+version 0.21-dev0
+  * Added CityHash32 to the list of supported hashing functions
+  * Added parsing of vDSO symbols
+  * Added luacheck for testing internal uJIT's code suites
+  * Improved testing tools with UJit::Test:
+  - valgrind output is streamed to a separate file for each test case
+  - All artifacts produced during testing tools are preserved
+  - Removed dead code around invoking valgrind for testing tools
+  - Overall refactoring of UJit::Test related to launching executables
+  * Fixed uj_sbuf module for zero-sized buffers and added overflow checks
+  * Reimplemented conversion from integer to C string
+  * Added missing flowerboxes to Lua test chunks
+  * Renamed VM state: C to IDLE
+  * Added luaE_createstate to create VM instances with various options
+  * Simplified layout of VM frame slots
+  * Enabled lua_newstate
+  * Refactored and restyled src/lib/ujit.c
+  * Removed strhash_fastcmp comparator to make short string interning faster
+  * Cleaned up uj_lib_check* interfaces
+  * Added to gdb plugin stack dumper that works from inside VM
+  * Tools tests runner moved to tests directory
+  * Added luaE_requiref() that implements a subset of luaL_requiref() from Lua 5.2
+  * Added extra field to ujpp output with absolute percentage of all profiled entities
+  * Fixed traversal of integer indices by ujit.table.toset
+  * Work-arounded profiler parser bug with unresolved CFUNC symbols
+  * Added PIE support to the profiler
+  * VM state is set to INTERP prior to raising an exception of any type
+  * Added an umbrella target tests_full for running full stability test suite
+  * Stack top is always actualized for Lua functions before throwing ERRMEM
+  * Python scripts are checked with flake8
+  * Fixed parsing of trace flushes in ujit-parse-dump
+  * Added luaE_deepcopytable to deep copy objects between VM instances
+  * Fixed recording of string.find
+  * Bumped copyright year across the code base, fixed some copyright notices
+  * Housekeeping in scripts
+  * Fixed pointer invalidation in lj_ir_emit_immutable_guard()
+  * Fixed ujit-parse-profile output for FFUNC and CFUNC counters
+  * In ujit-parse-memprof.pl, UJM_TIMESTAMP flag is properly cleared when parsing event headrs
+  * Fixed errors reported by flake8 (3.7.1)
+
+version 0.20-dev0
+  * Implemented platform-level coverage counting
+  * Removed relative ujit binary paths from Perl tests
+  * Removed recursion from loads / stores recording
+  * Implemented recording of string.find, string.lower, string.upper
+  * Implemented table.concat recording
+  * Refactored arguments handling for ujit.* Lua API functions
+  * Fixed misleading error message on temporary and/or expressions
+  * Introduced APIs for tables from hash to list conversion:
+  - ujit.table.keys/luaE_tablekeys
+  - ujit.table.values/luaE_tablevalues
+  * Fixed C unit tests rerun on C unit test source file change
+  * Introduced APIs for tables from list to hash conversion:
+  - ujit.table.toset/luaE_tabletoset
+  * Fixed include paths in the C unit test
+  * Added recording for ujit.table.shallowcopy
+  * Added gdb plugin for post-mortem analysis
+  * Unified ujit.table Lua tests
+  * Added GC check to ujit.table.shallowcopy
+  * Added ujit.table.* recording testing functionality
+  * Fixed coding style issue
+  * Refactored lj_record_idx_key()
+  * Reimplemented table.concat using global string buffer
+  * Refactored string.find implementation
+  * Fixed IR_CALL properties for lj_tab_keys and lj_tab_values
+  * Improved platform-level coverage counting:
+  - Added caching of chunknames that were excluded from coverage
+  - Added support for streaming coverage info through callback
+  * Fixed build with Intel VTune
+  * Fixed bugs in ujit.seal and ujit.immutable
+  * Improvements in run-clang-tidy.py:
+  - Added dynamic selection of clang-tidy version among supported
+  - Added an ability to override checks per-version
+  - Runner fails in case some files are skipped by clang-tidy
+  * Fixed regular expression literals in dumpanalyze
+  * Removed uj_lib_check* calls from C API.
+  * Fixed definition of irt_ktdup to avoid implicitly declared macros
+
+version 0.19-dev0
+  * Fixed coredump for miscached symbols in ujit-parse-profile
+  * Fixed clang-tidy strcpy warnings
+  * Added Lua functions name demangling
+  * nm substituted with custom ELF symbols parser
+  * Added Linux kernel style checker
+  * Changes in attributing platform-level and public interfaces:
+  - visibility=hidden is used by default
+  - Removed attributes: LJ_FUNC, LJ_FUNCA, LJ_ASMF, LJ_FUNC_NORET, LJ_FUNCA_NORET, LJ_ASMF_NORET, LJ_INLINE, UJ_ERRRUNA
+  - luaJIT_* symbols are exported
+  * Added support for Ubuntu 18.04
+  * MMDEF macro extended with number of arguments
+  * Refactored recording of metamethods
+  * Refactored code for indexed loads
+  * Refactored recording of indexed stores
+  * Refactored and restyled lj_dispatch
+  * Refactored and restyled lj_str
+  * Fixed clang-tidy CallAndMessage errors in core code base
+  * Fixed clang-tidy errors for jit/lj_asm.c
+  * Removed dependency on the minor version of Python
+  * Fixed placement of the terminator of the empty string's instance
+  * Enabled reporting of heap snapshots to ujit-parse-memprof.pl
+  * Refactored ujit.table extension module C API unit tests and Lua perf tests
+  * clang-tidy warnings suppressed for jemalloc builds
+  * Revived SINK optimization:
+  - Added optimization for immutability guard to re-enable proper SINK analysis
+  - Ported SINK optimization fix from LuaJIT
+  - Added tests to check results of SINK optimization
+  * Migrated to the common CheckVersion module in cmake
+  * Restored GC barrier for non-nil stores in uj_meta_tset
+  * Fixed immutability guard in setmetatable recording
+  * Added helper testing functionality for ujit.table module
+  * Fixed OOP syntax demangling for Lua functions
+  * ujit-parse-profile no longer throws an error in case of mismatch between profile data and Lua sources
+  * Refactored table extensions library functions implementation
+  * Fixed stack resizing during trace recording
+
+version 0.18-dev0
+  * Math helpers improvements:
+  - renamed math helpers header and source files to uj_math.h/uj_math.c
+  - renamed helpers to have uj_ prefix; fixed style
+  - removed from uj_math unrelated lj_vm_errno wrapper
+  * Enabled reporting clang-tidy errors in headers
+  * Removed magic constants from lj_num2bit
+  * Fixed timezone for profiler parser
+  * Refactored and fixed errors in throwing run-time errors:
+  - Fixed undefined behaviour in uj_err_callerv and uj_err_argv, caused by a promoted enum argument used by va_start
+  - uj_err refactored and restyled
+  - Introduced uj_errmsg for handling error codes and messages
+  * Made ujit.immutable recordable
+  * Fixed clang-tidy supressions for tools
+  * Removed custom math library in favour of common glibc functions
+  * Metamethod-related error handling moved from lj_err to uj_meta
+  * Fixed clang-tidy suppressions for clang-analyzer-core.NullDereference in core code base
+  * Cleaned-up uJIT-specific interfaces for raising exceptions:
+  - lj_err_immutable_modif removed
+  - lj_err_immutable and lj_err_seal are merged into lj_err_gco
+  * Added valgrind check for tests
+  * Supported build with clang 3.9
+  - Disabled unused gcov in unit tests
+  * Low-level exception handling is separated from high-level interfaces
+  - Introduced a dedicated translation unit uj_throw holding the implementation of throwing exceptions
+  - Introduced a dedicated header uj_unwind_ext.h holding the external unwinder definitions
+  - Removed redundant interfaces: lj_err_lex, lj_err_mem
+  * Introduced memory profiler
+  * Expanded VM frame to save current vmstate
+  * Restyled lj_obj.c
+  * Fixed uninitialized variable in luaL_gsub
+  * Simplified POW recording and added tests on POW folding
+  * Fixed undefined behaviour in lj_ir_call, caused by a promoted enum argument used by va_start
+  * Fixed undefined behaviour in lj_lex_error, caused by a promoted enum argument used by va_start
+  * Introduced APIs for tables shallow copying:
+  - ujit.table.shallowcopy
+  - luaE_shallowcopy
+  - refactored API performance bencmarking running
+  * Fixed saving VM state upon entering VM
+  * Calibrated benchmark threshold for pindex.lua to comply with the CI environment
+
+version 0.17-dev0
+  * Added CERN MAD test suite
+  * Removed strict checks of global variables
+  * Added jemalloc as an experimental built-in allocator (disabled by default)
+  * Refactored and restyled support code for Lua standard library
+  * Implemented new hotcounting mechanism relying on a dedicated BC_HOTCNT bytecode
+  * Added host VM states handling in profile reporting
+  * ujit-parse-dump is removed in favor of dumpanalyze, tests for dumpanalyze are integrated into build chain
+  * Refactored GC call for TDUP and TNEW
+  * Restored support for lua_getallocf and lua_setallocf
+  * clang-tidy checks integrated into build chain:
+  - Defined the set of applicable checks and check policy
+  - Defined the scope of checks
+  - Created runner run-clang-tidy.py along with all necessary infrastructure
+  * LuaJIT's allocator is isolated from the rest of the memory management subsystem
+  * Coroutine timeouts are checked only within CFRAME_RESUME frames
+  * Fixed invalid pointer in bcwrite_bytecode()
+  * Fixed stability issues with coroutine timeouts:
+  - Trace recording cannot start while we are executing a timeout function
+  - Timeout checks inside BC_*FUNC* prologues run after stack check to avoid out-of-bounds access to the stack during timeout handling
+  * Fixed dumping machine code
+  * Removed deprecated profiler parser
+  * Fixed restarting profiler
+  * Fixed profiler incorrect streaming of sealed Lua code chunks
+  * Used explicit Python 3.5 version in test functionality which utilizes Python
+  * Minor refactoring of the allocator's interfaces
+  * Build information specific for 3rd party components moved to the corresponding CMakeLists.txt
+  * Disabled unstable performance tests from MAD test suite
+  * Enhancements in the code base of profiler:
+  - Removed redundant code from the profiler's core
+  - Improved encapsulation for uj_profile_stream_* interfaces
+  - Code of ujit-mock-profile is reworked
+  * Fixed tests for ujit-parse-profile
+  * Fixed memory leak in profiler parser
+
+version 0.16-dev0
+  * Supported build and stability testing with clang 3.8
+  * Unified metamethods calls
+  * Added tests for ujit-parse-profile
+  * Improvements in debug tools:
+  - load-trace-dwarf.py re-tested and fixed
+  - Unused 3rd party tools removed
+  * Coroutine timeouts are not checked while the compiler is active
+  * Immutability constraints relaxed:
+  - Functional objects with upvalues are allowed to be made immutable.
+  - Userdata objects are marked immutable on creation.
+  * Introduced uJIT manual page and pkg-config information
+  * Cleaned up convenience bash aliases
+  * Various fixes in building uJIT
+  * Fixed re-enabling timeout checks during a call to the timeout function
+  * Running __gc finalizers and VM initialization is marked with corresponding external events
+  * Refactored CheckVersion cmake module:
+  - Variables exposed to the outer scope by the module carry the UJIT_ prefix
+  - Version string fetched from the VCS tag precedes the one from the ChangeLog
+  - Added extra checks for tagged stable releases
+  * Lua interface header lualib.h restored in the source tree:
+  - extended luaopen_* interfaces moved to lextlib.h
+  - lib/uj_lualib.h removed
+  * Further refactoring of the uj_sbuf module
+  * Bytecode dumper fixed for None operands
+  * Isolated transitions from and to the LJ_TRACE_IDLE state
+  * Introduced an isolated ujp_write module
+
+version 0.15-dev0
+  * Flower boxes unified across the code base
+  * Refactored and restyled code of profiler
+  * file(GLOB, ...)/file(GLOB_RECURSE, ...) removed in favour of manifesting sources explicitly
+  * API moved from debug* to ujit*
+  * Fixed semantics of return codes for dumpers
+  * Emission of CATF prevents the TBAR barrier from being eliminated by the CSE optimization
+  * run_tests.sh -> run_tests.py in command-line aliases for building/testing uJIT
+  * Improved implementation of coroutine timeouts:
+  - For unresolvable timeout values expiration happens ASAP
+  - Timeout checkpoints moved from BC_CALL* to BC_*FUNC* prologues
+  * Fast function recorders are guaranteed to be defined for all available fast functions
+  * Fixed reporting of asynchronous trace aborts in the dumper
+  * Added building uJIT as a shared library:
+  - A corresponding dynamically linked CLI is added for eventual testing
+  - Added cmake parameter UJIT_TEST_LIB_TYPE to specify which CLI (and eventually, which library) should be used for running tests
+  - The static library is now built from PIC-compiled object files
+  * tools/ujit-parse-dump ported to Python as tools/dumpanalyze
+  * Coroutines never expire while executing __gc finalizers
+  * Fixed timeout check in the C function prologue
+  * Added C-level APIs luaE_dumpstart, luaE_dumpstop and luaE_dumpbc
+  * Implementation of ujit.dump.start() does not close the output file upon failed call to uj_dump_start
+  * Introduced C-level API luaE_verstring
+  * Minor clean up across the code base
+  * Removed incorrect object state assertions during reverting an unsuccessfull immutability attempt
+  * Fixed declaration of luaE_iterate in lextlib.h
+
+version 0.14
+  * Refactored code of dumpers
+  * Refactored implementation of lj_gdbjit
+  * lj_state* refactored accourding to Linux kernel style
+  * Added profiler parser in C
+  * timeout-related fields moved to a separated struct
+  * Profiler ported to uj_sigtimer
+  * Fixed stability of concatenation:
+  - Some GC checks are relocated to avoid potential invalidation of stack slot pointers during concatenation
+  - lua_concat fixed to avoid using stack slot pointers across calls that potentially invoke GC
+  * Globbing made more strict to avoid redundant re-lauch of uJIT unit tests
+  * Continuation slot is not created if __concat metamethod is called from C API
+  * Refactored and restyled implementation of metamethod and metatable management
+  * Interpreter's PC is stashed before executing timeout function to preserve integrity of guest stack information
+  * Added support for platform-level immutable objects
+  - Added Lua-level interface ujit.immutable
+  - Added C-level interface luaE_immutable
+  * LJ_GC_SFIXED mark is no longer used
+  * Coroutines can use only timeouts greather than or equal to the resolution provided by the timer interrupts
+  - Added C-level API luaE_intresolvable
+  * Sealing is fixed to be an atomic operation
+  * Fixed wrong trace counters in ujit-profiler-parser.pl
+  * A test for os.getenv from lua-TestMore substituted with a more environment-independent version
+  * Compatibility target `test` removed from the build chain in favor of `tests`
+  * Restyled and cleaned up VM state manager
+  * Added tests for ujit.immutable + pairs/ipairs/next
+
+version 0.13
+  * Added an ability to set an expiration timeout for coroutines:
+  - Expired coroutines invoke a callback function (if it is set), clean up their stacks, return a LUA_TIMEOUT status and cannot be resumed after that
+  - Added a subsystem of timer interrupts which runs on top of a POSIX timer delivering its event via a configurable signal
+  - Refactored internal unwinder to support the newly added LUA_TIMEOUT coroutine status
+  * Added callgraph profiler
+  * Massive refactoring of dynamic memory management interfaces:
+  - Redundant interfaces are removed
+  - Interaction with the pluggable allocator is isolated within uj_mem module
+  * Integrated benchmarks for C APIs
+  * Fixed dumping of slots between stack bottom and the first actual frame
+  * Refactored and restyled implementation of userdata
+  * File names with their respective paths are dumped where appropriate
+  * Fixed tests after adding callgraph profiling
+  * Fixed guesttop renewal after stack reallocation
+  * Updated help for ujit-parse-profile.pl
+
+version 0.12
+  * Massive refactoring of project's build chain
+  * Multiple fixes of coroutines' stack traversal during GC:
+  - Framelinks are explicitly nil'ed in case of continuation slots and returning via RET0
+  - Stack traversal switched from slot by slot to frame by frame
+  - Fixes and enhancements in unit tests
+  * Started refactoring and fixing machine-dependent optimisations:
+  - Machine-dependent optimisations moved into a separate component
+  - Refactored and slightly fixed folding of `test r,r` instruction
+  * Refactored implementation of concatenation
+  * Introduced extended C API luaE_iterate for faster table traversal
+  * Fixes in the becnhmark suite:
+  - Removed dependency on LuaJIT
+  - Loosened criteria for considering tests failed
+  * Added dummy and bottom frames semantics
+  * Switched from lazy patching of bytecode for JIT-disabled prototypes to a dedicated interface
+  * Some refactoring of GCproto-related interfaces
+  * Some refactoring of GCfunc- and GCupval-related interfaces
+  * Running tests concurrently is turned off for the lua-TestMore suite
+  * Improved interaction with VM host frames
+  * Added new memory allocator metrics
+  * Removed redundant APIs and LuaJIT compatibility layer from lextlib.h
+  * Garbage collector does not remove weak keys / values pointing to sealed data
+
+version 0.11
+  * Refactored and restyled uj_strhash
+  * Disabled patching of GC side exits
+  * Added tests from lua-TestMore 0.3.2 (both self-tests and Lua 5.1 suite)
+  * Increased LUA_IDSIZE to 256 bytes
+  * Added C state dumping in profiler
+  * Added JIT flag noretl to disable/enable recording returns to lower frames (disabled by default, i.e. returns to lower frames are recorded)
+  * Fixed sealing restrictions for table.sort, debug.setmetatable and others
+  * Improved and document internal VM interfaces working with sealed objects
+  * Massive refactoring of SBuf interfaces
+  * Removed luaL_openlib interface, reworked luaL_register interface
+  * Refactored emission of control transfer instructions
+  * Performance db adjusted for CI
+  * Refactored and restyled uj_sbuf, uj_vtunejit, removed cTValue typedef
+  * Refactored and restyled extended C API
+  * Refactored and restyled auxilary C API
+  * Added API for checking if a function uses its environment: ujit.usesfenv (Lua-level), luaE_usesfenv (C-level)
+  * Enabled compilation of BC_CAT (off by default, can be enabled with the jitcat optimisation flag)
+  * Simplified fast function recording binding
+  * Refactored and restyled base C API
+  * Added metrics for string allocations
+  * Dynamic memory management inside profiler switched to uJIT memory allocator
+  * Adjusted building libudis86: documentation is not generated, files generating during validation against yasm are ignored by hg
+
+version 0.10
+  * Fixed choosing the comparison metamethod in LJ_52
+  * VARG recording refactored, decomposed and commented
+  * Fixed fusing operands in assembling the AREF IR instruction
+  * Fixed recording of VARG instruction:
+  - Fixed calculation of number of vararg slots
+  - Fixed calculation of total size of vararg slots
+  * Introduced additional sealing checks in compiled code
+  * Sealing of objects is guaranteed to be performed under paused GC only
+  * Added JIT flag nohrefk to disable/enable optimized lookup of constant hash keys in compiler (disabled by default, i.e. optimization is performed)
+  * Stabilized profiler tests, improved diagnostics in UJit::Test
+  * SBuf moved to separate module
+  * perftest.pl rewritten to support benchmark comparison and more test scenarios
+  * Fixed a warning about undefined counters in ujit-parse-profile.pl
+  * Calibrated performance testing thresholds for CI environment
+  * Prefix "no" is no longer supported for JIT optimization flags
+  * Refactored toupper/tolower char interfaces
+  * Fixed visualisation of links to the root trace of the current bush
+  * Added a simple tool for analysis of compiler dumps
+  * Enabled debug symbols for production build
+
+version 0.9
+  * Stack index x2 encoding in bytecode
+  * Applied x2 encoding for indexing constant numbers in prototypes
+  * Added bytecode mnemonic comments to auto-generated lj_bcdef.h
+  * Fixed a crash when a couroutine aborted tracing, and JIT state machine was re-entered in the context of another coroutine
+  * Switched from raw offsets to function pointers in lj_bcdef.h
+  * Instrumented code base with Intel VTune JIT API
+  * Minor fixes in tests for the profiler
+  * debug.dump.start() and debug.profile.start() write output to files suffixed with VM-specific suffix
+  * Minor cleanup in uJIT test infrastructure
+  * Implemented support of DataState
+
+version 0.8
+  * Introduced leaf profiler:
+  - Data about currently executed Lua function or compiled trace are streamed on each profiling event
+  - Added a tool for reading the stream of profiling events
+  - Added a new VM state LFUNC (set while interpreter is executing a Lua function)
+  - uj_profile_stop() and uj_profile_stop_vm() perform cleanup on their own (no longer deferring it to the profiled VM)
+  - uj_profile_reset() is removed
+  * Various improvements for leaf profiler
+  * Added VM states FFUNC and CFUNC
+  * Fixed inconsistencies in switching to C and FFUNC VM states
+  * Added C++ symbols demangling in parsed profile
+  * Added files generated by udis86 to hgignore.
+  * Minor refactoring of table interface naming called from JIT.
+  * Removed compilation support for numerous io and math functions.
+  * Optimized table re-hashing in case of non-integer key insertion.
+  * Fixed a bug in coroutine stack initialization
+  * Various improvements in dump_stack
+  * Fixed potential OOB error while shrinking the main string hash during sealing
+  * Fixed rare infinite loop issue in string sealing
+  * Optimized tostring conversion in case of integer numeric argument
+  * Removed vmevent mechanism from the core platform
+  * Generating vmdef.lua removed from the buildvm utility
+  * Added performance test runner
+  * Clean up in the interpreter's code:
+  - Implementation of math.modf moved from the interpreter to a separate function lj_math_modf
+  - Implementation of math.frexp moved from the interpreter to a separate function lj_math_frexp
+  * Disabled compilation of math.modf because of inconsistenciy between VM and IR implementations
+  * Fixed UJit::Test to emulate non-writable paths more properly
+  * Re-located compiler sources
+  * Increased the hotcount cache size
+  * Further optimization of tostring in case of integer argument
+  * Added uj_perftest alias to tools
+  * Another round of tostring optimization
+  * Fixed and re-enabled tvchecklive assertion in setgcV
+  * Replaced checktag macro and its derivatives with simpler assembly instructions where appropriate
+  * Added per-VM counter of snapshot restores
+  * Replaced gettag and settag macros with simpler assembly instructions where appropriate
+  * Refactoring of VM macros for working with frame links:
+  - Removed i2ftsz in favor of simpler assembly instructions
+  - Refactored i2func to get rid of heavy and useless i2tvp call
+  * Refactoring of VM macros for loading values to the guest stack:
+  - gco2i removed in favor of gco2s (for slots with fixed offsets) and gco2sv (for slots with variable offsets)
+  - num2i removed in favor of num2s (for slots with fixed offsets) and num2sv (for slots with variable offsets)
+  - gcr2i replaced with simpler assembly instructions
+  * Replaced i2tvp and i2gcr macros with simpler assembly instructions where appropriate
+  * Test suite extended and revealed bugs fixed:
+  - Adopted functional tests contributed to the community by Mike Pall
+  - coroutine.resume: Fixed Lua stack size check on resuming a coroutine
+  - Recording BC_VARG: Fixed accessing TValues inside a vararg frame
+  - Recording select: Backported emitting an extra guard from the stock LuaJIT
+  - Narrowing optimization of TOBIT: Fixed to pass tests
+  - Test suites relocated
+  * Added a tool for parsing compiler progress dumps
+  * Integrated benchmarks contributed to the community by Mike Pall
+  * Added proper version defines
+
+version 0.7
+  * Compilation of getfenv(0) backported from LuaJIT
+  * IR type NIL extended to 8 bytes to be able to hold a pointer to lua_State* on x86-64
+  * Fixed minor typo in vm_exit_handler
+  * Initial implementation of platform-level profiler
+  * Implemented C-level IR dumper
+  * Implemented C-level machine code dumper
+  * Replaced original dumper functionality with C-level dumpers:
+  - All dumper bindings are moved to debug.dump sublibrary
+  - Removed _debug library
+  * Implemented C-level compiler progress dumper:
+  - Added debug.dump.start and debug.dump.stop bindings for controlling compiler progress dumping
+  - Added -p CLI option to be able to dump compiler's progress to a file
+  - Changed behaviour of -b CLI option: Now it accepts only one argument (file name) and lists chunk's bytecode to that file before actually executing the chunk
+  - Removed Lua-level jit.* modules: jit.bcsave, jit.bc, jit.v, jit.dump (i.e. CLI options -jbc, -jv and -jdump are no longer supported)
+  - Removed jit.util module
+  - Detached dumpers from the vmevent subsystem
+  - LUAJIT_DISABLE_VMEVENT is enforced in src/CMakeLists.txt
+  * Fixed dumping of BC_FUNCF and BC_FUNCV ops
+  * Created utility module for working with LEB128 and ULEB128
+  * Fixed sealing of prototype chunk names
+  * Minor refactoring of IR manipulation routines
+  * Enabled GDB JIT by default; added cmake flag DISABLE_GDBJIT to override this behaviour
+  * Non-amalgamated build is enabled by default
+  * Applied instruction length decoder for trace patching
+  * Re-applied custom userdata GC chaining
+  * Introduced string hash structure and dedicated string hash for sealed strings.
+  * Multiple fixes:
+  - Added new performance test
+  - Added support for Valgrind profiling runs
+  - Optimized structure size for table node
+  - Optimized stack restoration on trace exit
+
+version 0.6
+  * Re-enabled non-amalgamated build (disabled by default)
+  * Implemented C-level bytecode dumper
+  * SIMD constants are fixed to be valid 128-bit long TValue's
+  * Fixed bug with sealing while inside GC sweep phase
+
+  Misc:
+  * print_stack removed in favor of dump_stack
+  * _debug.printstack renamed and moved to _debug.dumpstack
+  * _debug.dumpbc, _debug.dumpbcins
+  * Removed -Wno-unused-function workaround from build system
+  * Added shell aliases for convenient building and testing
+  * Enabled gdbjit for dynamically emitting DWARF information for compiled traces
+
+version 0.5
+  * Fixed snapshots to hold 64-bit pc/ftsz values
+  * Increased default value of maxmcode to 8mb
+  * Enabled compiler in 64-bit mode
+  * Applied fixes from luajit 2.0.3 and 2.0.4
+  * Interpreter optimizations
+  * Fixes for internal structures layout
+  * Multiple bugfixes in interpreter
+  * Intorudced murmur3 string hash function
+  * Moved CPUID-related code to separate cpuinfo module
+  * Reworked CPUID-related code to use GCC built-ins
+  * Reworked strscan-related code to separate strscan module
+
+  Misc:
+  * Enabled stock Lua 5.1 test suite for uJIT:
+  - math.mod (alias for math.fmod) is exported for compatibility with Lua 5.1
+  - string.gfind (alias for string.gmatch) is exported for compatibility with Lua 5.1
+  - coroutine.running return values are Lua 5.1-compatible
+  * Started covering the codebase with unit tests using cmocka
+  * Added syntax file for DynASM for Sublime Text editor
+  * Removed runtime detection and support of AMD processors
+  * Added explicit compilation error for non-GCC builds of cpuinfo
+  * Added version directives to nested cmake files
+  * Added checks for memory protection routines inside JIT compiler
+
+version 0.4
+  * Migrated build to cmake
+  * Added installation instructions
+  * Removed multi-platform support from buildvm
+  * Enabled all assertions project-wide
+  * Re-enabled compiler in 32-bit mode
+  * Added strict check of global variables
+
+  Misc:
+  * Created Lua lib ujit for Lua-level bindings of uJIT-specific API
+  * Added initial implementation of uJIT test environment and some uJIT-specific tests
+  * Fixed a bug in sealing implementation in DEBUG build mode
+  * -ggdb3 included into CMAKE_C_FLAGS_DEBUG to enable macro expansion in debugger
+
+version 0.3
+  * Introduced sealed objects
+  * Introduced lua metrics C API
+  * Prepared convenient merge with current upstream
+  * Fixed memory leak on lua_close with sealed objects
+
+version 0.2
+  * Supported wide memory space in interpretation mode
+
+version 0.1
+  * Virtual machine refactored
+  * Removed majority of cross-platform code, leaving only x86/x86_64 GNU Linux support
+  * Isolated utils module, including assembler math library
+  * Removed the following bytecode instructions: ADDVN, SUBVN, MULVN, DIVVN, MODVN, ADDNV, SUBNV, MULNV, DIVNV, MODNV.
+  - Changed mnemonics of the following bytecode instructions: ADDVV -> ADD, SUBVV -> SUB, MULVV -> MUL, DIVVV -> DIV, MODVV -> MOD
+  * Implemented 64-bit memory allocator, switched table hash part to wide address space

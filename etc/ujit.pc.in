@@ -1,0 +1,22 @@
+# Package information for uJIT to be used by pkg-config.
+# Copyright (C) 2015-2019 IPONWEB Ltd. All rights reserved.
+
+abiver=5.1
+
+prefix=/usr
+exec_prefix=${prefix}
+includedir=${prefix}/include
+libdir=${exec_prefix}/lib
+libname=ujit
+
+INSTALL_LMOD=${prefix}/share/lua/${abiver}
+INSTALL_CMOD=${prefix}/lib/lua/${abiver}
+
+Name: uJIT
+Description: Just-in-time compiler for Lua
+URL: https://github.com/iponweb/luavela
+Version: @UJIT_VERSION_STRING@
+Requires:
+Libs: -L${libdir} -l${libname}
+Libs.private:
+Cflags: -I${includedir} -I${includedir}/ujit

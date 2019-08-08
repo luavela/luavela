@@ -1,0 +1,249 @@
+#!/usr/bin/env perl
+#
+# clang-tidy runner for uJIT. Run with --help for the list of options.
+#
+# NB! Manual runs assume that your working directory is the source tree root.
+#
+# Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+
+use 5.016;
+
+use File::Basename;
+use File::Spec;
+use Getopt::Long;
+
+use constant BIN => File::Basename::basename($0);
+
+use constant DEFAULTS => {
+	verbose => 0,
+	build => '.',
+	project => '.',
+	clang_tidy => {
+		prefix => '/usr/bin/clang-tidy',
+		versions => [ qw(6.0) ],
+	},
+	tries => 3,
+};
+
+use constant ERRORS => join '|',
+	'Error reading configuration from \w+: \w+',
+	'Compile command not found',
+;
+
+# clang-tidy must be applied permissively, i.e.:
+#  * All checks are enabled by default
+#  * It is prohibited to explicitly enable certain checks/check groups
+#  * It is permitted to explicitly disable certain checks/check groups
+#  * There must be a justification for each disabled check/check group
+use constant CHECKS => {
+	default => [
+		# 5.0+:
+		# Everything is enabled except:
+		'*',
+		# no Android-specific checks
+		'-android-*',
+		# no C++-specific checks
+		'-boost-*',
+		# not following CERT guidelines
+		'-cert-*',
+		# no unstable checks
+		'-clang-analyzer-alpha.*',
+		# no C++-specific checks
+		'-clang-analyzer-cplusplus.*',
+		# no MPI-specific checks
+		'-clang-analyzer-optin.mpi.*',
+		# no OSX-specific checks
+		'-clang-analyzer-optin.osx.*',
+		# no OSX-specific checks
+		'-clang-analyzer-osx.*',
+		# no C++-specific checks
+		'-cppcoreguidelines-*',
+		# not following Google conventions
+		'-google-*',
+		# contradicts LKSG
+		'-hicpp-braces-around-statements',
+		# much noise, little value
+		'-hicpp-no-assembler',
+		# much noise, little value
+		'-hicpp-static-assert',
+		# much noise, little value
+		'-hicpp-signed-bitwise',
+		# not following LLVM conventions
+		'-llvm-*',
+		# much noise, little value
+		'-misc-misplaced-widening-cast',
+		# false positives in our code base
+		'-misc-sizeof-expression',
+		# much noise, little value
+		'-misc-static-assert',
+		# no C++-specific checks
+		'-modernize-*',
+		# we use LKSG
+		'-readability-*',
+	],
+
+	# Extra per-file disabled checks. Originally this dictionary was
+	# introduced because each case below implies non-trivial and careful
+	# refactoring. Do not add new entries here, remove existing instead:
+	custom => {
+		# 5.0+, Access to an uninitialized va_list can sneak
+		# through the public lua_pushvfstring, but we can do nothing
+		# about it.
+		'src/uj_str.c' => [
+			'-clang-analyzer-valist.Uninitialized'
+		],
+		# 5.0+, Looks like a false positive.
+		'src/jit/lj_ir.c' => [
+			'-clang-analyzer-valist.Uninitialized'
+		],
+		# The risk of breaking things is much higher than
+		# a potential benefit from fixing away a single warning.
+		'src/utils/strscan.c' => [
+			'-clang-analyzer-core.uninitialized.Assign'
+		],
+		# The alloc_size attribute (conditionally used inside jemalloc
+		# depending on the compiler) is supported by GCC, but not by clang,
+		# which leads to false positives when we run the clang-tidy check
+		# against jemalloc sources configured/built with GCC. Looks like
+		# the suppression is the easiest way to work around the issue.
+		'src/utils/jemalloc.c' => [
+			'-clang-diagnostic-unknown-attributes'
+		],
+		# 5.0+, Looks like a false positive.
+		'tools/parse_profile/ujpp_utils.c' => [
+			'-clang-analyzer-valist.Uninitialized'
+		],
+		# 5.0+, Looks like a false positive
+		'src/uj_meta.c' => [
+			'-clang-analyzer-core.NullDereference'
+		],
+		# An obvious false positive specific to clang-tidy 5.0.
+		# TODO: Please remove after upgrade:
+		'src/frontend/lj_bcread.c' => [
+			'-misc-redundant-expression'
+		],
+        # Long test cases are totally reasonable here.
+        'tests/impl/uJIT-tests-C/suite/test_emit_sse2.c' => [
+            '-hicpp-function-size'
+        ],
+	}
+};
+
+my $options = { map { $_ => DEFAULTS->{ $_ } } qw(verbose build project) };
+
+Getopt::Long::GetOptions(
+	'verbose|v' => \$options->{verbose},
+	'build|b=s' => \$options->{build},
+	'project|p=s' => \$options->{project},
+	'help|h' => sub {
+		say <<HELP and exit 0;
+@{[BIN]} - run clang-tidy with specified checks
+
+SYNOPSIS
+
+@{[BIN]} [options] [<files>...]
+
+Supported options are:
+
+    -p PROJECT, --project PROJECT
+                                Project directory.
+                                Current directory by default.
+
+    -b BUILD, --build BUILD
+                                Build directory.
+                                Current directory by default.
+
+    -v, --verbose               Verbose output.
+                                Off by default.
+
+    -h, --help                  Show this message and exit.
+HELP
+	},
+);
+
+my $env = {
+	clang_tidy => undef,
+	build => $options->{build},
+	project => $options->{project},
+	verbose => $options->{verbose},
+};
+
+for (@{ DEFAULTS->{clang_tidy}{versions} }) {
+	my $bin = join '-', DEFAULTS->{clang_tidy}{prefix}, $_;
+	$env->{clang_tidy} = $bin and last if -f $bin;
+}
+
+die 'No clang-tidy found' unless defined $env->{clang_tidy};
+
+say <<FOUND if $env->{verbose};
+Found clang-tidy: $env->{clang_tidy}
+Build dir: $env->{build}
+Project dir: $env->{project}
+FOUND
+
+die 'No compile commands found'
+	unless -f File::Spec->catfile($env->{build}, 'compile_commands.json');
+
+my $files = { map { $_ => [ ] } qw(default custom) };
+push @{ $files->{
+	exists CHECKS->{custom}{ File::Spec->abs2rel($_, $env->{project}) }
+		? 'custom' : 'default'
+} }, File::Spec->rel2abs($_)
+	for @ARGV;
+
+if (@{ $files->{default} }) {
+	say report($files, 'default');
+	run_clang_tidy($env, $files->{default}, CHECKS->{default});
+}
+
+if (@{ $files->{custom} }) {
+	say report($files, 'custom');
+	run_clang_tidy($env, [ $_ ], CHECKS->{default}, CHECKS->{custom}{
+		File::Spec->abs2rel($_, $env->{project})
+	}) for @{ $files->{custom} };
+}
+
+exit 0;
+
+# Invoke a clang-tidy command.
+sub run_clang_tidy($$$;$) {
+	my ($env, $files, $default, $custom) = @_;
+
+	my $cmd = join(' ', $env->{clang_tidy},
+		'-warnings-as-errors=*',
+		'-header-filter=.*',
+		"-p $env->{build}",
+		'-checks=' . join(',', @{ $default }, @{ $custom // [ ] }),
+		@{ $files }
+	);
+
+	for (my $tries = DEFAULTS->{tries}; $tries; $tries--) {
+		local $| = 1;
+		local $/;
+		say join "\n", '=' x 60, "Running $cmd" if $env->{verbose};
+		open(my $pipe, '-|', "$cmd 2>&1") or die "Can't fork: $!";
+		my $buf = <$pipe>;
+		close($pipe) or do {
+			say join "\n", 'FAILED', $buf, '-' x 60 if $env->{verbose};
+			say STDERR 'WARNING! DETECTED A SEGMENTATION FAULT OF clang-tidy' and next
+				if $buf =~ m{Segmentation fault};
+			die "run-clang-tidy FAILED on $cmd ($1)"
+				if $buf =~ m{(@{[ERRORS]})};
+			die "run-clang-tidy FAILED on $cmd (Unhandled)";
+		};
+		say join "\n", 'PASSED', $buf, '-' x 60 if $env->{verbose};
+		return;
+	}
+
+	die "run-clang-tidy FAILED on $cmd (max tries exceeded)";
+}
+
+sub report($$) {
+	my ($files, $check) = @_;
+
+	sprintf 'Checking %u file(s) with %s checks: %s',
+		~~@{ $files->{ $check } },
+		$check,
+		join ', ', @{ $files->{ $check } }
+	;
+}
