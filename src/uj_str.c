@@ -295,51 +295,41 @@ int uj_str_tonum(const GCstr *str, lua_Number *n)
 /* -- String concatenation for interpreted code -------------------------- */
 
 /*
- * In-place coercion of a TValue to a string. Implemented as a no-op for strings
- * (for convenience) and actual value conversion for numbers. Throws otherwise.
- */
-static void str_coerce(lua_State *L, TValue *tv)
-{
-	if (tvisstr(tv))
-		return;
-
-	if (tvisnum(tv)) {
-		setstrV(L, tv, uj_str_fromnumber(L, tv->n));
-		return;
-	}
-
-	lua_assert(0);
-}
-
-/*
  * Performs naive concatenation of slots from `top` to `bottom` (both inclusive)
- * assuming that each slot is either a string or a number. In the latter case,
- * the slot is coerced into a string *in-place*. Throws if the result of
- * concatenation is too large. Returns a pointer to interned resulting string.
+ * assuming that each slot is either a string or a number. Throws if the result
+ * of a concatenation is too large. Returns a pointer to interned resulting
+ * string.
  */
 static GCstr *str_cat(lua_State *L, TValue *bottom, TValue *top)
 {
 	ptrdiff_t i;
-	size_t res_len = 0;
+	size_t buf_len = 0;
 	struct sbuf *sb = uj_sbuf_reset_tmp(L);
 	const ptrdiff_t nslots = top - bottom + 1;
 
 	lua_assert(nslots > 1);
 
 	for (i = 0; i < nslots; i++) {
-		str_coerce(L, &bottom[i]);
-		const size_t len = strV(&bottom[i])->len;
+		const TValue *tv = &bottom[i];
+		const size_t len = tvisstr(tv) ? strV(tv)->len :
+						 LUAI_MAXNUMBER2STR;
 
-		if (LJ_UNLIKELY(len >= LJ_MAX_STR - res_len))
+		lua_assert(uj_str_is_coercible(tv));
+
+		if (LJ_UNLIKELY(len >= LJ_MAX_STR - buf_len))
 			uj_err(L, UJ_ERR_STROV);
-		res_len += len;
+		buf_len += len;
 	}
 
-	uj_sbuf_reserve(sb, res_len);
-	for (i = 0; i < nslots; i++)
-		uj_sbuf_push_str(sb, strV(&bottom[i]));
+	uj_sbuf_reserve(sb, buf_len);
+	for (i = 0; i < nslots; i++) {
+		const TValue *tv = &bottom[i];
 
-	lua_assert(res_len == uj_sbuf_size(sb));
+		if (tvisnum(tv))
+			uj_sbuf_push_number(sb, numV(tv));
+		else
+			uj_sbuf_push_str(sb, strV(tv));
+	}
 
 	return uj_str_frombuf(L, sb);
 }

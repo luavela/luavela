@@ -1,4 +1,5 @@
 version 0.24-dev0
+  * Removed unnecessary conversions from numbers to temporary strings on concatenations
   * Added missing documentation page
   * Added a separate LICENSE file and unified copyright notices across the code base
 
