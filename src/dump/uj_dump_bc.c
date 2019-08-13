@@ -293,7 +293,12 @@ static void dump_bc_get_file_line(struct source_dumper_state *sds)
 	size_t line_len;
 
 	/* edge case: MAX_SRC_LINE_LEN chars + '\n' + '\0' */
-	fgets(sds->buf, MAX_SRC_LINE_LEN + 2, sds->file);
+	if (fgets(sds->buf, MAX_SRC_LINE_LEN + 2, sds->file) == NULL) {
+		/* Anything wrong? Pretend we've read an empty line. */
+		sds->buf[0] = '\0';
+		sds->line++;
+		return;
+	}
 
 	line_len = strlen(sds->buf);
 	lua_assert(line_len != 0);
