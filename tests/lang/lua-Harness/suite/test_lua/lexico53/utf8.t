@@ -1,11 +1,13 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2014-2018, Perrad Francois
+-- Copyright (C) 2014-2019, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
 --
+
+local has_utf8_lax = _VERSION >= 'Lua 5.4'
 
 do -- char
     is(utf8.char(65, 66, 67), 'ABC', "function char")
@@ -22,13 +24,17 @@ do -- char
 end
 
 do -- charpattern
-    is(utf8.charpattern, "[\0-\x7F\xC2-\xF4][\x80-\xBF]*", "charpattern")
+    if _VERSION == 'Lua 5.3' then
+        is(utf8.charpattern, "[\0-\x7F\xC2-\xF4][\x80-\xBF]*", "charpattern")
+    else
+        is(utf8.charpattern, "[\0-\x7F\xC2-\xFD][\x80-\xBF]*", "charpattern")
+    end
 end
 
 do -- codes
     local ap = {}
     local ac = {}
-    for p, c in utf8.codes("A\u{20AC}3") do
+    for p, c in utf8.codes("A\u{20AC}3", has_utf8_lax) do
         ap[#ap+1] = p
         ac[#ac+1] = c
     end
@@ -59,7 +65,7 @@ do -- codepoints
     is(utf8.codepoint("A\u{20AC}3", 2), 0x20AC)
     is(utf8.codepoint("A\u{20AC}3", -1), 0x33)
     is(utf8.codepoint("A\u{20AC}3", 5), 0x33)
-    eq_array({utf8.codepoint("A\u{20AC}3", 1, 5)}, {0x41, 0x20AC, 0x33})
+    eq_array({utf8.codepoint("A\u{20AC}3", 1, 5, has_utf8_lax)}, {0x41, 0x20AC, 0x33})
     eq_array({utf8.codepoint("A\u{20AC}3", 1, 4)}, {0x41, 0x20AC})
 
     error_like(function () utf8.codepoint("A\u{20AC}3", 6) end,
@@ -83,6 +89,8 @@ do -- len
 
     is(utf8.len('A', 1), 1)
     is(utf8.len('A', 2), 0)
+    is(utf8.len('ABC', 1, 1, has_utf8_lax), 1)
+    is(utf8.len('ABC', 2, 2), 1)
     is(utf8.len('ABC', -1), 1)
     is(utf8.len('ABC', -2), 2)
 

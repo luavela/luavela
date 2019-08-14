@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2009-2018, Perrad Francois
+-- Copyright (C) 2009-2019, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -32,8 +32,9 @@ See section "Coroutines" in "Programming in Lua".
 require'tap'
 local profile = require'profile'
 local has_coroutine52 = _VERSION >= 'Lua 5.2' or jit
-local has_running52 = false -- UJIT: coroutine.running is not implemented yet
+local has_running52 = _VERSION >= 'Lua 5.2' or (profile.luajit_compat52 and not ujit)
 local has_isyieldable = _VERSION >= 'Lua 5.3' or (jit and jit.version_num >= 20100)
+local has_close = _VERSION >= 'Lua 5.4'
 
 plan'no_plan'
 
@@ -83,10 +84,10 @@ do
                "^[^:]+:%d+: bad argument #1 to 'create' %(.- expected")
 
     error_like(function () coroutine.resume(true) end,
-               "^[^:]+:%d+: bad argument #1 to 'resume' %(.- expected%)")
+               "^[^:]+:%d+: bad argument #1 to 'resume' %(.- expected")
 
     error_like(function () coroutine.status(true) end,
-               "^[^:]+:%d+: bad argument #1 to 'status' %(.- expected%)")
+               "^[^:]+:%d+: bad argument #1 to 'status' %(.- expected")
 end
 
 do
@@ -210,6 +211,25 @@ do
     else
         is(coroutine.isyieldable, nil, "no coroutine.isyieldable")
     end
+end
+
+-- close
+if has_close then
+    local output = ''
+    local co = coroutine.create(function ()
+        output = 'hi'
+    end)
+    is(coroutine.close(co), true, "close")
+    is(coroutine.status(co), 'dead')
+    is(coroutine.close(co), true, "close again")
+
+    error_like(function () coroutine.close(coroutine.running()) end,
+               "^[^:]+:%d+: cannot close a running coroutine")
+
+    error_like(function () coroutine.close(42) end,
+               "^[^:]+:%d+: bad argument #1 to 'close' %(thread expected, got number%)")
+else
+    is(coroutine.close, nil, "no coroutine.close")
 end
 
 done_testing()

@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2009-2018, Perrad Francois
+-- Copyright (C) 2009-2019, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -111,7 +111,7 @@ error_like(function ()
                     print(i)
                 end
            end,
-           "^[^:]+:%d+: 'for' initial value must be a number",
+           "^[^:]+:%d+:.- 'for' initial value",
            "for tonumber")
 
 error_like(function ()
@@ -122,7 +122,7 @@ error_like(function ()
                     print(i)
                 end
            end,
-           "^[^:]+:%d+: 'for' limit must be a number",
+           "^[^:]+:%d+:.- 'for' limit",
            "for tonumber")
 
 error_like(function ()
@@ -133,8 +133,18 @@ error_like(function ()
                     print(i)
                 end
            end,
-           "^[^:]+:%d+: 'for' step must be a number",
+           "^[^:]+:%d+:.- 'for' step",
            "for tonumber")
+
+if _VERSION >= 'Lua 5.4' then
+    error_like(function ()
+                    for i = 1, 10, 0 do
+                        print(i)
+                    end
+               end,
+               "^[^:]+:%d+: 'for' step is zero",
+               "for step zero")
+end
 
 done_testing()
 

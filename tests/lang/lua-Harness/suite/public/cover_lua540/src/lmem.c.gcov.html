@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - Lua 5.4.0-work2 - src/lmem.c</title>
+  <title>LCOV - Lua 5.4.0-alpha - src/lmem.c</title>
   <link rel="stylesheet" type="text/css" href="../gcov.css">
 </head>
 
@@ -28,16 +28,16 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">Lua 5.4.0-work2</td>
+            <td class="headerValue">Lua 5.4.0-alpha</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntry">42</td>
-            <td class="headerCovTableEntry">60</td>
-            <td class="headerCovTableEntryLo">70.0 %</td>
+            <td class="headerCovTableEntry">45</td>
+            <td class="headerCovTableEntry">66</td>
+            <td class="headerCovTableEntryLo">68.2 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2018-10-07 17:32:54</td>
+            <td class="headerValue">2019-06-13 19:44:19</td>
             <td></td>
           </tr>
           <tr>
@@ -65,7 +65,7 @@
 <pre class="sourceHeading">          Line data    Source code</pre>
 <pre class="source">
 <span class="lineNum">       1 </span>            : /*
-<span class="lineNum">       2 </span>            : ** $Id: lmem.c,v 1.98 2018/06/18 12:08:10 roberto Exp $
+<span class="lineNum">       2 </span>            : ** $Id: lmem.c $
 <span class="lineNum">       3 </span>            : ** Interface to Memory Manager
 <span class="lineNum">       4 </span>            : ** See Copyright Notice in lua.h
 <span class="lineNum">       5 </span>            : */
@@ -119,47 +119,47 @@
 <span class="lineNum">      53 </span>            : #define MINSIZEARRAY    4
 <span class="lineNum">      54 </span>            : 
 <span class="lineNum">      55 </span>            : 
-<span class="lineNum">      56 </span><span class="lineCov">     336767 : void *luaM_growaux_ (lua_State *L, void *block, int nelems, int *psize,</span>
+<span class="lineNum">      56 </span><span class="lineCov">     141265 : void *luaM_growaux_ (lua_State *L, void *block, int nelems, int *psize,</span>
 <span class="lineNum">      57 </span>            :                      int size_elems, int limit, const char *what) {
 <span class="lineNum">      58 </span>            :   void *newblock;
-<span class="lineNum">      59 </span><span class="lineCov">     336767 :   int size = *psize;</span>
-<span class="lineNum">      60 </span><span class="lineCov">     336767 :   if (nelems + 1 &lt;= size)  /* does one extra element still fit? */</span>
-<span class="lineNum">      61 </span>            :     return block;  /* nothing to be done */
-<span class="lineNum">      62 </span><span class="lineCov">      48019 :   if (size &gt;= limit / 2) {  /* cannot double it? */</span>
+<span class="lineNum">      59 </span><span class="lineCov">     141265 :   int size = *psize;</span>
+<span class="lineNum">      60 </span><span class="lineCov">     141265 :   if (nelems + 1 &lt;= size)  /* does one extra element still fit? */</span>
+<span class="lineNum">      61 </span><span class="lineCov">     122054 :     return block;  /* nothing to be done */</span>
+<span class="lineNum">      62 </span><span class="lineCov">      19211 :   if (size &gt;= limit / 2) {  /* cannot double it? */</span>
 <span class="lineNum">      63 </span><span class="lineNoCov">          0 :     if (unlikely(size &gt;= limit))  /* cannot grow even a little? */</span>
 <span class="lineNum">      64 </span><span class="lineNoCov">          0 :       luaG_runerror(L, &quot;too many %s (limit is %d)&quot;, what, limit);</span>
-<span class="lineNum">      65 </span>            :     size = limit;  /* still have at least one free place */
+<span class="lineNum">      65 </span><span class="lineNoCov">          0 :     size = limit;  /* still have at least one free place */</span>
 <span class="lineNum">      66 </span>            :   }
 <span class="lineNum">      67 </span>            :   else {
-<span class="lineNum">      68 </span><span class="lineCov">      48019 :     size *= 2;</span>
-<span class="lineNum">      69 </span><span class="lineCov">      48019 :     if (size &lt; MINSIZEARRAY)</span>
-<span class="lineNum">      70 </span>            :       size = MINSIZEARRAY;  /* minimum size */
+<span class="lineNum">      68 </span><span class="lineCov">      19211 :     size *= 2;</span>
+<span class="lineNum">      69 </span><span class="lineCov">      19211 :     if (size &lt; MINSIZEARRAY)</span>
+<span class="lineNum">      70 </span><span class="lineCov">       9638 :       size = MINSIZEARRAY;  /* minimum size */</span>
 <span class="lineNum">      71 </span>            :   }
 <span class="lineNum">      72 </span>            :   lua_assert(nelems + 1 &lt;= size &amp;&amp; size &lt;= limit);
 <span class="lineNum">      73 </span>            :   /* 'limit' ensures that multiplication will not overflow */
-<span class="lineNum">      74 </span><span class="lineCov">      48019 :   newblock = luaM_realloc_(L, block, cast_sizet(*psize) * size_elems,</span>
-<span class="lineNum">      75 </span><span class="lineCov">      48019 :                                      cast_sizet(size) * size_elems);</span>
-<span class="lineNum">      76 </span><span class="lineCov">      48019 :   if (unlikely(newblock == NULL))</span>
+<span class="lineNum">      74 </span><span class="lineCov">      19211 :   newblock = luaM_realloc_(L, block, cast_sizet(*psize) * size_elems,</span>
+<span class="lineNum">      75 </span><span class="lineCov">      19211 :                                      cast_sizet(size) * size_elems);</span>
+<span class="lineNum">      76 </span><span class="lineCov">      19211 :   if (unlikely(newblock == NULL))</span>
 <span class="lineNum">      77 </span><span class="lineNoCov">          0 :     luaM_error(L);</span>
-<span class="lineNum">      78 </span><span class="lineCov">      48019 :   *psize = size;  /* update only when everything else is OK */</span>
-<span class="lineNum">      79 </span><span class="lineCov">      48019 :   return newblock;</span>
+<span class="lineNum">      78 </span><span class="lineCov">      19211 :   *psize = size;  /* update only when everything else is OK */</span>
+<span class="lineNum">      79 </span><span class="lineCov">      19211 :   return newblock;</span>
 <span class="lineNum">      80 </span>            : }
 <span class="lineNum">      81 </span>            : 
 <span class="lineNum">      82 </span>            : 
-<span class="lineNum">      83 </span><span class="lineCov">      33271 : void *luaM_shrinkvector_ (lua_State *L, void *block, int *size,</span>
+<span class="lineNum">      83 </span><span class="lineCov">      14189 : void *luaM_shrinkvector_ (lua_State *L, void *block, int *size,</span>
 <span class="lineNum">      84 </span>            :                           int final_n, int size_elem) {
-<span class="lineNum">      85 </span><span class="lineCov">      33271 :   global_State *g = G(L);</span>
+<span class="lineNum">      85 </span><span class="lineCov">      14189 :   global_State *g = G(L);</span>
 <span class="lineNum">      86 </span>            :   void *newblock;
-<span class="lineNum">      87 </span><span class="lineCov">      33271 :   size_t oldsize = cast_sizet((*size) * size_elem);</span>
-<span class="lineNum">      88 </span><span class="lineCov">      33271 :   size_t newsize = cast_sizet(final_n * size_elem);</span>
+<span class="lineNum">      87 </span><span class="lineCov">      14189 :   size_t oldsize = cast_sizet((*size) * size_elem);</span>
+<span class="lineNum">      88 </span><span class="lineCov">      14189 :   size_t newsize = cast_sizet(final_n * size_elem);</span>
 <span class="lineNum">      89 </span>            :   lua_assert(newsize &lt;= oldsize);
-<span class="lineNum">      90 </span><span class="lineCov">      33271 :   newblock = (*g-&gt;frealloc)(g-&gt;ud, block, oldsize, newsize);</span>
-<span class="lineNum">      91 </span><span class="lineCov">      33271 :   if (unlikely(newblock == NULL &amp;&amp; final_n &gt; 0))  /* allocation failed? */</span>
+<span class="lineNum">      90 </span><span class="lineCov">      14189 :   newblock = (*g-&gt;frealloc)(g-&gt;ud, block, oldsize, newsize);</span>
+<span class="lineNum">      91 </span><span class="lineCov">      14189 :   if (unlikely(newblock == NULL &amp;&amp; final_n &gt; 0))  /* allocation failed? */</span>
 <span class="lineNum">      92 </span><span class="lineNoCov">          0 :     luaM_error(L);</span>
 <span class="lineNum">      93 </span>            :   else {
-<span class="lineNum">      94 </span><span class="lineCov">      33271 :     g-&gt;GCdebt += newsize - oldsize;</span>
-<span class="lineNum">      95 </span><span class="lineCov">      33271 :     *size = final_n;</span>
-<span class="lineNum">      96 </span><span class="lineCov">      33271 :     return newblock;</span>
+<span class="lineNum">      94 </span><span class="lineCov">      14189 :     g-&gt;GCdebt += newsize - oldsize;</span>
+<span class="lineNum">      95 </span><span class="lineCov">      14189 :     *size = final_n;</span>
+<span class="lineNum">      96 </span><span class="lineCov">      14189 :     return newblock;</span>
 <span class="lineNum">      97 </span>            :   }
 <span class="lineNum">      98 </span>            : }
 <span class="lineNum">      99 </span>            : 
@@ -172,12 +172,12 @@
 <span class="lineNum">     106 </span>            : /*
 <span class="lineNum">     107 </span>            : ** Free memory
 <span class="lineNum">     108 </span>            : */
-<span class="lineNum">     109 </span><span class="lineCov">     136161 : void luaM_free_ (lua_State *L, void *block, size_t osize) {</span>
-<span class="lineNum">     110 </span><span class="lineCov">     136161 :   global_State *g = G(L);</span>
-<span class="lineNum">     111 </span>            :   lua_assert((block == 0) == (block == NULL));
-<span class="lineNum">     112 </span><span class="lineCov">     136161 :   (*g-&gt;frealloc)(g-&gt;ud, block, osize, 0);</span>
-<span class="lineNum">     113 </span><span class="lineCov">     136161 :   g-&gt;GCdebt -= osize;</span>
-<span class="lineNum">     114 </span><span class="lineCov">     136161 : }</span>
+<span class="lineNum">     109 </span><span class="lineCov">      92750 : void luaM_free_ (lua_State *L, void *block, size_t osize) {</span>
+<span class="lineNum">     110 </span><span class="lineCov">      92750 :   global_State *g = G(L);</span>
+<span class="lineNum">     111 </span>            :   lua_assert((osize == 0) == (block == NULL));
+<span class="lineNum">     112 </span><span class="lineCov">      92750 :   (*g-&gt;frealloc)(g-&gt;ud, block, osize, 0);</span>
+<span class="lineNum">     113 </span><span class="lineCov">      92750 :   g-&gt;GCdebt -= osize;</span>
+<span class="lineNum">     114 </span><span class="lineCov">      92750 : }</span>
 <span class="lineNum">     115 </span>            : 
 <span class="lineNum">     116 </span>            : 
 <span class="lineNum">     117 </span>            : /*
@@ -193,54 +193,54 @@
 <span class="lineNum">     127 </span><span class="lineNoCov">          0 :     luaC_fullgc(L, 1);  /* try to free some memory... */</span>
 <span class="lineNum">     128 </span><span class="lineNoCov">          0 :     return (*g-&gt;frealloc)(g-&gt;ud, block, osize, nsize);  /* try again */</span>
 <span class="lineNum">     129 </span>            :   }
-<span class="lineNum">     130 </span>            :   else return NULL;  /* cannot free any memory without a full state */
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :   else return NULL;  /* cannot free any memory without a full state */</span>
 <span class="lineNum">     131 </span>            : }
 <span class="lineNum">     132 </span>            : 
 <span class="lineNum">     133 </span>            : 
 <span class="lineNum">     134 </span>            : /*
 <span class="lineNum">     135 </span>            : ** generic allocation routine.
 <span class="lineNum">     136 </span>            : */
-<span class="lineNum">     137 </span><span class="lineCov">      83687 : void *luaM_realloc_ (lua_State *L, void *block, size_t osize, size_t nsize) {</span>
+<span class="lineNum">     137 </span><span class="lineCov">      51525 : void *luaM_realloc_ (lua_State *L, void *block, size_t osize, size_t nsize) {</span>
 <span class="lineNum">     138 </span>            :   void *newblock;
-<span class="lineNum">     139 </span><span class="lineCov">      83687 :   global_State *g = G(L);</span>
+<span class="lineNum">     139 </span><span class="lineCov">      51525 :   global_State *g = G(L);</span>
 <span class="lineNum">     140 </span>            :   lua_assert((osize == 0) == (block == NULL));
 <span class="lineNum">     141 </span>            :   hardtest(L, osize, nsize);
-<span class="lineNum">     142 </span><span class="lineCov">      83687 :   newblock = (*g-&gt;frealloc)(g-&gt;ud, block, osize, nsize);</span>
-<span class="lineNum">     143 </span><span class="lineCov">      83687 :   if (unlikely(newblock == NULL &amp;&amp; nsize &gt; 0)) {</span>
+<span class="lineNum">     142 </span><span class="lineCov">      51525 :   newblock = (*g-&gt;frealloc)(g-&gt;ud, block, osize, nsize);</span>
+<span class="lineNum">     143 </span><span class="lineCov">      51525 :   if (unlikely(newblock == NULL &amp;&amp; nsize &gt; 0)) {</span>
 <span class="lineNum">     144 </span><span class="lineNoCov">          0 :     if (nsize &gt; osize)  /* not shrinking a block? */</span>
 <span class="lineNum">     145 </span><span class="lineNoCov">          0 :       newblock = tryagain(L, block, osize, nsize);</span>
 <span class="lineNum">     146 </span><span class="lineNoCov">          0 :     if (newblock == NULL)  /* still no memory? */</span>
-<span class="lineNum">     147 </span>            :       return NULL;
+<span class="lineNum">     147 </span><span class="lineNoCov">          0 :       return NULL;</span>
 <span class="lineNum">     148 </span>            :   }
 <span class="lineNum">     149 </span>            :   lua_assert((nsize == 0) == (newblock == NULL));
-<span class="lineNum">     150 </span><span class="lineCov">      83687 :   g-&gt;GCdebt = (g-&gt;GCdebt + nsize) - osize;</span>
-<span class="lineNum">     151 </span><span class="lineCov">      83687 :   return newblock;</span>
+<span class="lineNum">     150 </span><span class="lineCov">      51525 :   g-&gt;GCdebt = (g-&gt;GCdebt + nsize) - osize;</span>
+<span class="lineNum">     151 </span><span class="lineCov">      51525 :   return newblock;</span>
 <span class="lineNum">     152 </span>            : }
 <span class="lineNum">     153 </span>            : 
 <span class="lineNum">     154 </span>            : 
-<span class="lineNum">     155 </span><span class="lineCov">       1311 : void *luaM_saferealloc_ (lua_State *L, void *block, size_t osize,</span>
+<span class="lineNum">     155 </span><span class="lineCov">       1117 : void *luaM_saferealloc_ (lua_State *L, void *block, size_t osize,</span>
 <span class="lineNum">     156 </span>            :                                                     size_t nsize) {
-<span class="lineNum">     157 </span><span class="lineCov">       1311 :   void *newblock = luaM_realloc_(L, block, osize, nsize);</span>
-<span class="lineNum">     158 </span><span class="lineCov">       1311 :   if (unlikely(newblock == NULL &amp;&amp; nsize &gt; 0))  /* allocation failed? */</span>
+<span class="lineNum">     157 </span><span class="lineCov">       1117 :   void *newblock = luaM_realloc_(L, block, osize, nsize);</span>
+<span class="lineNum">     158 </span><span class="lineCov">       1117 :   if (unlikely(newblock == NULL &amp;&amp; nsize &gt; 0))  /* allocation failed? */</span>
 <span class="lineNum">     159 </span><span class="lineNoCov">          0 :     luaM_error(L);</span>
-<span class="lineNum">     160 </span><span class="lineCov">       1311 :   return newblock;</span>
+<span class="lineNum">     160 </span><span class="lineCov">       1117 :   return newblock;</span>
 <span class="lineNum">     161 </span>            : }
 <span class="lineNum">     162 </span>            : 
 <span class="lineNum">     163 </span>            : 
-<span class="lineNum">     164 </span><span class="lineCov">      92616 : void *luaM_malloc_ (lua_State *L, size_t size, int tag) {</span>
+<span class="lineNum">     164 </span><span class="lineCov">      72485 : void *luaM_malloc_ (lua_State *L, size_t size, int tag) {</span>
 <span class="lineNum">     165 </span>            :   hardtest(L, 0, size);
-<span class="lineNum">     166 </span><span class="lineCov">      92616 :   if (size == 0)</span>
-<span class="lineNum">     167 </span>            :     return NULL;  /* that's all */
+<span class="lineNum">     166 </span><span class="lineCov">      72485 :   if (size == 0)</span>
+<span class="lineNum">     167 </span><span class="lineCov">         33 :     return NULL;  /* that's all */</span>
 <span class="lineNum">     168 </span>            :   else {
-<span class="lineNum">     169 </span><span class="lineCov">      92583 :     global_State *g = G(L);</span>
-<span class="lineNum">     170 </span><span class="lineCov">      92583 :     void *newblock = (*g-&gt;frealloc)(g-&gt;ud, NULL, tag, size);</span>
-<span class="lineNum">     171 </span><span class="lineCov">      92583 :     if (unlikely(newblock == NULL)) {</span>
+<span class="lineNum">     169 </span><span class="lineCov">      72452 :     global_State *g = G(L);</span>
+<span class="lineNum">     170 </span><span class="lineCov">      72452 :     void *newblock = (*g-&gt;frealloc)(g-&gt;ud, NULL, tag, size);</span>
+<span class="lineNum">     171 </span><span class="lineCov">      72452 :     if (unlikely(newblock == NULL)) {</span>
 <span class="lineNum">     172 </span><span class="lineNoCov">          0 :       newblock = tryagain(L, NULL, tag, size);</span>
 <span class="lineNum">     173 </span><span class="lineNoCov">          0 :       if (newblock == NULL)</span>
 <span class="lineNum">     174 </span><span class="lineNoCov">          0 :         luaM_error(L);</span>
 <span class="lineNum">     175 </span>            :     }
-<span class="lineNum">     176 </span><span class="lineCov">      92583 :     g-&gt;GCdebt += size;</span>
-<span class="lineNum">     177 </span><span class="lineCov">      92583 :     return newblock;</span>
+<span class="lineNum">     176 </span><span class="lineCov">      72452 :     g-&gt;GCdebt += size;</span>
+<span class="lineNum">     177 </span><span class="lineCov">      72452 :     return newblock;</span>
 <span class="lineNum">     178 </span>            :   }
 <span class="lineNum">     179 </span>            : }
 </pre>

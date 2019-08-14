@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2018, Perrad Francois
+-- Copyright (C) 2018-2019, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -26,7 +26,7 @@ See L<http://luajit.org/running.html>
 
 require'tap'
 
-if not jit then
+if not jit or ujit then
     skip_all("only with LuaJIT")
 end
 
@@ -40,13 +40,6 @@ local compiled_with_jit = jit.status()
 
 plan'no_plan'
 diag(lua)
-
--- UJIT: "-b" flag produces human readable code in our implementation
--- So these tests are not applicable for now
-do
-    skip_all("UJIT: tests are specific for LuaJIT")
-    return
-end
 
 local f = io.open('hello-404.lua', 'w')
 f:write([[

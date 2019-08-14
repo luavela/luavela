@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2018-10-07 17:32:51</td>
+            <td class="headerValue">2019-06-13 19:44:15</td>
             <td></td>
           </tr>
           <tr>
@@ -93,14 +93,14 @@
 <span class="lineNum">      27 </span>            : };
 <span class="lineNum">      28 </span>            : 
 <span class="lineNum">      29 </span>            : 
-<span class="lineNum">      30 </span><span class="lineCov">         83 : LUALIB_API void luaL_openlibs (lua_State *L) {</span>
-<span class="lineNum">      31 </span><span class="lineCov">         83 :   const luaL_Reg *lib = lualibs;</span>
-<span class="lineNum">      32 </span><span class="lineCov">        747 :   for (; lib-&gt;func; lib++) {</span>
-<span class="lineNum">      33 </span><span class="lineCov">        664 :     lua_pushcfunction(L, lib-&gt;func);</span>
-<span class="lineNum">      34 </span><span class="lineCov">        664 :     lua_pushstring(L, lib-&gt;name);</span>
-<span class="lineNum">      35 </span><span class="lineCov">        664 :     lua_call(L, 1, 0);</span>
+<span class="lineNum">      30 </span><span class="lineCov">         87 : LUALIB_API void luaL_openlibs (lua_State *L) {</span>
+<span class="lineNum">      31 </span><span class="lineCov">         87 :   const luaL_Reg *lib = lualibs;</span>
+<span class="lineNum">      32 </span><span class="lineCov">        783 :   for (; lib-&gt;func; lib++) {</span>
+<span class="lineNum">      33 </span><span class="lineCov">        696 :     lua_pushcfunction(L, lib-&gt;func);</span>
+<span class="lineNum">      34 </span><span class="lineCov">        696 :     lua_pushstring(L, lib-&gt;name);</span>
+<span class="lineNum">      35 </span><span class="lineCov">        696 :     lua_call(L, 1, 0);</span>
 <span class="lineNum">      36 </span>            :   }
-<span class="lineNum">      37 </span><span class="lineCov">         83 : }</span>
+<span class="lineNum">      37 </span><span class="lineCov">         87 : }</span>
 <span class="lineNum">      38 </span>            : 
 </pre>
       </td>

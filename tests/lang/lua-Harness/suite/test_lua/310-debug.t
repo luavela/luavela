@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2009-2018, Perrad Francois
+-- Copyright (C) 2009-2019, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -33,8 +33,9 @@ require 'tap'
 local profile = require'profile'
 local has_getfenv = _VERSION == 'Lua 5.1'
 local has_getlocal52 = _VERSION >= 'Lua 5.2' or profile.luajit_compat52
-local has_setmetatable52 = false -- UJIT: currently debug.setmetatable returns bool like in Lua 5.1
+local has_setmetatable52 = _VERSION >= 'Lua 5.2' or (profile.luajit_compat52 and not ujit)
 local has_getuservalue = _VERSION >= 'Lua 5.2' or profile.luajit_compat52
+local has_getuservalue54 = _VERSION >= 'Lua 5.4'
 local has_upvalueid = _VERSION >= 'Lua 5.2' or jit
 local has_upvaluejoin = _VERSION >= 'Lua 5.2' or jit
 
@@ -198,7 +199,7 @@ do -- setmetatable
     is(getmetatable(t), t1)
 
     error_like(function () debug.setmetatable(t, true) end,
-               "^[^:]+:%d+: bad argument #2 to 'setmetatable' %(nil or table expected%)")
+               "^[^:]+:%d+: bad argument #2 to 'setmetatable' %(nil or table expected")
 end
 
 do -- setupvalue
@@ -212,7 +213,23 @@ do -- setupvalue
 end
 
 -- getuservalue / setuservalue
-if has_getuservalue then
+if has_getuservalue54 then
+    local u = io.tmpfile()      -- lua_newuserdatauv(L, sizeof(LStream), 0);
+    is(debug.getuservalue(u, 0), nil, "function getuservalue")
+    is(debug.getuservalue(true), nil)
+
+    error_like(function () debug.getuservalue(u, 'foo') end,
+               "^[^:]+:%d+: bad argument #2 to 'getuservalue' %(number expected, got string%)")
+
+    local data = {}
+    is(debug.setuservalue(u, data, 42), nil, "function setuservalue")
+
+    error_like(function () debug.setuservalue({}, data) end,
+               "^[^:]+:%d+: bad argument #1 to 'setuservalue' %(userdata expected, got table%)")
+
+    error_like(function () debug.setuservalue(u, data, 'foo') end,
+               "^[^:]+:%d+: bad argument #3 to 'setuservalue' %(number expected, got string%)")
+elseif has_getuservalue then
     local u = io.tmpfile()
     local old = debug.getuservalue(u)
     if jit then
@@ -221,11 +238,9 @@ if has_getuservalue then
         is(old, nil, "function getuservalue")
     end
     is(debug.getuservalue(true), nil)
+
     local data = {}
     local r = debug.setuservalue(u, data)
-    if _VERSION == 'Lua 5.4' then
-        todo("5.4", 2)
-    end
     is(r, u, "function setuservalue")
     is(debug.getuservalue(u), data)
     r = debug.setuservalue(u, old)

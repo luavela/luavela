@@ -37,7 +37,7 @@ if not utf8 then
     plan(1)
     nok(has_utf8, "no has_utf8")
 else
-    plan(69)
+    plan(71)
     dofile'lexico53/utf8.t'
 end
 

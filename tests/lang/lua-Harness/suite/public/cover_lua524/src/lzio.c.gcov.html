@@ -31,13 +31,13 @@
             <td class="headerValue">Lua 5.2.4</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntry">30</td>
-            <td class="headerCovTableEntry">30</td>
+            <td class="headerCovTableEntry">34</td>
+            <td class="headerCovTableEntry">34</td>
             <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2018-10-07 17:32:52</td>
+            <td class="headerValue">2019-06-13 19:44:16</td>
             <td></td>
           </tr>
           <tr>
@@ -84,37 +84,37 @@
 <span class="lineNum">      18 </span>            : #include &quot;lzio.h&quot;
 <span class="lineNum">      19 </span>            : 
 <span class="lineNum">      20 </span>            : 
-<span class="lineNum">      21 </span><span class="lineCov">       1452 : int luaZ_fill (ZIO *z) {</span>
+<span class="lineNum">      21 </span><span class="lineCov">       1173 : int luaZ_fill (ZIO *z) {</span>
 <span class="lineNum">      22 </span>            :   size_t size;
-<span class="lineNum">      23 </span><span class="lineCov">       1452 :   lua_State *L = z-&gt;L;</span>
+<span class="lineNum">      23 </span><span class="lineCov">       1173 :   lua_State *L = z-&gt;L;</span>
 <span class="lineNum">      24 </span>            :   const char *buff;
 <span class="lineNum">      25 </span>            :   lua_unlock(L);
-<span class="lineNum">      26 </span><span class="lineCov">       1452 :   buff = z-&gt;reader(L, z-&gt;data, &amp;size);</span>
+<span class="lineNum">      26 </span><span class="lineCov">       1173 :   buff = z-&gt;reader(L, z-&gt;data, &amp;size);</span>
 <span class="lineNum">      27 </span>            :   lua_lock(L);
-<span class="lineNum">      28 </span><span class="lineCov">       1451 :   if (buff == NULL || size == 0)</span>
-<span class="lineNum">      29 </span>            :     return EOZ;
-<span class="lineNum">      30 </span><span class="lineCov">        912 :   z-&gt;n = size - 1;  /* discount char being returned */</span>
-<span class="lineNum">      31 </span>            :   z-&gt;p = buff;
-<span class="lineNum">      32 </span><span class="lineCov">        912 :   return cast_uchar(*(z-&gt;p++));</span>
+<span class="lineNum">      28 </span><span class="lineCov">       1172 :   if (buff == NULL || size == 0)</span>
+<span class="lineNum">      29 </span><span class="lineCov">        473 :     return EOZ;</span>
+<span class="lineNum">      30 </span><span class="lineCov">        699 :   z-&gt;n = size - 1;  /* discount char being returned */</span>
+<span class="lineNum">      31 </span><span class="lineCov">        699 :   z-&gt;p = buff;</span>
+<span class="lineNum">      32 </span><span class="lineCov">        699 :   return cast_uchar(*(z-&gt;p++));</span>
 <span class="lineNum">      33 </span>            : }
 <span class="lineNum">      34 </span>            : 
 <span class="lineNum">      35 </span>            : 
-<span class="lineNum">      36 </span><span class="lineCov">        576 : void luaZ_init (lua_State *L, ZIO *z, lua_Reader reader, void *data) {</span>
-<span class="lineNum">      37 </span><span class="lineCov">        576 :   z-&gt;L = L;</span>
-<span class="lineNum">      38 </span><span class="lineCov">        576 :   z-&gt;reader = reader;</span>
-<span class="lineNum">      39 </span><span class="lineCov">        576 :   z-&gt;data = data;</span>
-<span class="lineNum">      40 </span><span class="lineCov">        576 :   z-&gt;n = 0;</span>
-<span class="lineNum">      41 </span><span class="lineCov">        576 :   z-&gt;p = NULL;</span>
-<span class="lineNum">      42 </span><span class="lineCov">        576 : }</span>
+<span class="lineNum">      36 </span><span class="lineCov">        510 : void luaZ_init (lua_State *L, ZIO *z, lua_Reader reader, void *data) {</span>
+<span class="lineNum">      37 </span><span class="lineCov">        510 :   z-&gt;L = L;</span>
+<span class="lineNum">      38 </span><span class="lineCov">        510 :   z-&gt;reader = reader;</span>
+<span class="lineNum">      39 </span><span class="lineCov">        510 :   z-&gt;data = data;</span>
+<span class="lineNum">      40 </span><span class="lineCov">        510 :   z-&gt;n = 0;</span>
+<span class="lineNum">      41 </span><span class="lineCov">        510 :   z-&gt;p = NULL;</span>
+<span class="lineNum">      42 </span><span class="lineCov">        510 : }</span>
 <span class="lineNum">      43 </span>            : 
 <span class="lineNum">      44 </span>            : 
 <span class="lineNum">      45 </span>            : /* --------------------------------------------------------------- read --- */
 <span class="lineNum">      46 </span><span class="lineCov">        371 : size_t luaZ_read (ZIO *z, void *b, size_t n) {</span>
-<span class="lineNum">      47 </span><span class="lineCov">       1109 :   while (n) {</span>
+<span class="lineNum">      47 </span><span class="lineCov">        738 :   while (n) {</span>
 <span class="lineNum">      48 </span>            :     size_t m;
 <span class="lineNum">      49 </span><span class="lineCov">        368 :     if (z-&gt;n == 0) {  /* no bytes in buffer? */</span>
 <span class="lineNum">      50 </span><span class="lineCov">         14 :       if (luaZ_fill(z) == EOZ)  /* try to read more */</span>
-<span class="lineNum">      51 </span>            :         return n;  /* no more input; return number of missing bytes */
+<span class="lineNum">      51 </span><span class="lineCov">          1 :         return n;  /* no more input; return number of missing bytes */</span>
 <span class="lineNum">      52 </span>            :       else {
 <span class="lineNum">      53 </span><span class="lineCov">         13 :         z-&gt;n++;  /* luaZ_fill consumed first byte; put it back */</span>
 <span class="lineNum">      54 </span><span class="lineCov">         13 :         z-&gt;p--;</span>
@@ -127,16 +127,16 @@
 <span class="lineNum">      61 </span><span class="lineCov">        367 :     b = (char *)b + m;</span>
 <span class="lineNum">      62 </span><span class="lineCov">        367 :     n -= m;</span>
 <span class="lineNum">      63 </span>            :   }
-<span class="lineNum">      64 </span>            :   return 0;
+<span class="lineNum">      64 </span><span class="lineCov">        370 :   return 0;</span>
 <span class="lineNum">      65 </span>            : }
 <span class="lineNum">      66 </span>            : 
 <span class="lineNum">      67 </span>            : /* ------------------------------------------------------------------------ */
-<span class="lineNum">      68 </span><span class="lineCov">      11020 : char *luaZ_openspace (lua_State *L, Mbuffer *buff, size_t n) {</span>
-<span class="lineNum">      69 </span><span class="lineCov">      11020 :   if (n &gt; buff-&gt;buffsize) {</span>
-<span class="lineNum">      70 </span><span class="lineCov">        486 :     if (n &lt; LUA_MINBUFFER) n = LUA_MINBUFFER;</span>
-<span class="lineNum">      71 </span><span class="lineCov">        486 :     luaZ_resizebuffer(L, buff, n);</span>
+<span class="lineNum">      68 </span><span class="lineCov">       9533 : char *luaZ_openspace (lua_State *L, Mbuffer *buff, size_t n) {</span>
+<span class="lineNum">      69 </span><span class="lineCov">       9533 :   if (n &gt; buff-&gt;buffsize) {</span>
+<span class="lineNum">      70 </span><span class="lineCov">        507 :     if (n &lt; LUA_MINBUFFER) n = LUA_MINBUFFER;</span>
+<span class="lineNum">      71 </span><span class="lineCov">        507 :     luaZ_resizebuffer(L, buff, n);</span>
 <span class="lineNum">      72 </span>            :   }
-<span class="lineNum">      73 </span><span class="lineCov">      11020 :   return buff-&gt;buffer;</span>
+<span class="lineNum">      73 </span><span class="lineCov">       9533 :   return buff-&gt;buffer;</span>
 <span class="lineNum">      74 </span>            : }
 <span class="lineNum">      75 </span>            : 
 <span class="lineNum">      76 </span>            : 

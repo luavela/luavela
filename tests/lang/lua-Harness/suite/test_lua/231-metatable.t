@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2009-2018, Perrad Francois
+-- Copyright (C) 2009-2019, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -33,8 +33,11 @@ require'tap'
 local profile = require'profile'
 local has_metamethod52 = _VERSION >= 'Lua 5.2' or profile.luajit_compat52
 local has_metamethod_ipairs = _VERSION == 'Lua 5.2' or profile.compat52 or profile.luajit_compat52
+local has_metamethod_le_emulated = _VERSION <= 'Lua 5.3' or profile.compat53
 local has_metamethod_pairs = _VERSION >= 'Lua 5.2' or profile.luajit_compat52
 local has_metamethod_tostring53 = _VERSION >= 'Lua 5.3'
+local has_metamethod_tostring54 = _VERSION >= 'Lua 5.4'
+local has_anno_toclose = _VERSION >= 'Lua 5.4'
 
 plan'no_plan'
 
@@ -46,7 +49,7 @@ do
     is(getmetatable(t), t1)
     is(setmetatable(t, nil), t)
     error_like(function () setmetatable(t, true) end,
-               "^[^:]+:%d+: bad argument #2 to 'setmetatable' %(nil or table expected%)")
+               "^[^:]+:%d+: bad argument #2 to 'setmetatable' %(nil or table expected")
 
     local mt = {}
     mt.__metatable = "not your business"
@@ -80,8 +83,13 @@ do
         error_like(function () tostring(t) end,
                    "^[^:]+:%d+: '__tostring' must return a string")
         is(a, "return nothing")
-        error_is(function () print(t) end,
-                 "'__tostring' must return a string")
+        if has_metamethod_tostring54 then
+            error_like(function () print(t) end,
+                       "^[^:]+:%d+: '__tostring' must return a string")
+        else
+            error_is(function () print(t) end,
+                     "'__tostring' must return a string")
+        end
     else
         is(tostring(t), nil, "__tostring no-output")
         is(a, "return nothing")
@@ -293,7 +301,9 @@ do --[[ Cplx ]]
 
     is(c1 < c2, true, "cplx __lt")
     is(c1 < c3, false)
-    is(c1 <= c3, true)
+    if has_metamethod_le_emulated then
+        is(c1 <= c3, true)
+    end
     if has_metamethod52 then
         is(c1 < 1, false)
         is(c1 < 4, true)
@@ -575,6 +585,10 @@ do
     local t = setmetatable({}, mt)
     t[1] = 42
     is(newindex[1], 42, "__newindex")
+end
+
+if has_anno_toclose then
+    dofile'lexico54/metatable.t'
 end
 
 done_testing()
