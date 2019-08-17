@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2009-2018, Perrad Francois
+-- Copyright (C) 2009-2019, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -31,7 +31,7 @@ L<https://www.lua.org/manual/5.3/manual.html#6.9>
 
 require'tap'
 local profile = require'profile'
-local has_execute51 = true -- UJIT: currently execute has the same behaviour as at did in Lua 5.1
+local has_execute51 = _VERSION == 'Lua 5.1' and (not profile.luajit_compat52 or ujit)
 local lua = arg[-3] or arg[-1]
 
 plan'no_plan'

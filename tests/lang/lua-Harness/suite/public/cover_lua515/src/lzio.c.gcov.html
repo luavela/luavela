@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2018-10-07 17:32:51</td>
+            <td class="headerValue">2019-06-13 19:44:15</td>
             <td></td>
           </tr>
           <tr>
@@ -84,45 +84,45 @@
 <span class="lineNum">      18 </span>            : #include &quot;lzio.h&quot;
 <span class="lineNum">      19 </span>            : 
 <span class="lineNum">      20 </span>            : 
-<span class="lineNum">      21 </span><span class="lineCov">       1212 : int luaZ_fill (ZIO *z) {</span>
+<span class="lineNum">      21 </span><span class="lineCov">       1007 : int luaZ_fill (ZIO *z) {</span>
 <span class="lineNum">      22 </span>            :   size_t size;
-<span class="lineNum">      23 </span><span class="lineCov">       1212 :   lua_State *L = z-&gt;L;</span>
+<span class="lineNum">      23 </span><span class="lineCov">       1007 :   lua_State *L = z-&gt;L;</span>
 <span class="lineNum">      24 </span>            :   const char *buff;
 <span class="lineNum">      25 </span>            :   lua_unlock(L);
-<span class="lineNum">      26 </span><span class="lineCov">       1212 :   buff = z-&gt;reader(L, z-&gt;data, &amp;size);</span>
+<span class="lineNum">      26 </span><span class="lineCov">       1007 :   buff = z-&gt;reader(L, z-&gt;data, &amp;size);</span>
 <span class="lineNum">      27 </span>            :   lua_lock(L);
-<span class="lineNum">      28 </span><span class="lineCov">       1211 :   if (buff == NULL || size == 0) return EOZ;</span>
-<span class="lineNum">      29 </span><span class="lineCov">        685 :   z-&gt;n = size - 1;</span>
-<span class="lineNum">      30 </span><span class="lineCov">        685 :   z-&gt;p = buff;</span>
-<span class="lineNum">      31 </span><span class="lineCov">        685 :   return char2int(*(z-&gt;p++));</span>
+<span class="lineNum">      28 </span><span class="lineCov">       1006 :   if (buff == NULL || size == 0) return EOZ;</span>
+<span class="lineNum">      29 </span><span class="lineCov">        545 :   z-&gt;n = size - 1;</span>
+<span class="lineNum">      30 </span><span class="lineCov">        545 :   z-&gt;p = buff;</span>
+<span class="lineNum">      31 </span><span class="lineCov">        545 :   return char2int(*(z-&gt;p++));</span>
 <span class="lineNum">      32 </span>            : }
 <span class="lineNum">      33 </span>            : 
 <span class="lineNum">      34 </span>            : 
-<span class="lineNum">      35 </span><span class="lineCov">        870 : int luaZ_lookahead (ZIO *z) {</span>
-<span class="lineNum">      36 </span><span class="lineCov">        870 :   if (z-&gt;n == 0) {</span>
-<span class="lineNum">      37 </span><span class="lineCov">        553 :     if (luaZ_fill(z) == EOZ)</span>
+<span class="lineNum">      35 </span><span class="lineCov">        805 : int luaZ_lookahead (ZIO *z) {</span>
+<span class="lineNum">      36 </span><span class="lineCov">        805 :   if (z-&gt;n == 0) {</span>
+<span class="lineNum">      37 </span><span class="lineCov">        488 :     if (luaZ_fill(z) == EOZ)</span>
 <span class="lineNum">      38 </span><span class="lineCov">          2 :       return EOZ;</span>
 <span class="lineNum">      39 </span>            :     else {
-<span class="lineNum">      40 </span><span class="lineCov">        550 :       z-&gt;n++;  /* luaZ_fill removed first byte; put back it */</span>
-<span class="lineNum">      41 </span><span class="lineCov">        550 :       z-&gt;p--;</span>
+<span class="lineNum">      40 </span><span class="lineCov">        485 :       z-&gt;n++;  /* luaZ_fill removed first byte; put back it */</span>
+<span class="lineNum">      41 </span><span class="lineCov">        485 :       z-&gt;p--;</span>
 <span class="lineNum">      42 </span>            :     }
 <span class="lineNum">      43 </span>            :   }
-<span class="lineNum">      44 </span><span class="lineCov">        867 :   return char2int(*z-&gt;p);</span>
+<span class="lineNum">      44 </span><span class="lineCov">        802 :   return char2int(*z-&gt;p);</span>
 <span class="lineNum">      45 </span>            : }
 <span class="lineNum">      46 </span>            : 
 <span class="lineNum">      47 </span>            : 
-<span class="lineNum">      48 </span><span class="lineCov">        553 : void luaZ_init (lua_State *L, ZIO *z, lua_Reader reader, void *data) {</span>
-<span class="lineNum">      49 </span><span class="lineCov">        553 :   z-&gt;L = L;</span>
-<span class="lineNum">      50 </span><span class="lineCov">        553 :   z-&gt;reader = reader;</span>
-<span class="lineNum">      51 </span><span class="lineCov">        553 :   z-&gt;data = data;</span>
-<span class="lineNum">      52 </span><span class="lineCov">        553 :   z-&gt;n = 0;</span>
-<span class="lineNum">      53 </span><span class="lineCov">        553 :   z-&gt;p = NULL;</span>
-<span class="lineNum">      54 </span><span class="lineCov">        553 : }</span>
+<span class="lineNum">      48 </span><span class="lineCov">        488 : void luaZ_init (lua_State *L, ZIO *z, lua_Reader reader, void *data) {</span>
+<span class="lineNum">      49 </span><span class="lineCov">        488 :   z-&gt;L = L;</span>
+<span class="lineNum">      50 </span><span class="lineCov">        488 :   z-&gt;reader = reader;</span>
+<span class="lineNum">      51 </span><span class="lineCov">        488 :   z-&gt;data = data;</span>
+<span class="lineNum">      52 </span><span class="lineCov">        488 :   z-&gt;n = 0;</span>
+<span class="lineNum">      53 </span><span class="lineCov">        488 :   z-&gt;p = NULL;</span>
+<span class="lineNum">      54 </span><span class="lineCov">        488 : }</span>
 <span class="lineNum">      55 </span>            : 
 <span class="lineNum">      56 </span>            : 
 <span class="lineNum">      57 </span>            : /* --------------------------------------------------------------- read --- */
 <span class="lineNum">      58 </span><span class="lineCov">        321 : size_t luaZ_read (ZIO *z, void *b, size_t n) {</span>
-<span class="lineNum">      59 </span><span class="lineCov">        959 :   while (n) {</span>
+<span class="lineNum">      59 </span><span class="lineCov">        638 :   while (n) {</span>
 <span class="lineNum">      60 </span>            :     size_t m;
 <span class="lineNum">      61 </span><span class="lineCov">        317 :     if (luaZ_lookahead(z) == EOZ)</span>
 <span class="lineNum">      62 </span><span class="lineNoCov">          0 :       return n;  /* return number of missing bytes */</span>
@@ -137,12 +137,12 @@
 <span class="lineNum">      71 </span>            : }
 <span class="lineNum">      72 </span>            : 
 <span class="lineNum">      73 </span>            : /* ------------------------------------------------------------------------ */
-<span class="lineNum">      74 </span><span class="lineCov">      11855 : char *luaZ_openspace (lua_State *L, Mbuffer *buff, size_t n) {</span>
-<span class="lineNum">      75 </span><span class="lineCov">      11855 :   if (n &gt; buff-&gt;buffsize) {</span>
-<span class="lineNum">      76 </span><span class="lineCov">        253 :     if (n &lt; LUA_MINBUFFER) n = LUA_MINBUFFER;</span>
-<span class="lineNum">      77 </span><span class="lineCov">        253 :     luaZ_resizebuffer(L, buff, n);</span>
+<span class="lineNum">      74 </span><span class="lineCov">      10629 : char *luaZ_openspace (lua_State *L, Mbuffer *buff, size_t n) {</span>
+<span class="lineNum">      75 </span><span class="lineCov">      10629 :   if (n &gt; buff-&gt;buffsize) {</span>
+<span class="lineNum">      76 </span><span class="lineCov">        539 :     if (n &lt; LUA_MINBUFFER) n = LUA_MINBUFFER;</span>
+<span class="lineNum">      77 </span><span class="lineCov">        539 :     luaZ_resizebuffer(L, buff, n);</span>
 <span class="lineNum">      78 </span>            :   }
-<span class="lineNum">      79 </span><span class="lineCov">      11855 :   return buff-&gt;buffer;</span>
+<span class="lineNum">      79 </span><span class="lineCov">      10629 :   return buff-&gt;buffer;</span>
 <span class="lineNum">      80 </span>            : }
 <span class="lineNum">      81 </span>            : 
 <span class="lineNum">      82 </span>            : 

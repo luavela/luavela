@@ -28,6 +28,8 @@ read_globals = {
     'todo_skip',
     'skip_rest',
     'todo',
+    -- LuaVela
+    'ujit',
 }
 
 files['test_lua/000-sanity.t'].ignore = { '111', '113' }

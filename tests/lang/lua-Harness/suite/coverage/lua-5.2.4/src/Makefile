@@ -7,7 +7,7 @@
 PLAT= none
 
 CC= gcc
-CFLAGS= -O2 -Wall -fprofile-arcs -ftest-coverage -DLUA_COMPAT_ALL $(SYSCFLAGS) $(MYCFLAGS)
+CFLAGS= -O0 -Wall -fprofile-arcs -ftest-coverage -DLUA_COMPAT_ALL $(SYSCFLAGS) $(MYCFLAGS)
 LDFLAGS= $(SYSLDFLAGS) $(MYLDFLAGS)
 LIBS= -lm $(SYSLIBS) $(MYLIBS)
 

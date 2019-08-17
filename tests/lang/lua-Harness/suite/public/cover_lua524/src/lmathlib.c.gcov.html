@@ -31,13 +31,13 @@
             <td class="headerValue">Lua 5.2.4</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntry">130</td>
-            <td class="headerCovTableEntry">130</td>
+            <td class="headerCovTableEntry">133</td>
+            <td class="headerCovTableEntry">133</td>
             <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2018-10-07 17:32:52</td>
+            <td class="headerValue">2019-06-13 19:44:16</td>
             <td></td>
           </tr>
           <tr>
@@ -240,7 +240,7 @@
 <span class="lineNum">     174 </span><span class="lineCov">          7 :   for (i=2; i&lt;=n; i++) {</span>
 <span class="lineNum">     175 </span><span class="lineCov">          4 :     lua_Number d = luaL_checknumber(L, i);</span>
 <span class="lineNum">     176 </span><span class="lineCov">          4 :     if (d &lt; dmin)</span>
-<span class="lineNum">     177 </span>            :       dmin = d;
+<span class="lineNum">     177 </span><span class="lineCov">          1 :       dmin = d;</span>
 <span class="lineNum">     178 </span>            :   }
 <span class="lineNum">     179 </span><span class="lineCov">          3 :   lua_pushnumber(L, dmin);</span>
 <span class="lineNum">     180 </span><span class="lineCov">          3 :   return 1;</span>
@@ -254,7 +254,7 @@
 <span class="lineNum">     188 </span><span class="lineCov">         13 :   for (i=2; i&lt;=n; i++) {</span>
 <span class="lineNum">     189 </span><span class="lineCov">          8 :     lua_Number d = luaL_checknumber(L, i);</span>
 <span class="lineNum">     190 </span><span class="lineCov">          8 :     if (d &gt; dmax)</span>
-<span class="lineNum">     191 </span>            :       dmax = d;
+<span class="lineNum">     191 </span><span class="lineCov">          6 :       dmax = d;</span>
 <span class="lineNum">     192 </span>            :   }
 <span class="lineNum">     193 </span><span class="lineCov">          5 :   lua_pushnumber(L, dmax);</span>
 <span class="lineNum">     194 </span><span class="lineCov">          5 :   return 1;</span>
@@ -285,7 +285,7 @@
 <span class="lineNum">     219 </span>            :     }
 <span class="lineNum">     220 </span><span class="lineCov">          1 :     default: return luaL_error(L, &quot;wrong number of arguments&quot;);</span>
 <span class="lineNum">     221 </span>            :   }
-<span class="lineNum">     222 </span>            :   return 1;
+<span class="lineNum">     222 </span><span class="lineCov">          6 :   return 1;</span>
 <span class="lineNum">     223 </span>            : }
 <span class="lineNum">     224 </span>            : 
 <span class="lineNum">     225 </span>            : 
@@ -334,13 +334,13 @@
 <span class="lineNum">     268 </span>            : /*
 <span class="lineNum">     269 </span>            : ** Open math library
 <span class="lineNum">     270 </span>            : */
-<span class="lineNum">     271 </span><span class="lineCov">         83 : LUAMOD_API int luaopen_math (lua_State *L) {</span>
-<span class="lineNum">     272 </span><span class="lineCov">         83 :   luaL_newlib(L, mathlib);</span>
-<span class="lineNum">     273 </span><span class="lineCov">         83 :   lua_pushnumber(L, PI);</span>
-<span class="lineNum">     274 </span><span class="lineCov">         83 :   lua_setfield(L, -2, &quot;pi&quot;);</span>
-<span class="lineNum">     275 </span><span class="lineCov">         83 :   lua_pushnumber(L, HUGE_VAL);</span>
-<span class="lineNum">     276 </span><span class="lineCov">         83 :   lua_setfield(L, -2, &quot;huge&quot;);</span>
-<span class="lineNum">     277 </span><span class="lineCov">         83 :   return 1;</span>
+<span class="lineNum">     271 </span><span class="lineCov">         87 : LUAMOD_API int luaopen_math (lua_State *L) {</span>
+<span class="lineNum">     272 </span><span class="lineCov">         87 :   luaL_newlib(L, mathlib);</span>
+<span class="lineNum">     273 </span><span class="lineCov">         87 :   lua_pushnumber(L, PI);</span>
+<span class="lineNum">     274 </span><span class="lineCov">         87 :   lua_setfield(L, -2, &quot;pi&quot;);</span>
+<span class="lineNum">     275 </span><span class="lineCov">         87 :   lua_pushnumber(L, HUGE_VAL);</span>
+<span class="lineNum">     276 </span><span class="lineCov">         87 :   lua_setfield(L, -2, &quot;huge&quot;);</span>
+<span class="lineNum">     277 </span><span class="lineCov">         87 :   return 1;</span>
 <span class="lineNum">     278 </span>            : }
 <span class="lineNum">     279 </span>            : 
 </pre>

@@ -31,13 +31,13 @@
             <td class="headerValue">Lua 5.3.5</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntry">296</td>
-            <td class="headerCovTableEntry">304</td>
-            <td class="headerCovTableEntryHi">97.4 %</td>
+            <td class="headerCovTableEntry">326</td>
+            <td class="headerCovTableEntry">334</td>
+            <td class="headerCovTableEntryHi">97.6 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2018-10-07 17:32:53</td>
+            <td class="headerValue">2019-06-13 19:44:17</td>
             <td></td>
           </tr>
           <tr>
@@ -104,8 +104,8 @@
 <span class="lineNum">      38 </span>            : 
 <span class="lineNum">      39 </span>            : /* Check whether 'mode' matches '[rwa]%+?[L_MODEEXT]*' */
 <span class="lineNum">      40 </span><span class="lineCov">         56 : static int l_checkmode (const char *mode) {</span>
-<span class="lineNum">      41 </span><span class="lineCov">        167 :   return (*mode != '\0' &amp;&amp; strchr(&quot;rwa&quot;, *(mode++)) != NULL &amp;&amp;</span>
-<span class="lineNum">      42 </span><span class="lineCov">        166 :          (*mode != '+' || (++mode, 1)) &amp;&amp;  /* skip if char is '+' */</span>
+<span class="lineNum">      41 </span><span class="lineCov">         56 :   return (*mode != '\0' &amp;&amp; strchr(&quot;rwa&quot;, *(mode++)) != NULL &amp;&amp;</span>
+<span class="lineNum">      42 </span><span class="lineCov">        167 :          (*mode != '+' || (++mode, 1)) &amp;&amp;  /* skip if char is '+' */</span>
 <span class="lineNum">      43 </span><span class="lineCov">         55 :          (strspn(mode, L_MODEEXT) == strlen(mode)));  /* check extensions */</span>
 <span class="lineNum">      44 </span>            : }
 <span class="lineNum">      45 </span>            : 
@@ -237,12 +237,12 @@
 <span class="lineNum">     171 </span>            : }
 <span class="lineNum">     172 </span>            : 
 <span class="lineNum">     173 </span>            : 
-<span class="lineNum">     174 </span><span class="lineCov">       2341 : static FILE *tofile (lua_State *L) {</span>
-<span class="lineNum">     175 </span><span class="lineCov">       2341 :   LStream *p = tolstream(L);</span>
-<span class="lineNum">     176 </span><span class="lineCov">       2341 :   if (isclosed(p))</span>
+<span class="lineNum">     174 </span><span class="lineCov">        270 : static FILE *tofile (lua_State *L) {</span>
+<span class="lineNum">     175 </span><span class="lineCov">        270 :   LStream *p = tolstream(L);</span>
+<span class="lineNum">     176 </span><span class="lineCov">        270 :   if (isclosed(p))</span>
 <span class="lineNum">     177 </span><span class="lineCov">          5 :     luaL_error(L, &quot;attempt to use a closed file&quot;);</span>
 <span class="lineNum">     178 </span>            :   lua_assert(p-&gt;f);
-<span class="lineNum">     179 </span><span class="lineCov">       2336 :   return p-&gt;f;</span>
+<span class="lineNum">     179 </span><span class="lineCov">        265 :   return p-&gt;f;</span>
 <span class="lineNum">     180 </span>            : }
 <span class="lineNum">     181 </span>            : 
 <span class="lineNum">     182 </span>            : 
@@ -251,11 +251,11 @@
 <span class="lineNum">     185 </span>            : ** before opening the actual file; so, if there is a memory error, the
 <span class="lineNum">     186 </span>            : ** handle is in a consistent state.
 <span class="lineNum">     187 </span>            : */
-<span class="lineNum">     188 </span><span class="lineCov">        373 : static LStream *newprefile (lua_State *L) {</span>
-<span class="lineNum">     189 </span><span class="lineCov">        373 :   LStream *p = (LStream *)lua_newuserdata(L, sizeof(LStream));</span>
-<span class="lineNum">     190 </span><span class="lineCov">        373 :   p-&gt;closef = NULL;  /* mark file handle as 'closed' */</span>
-<span class="lineNum">     191 </span><span class="lineCov">        373 :   luaL_setmetatable(L, LUA_FILEHANDLE);</span>
-<span class="lineNum">     192 </span><span class="lineCov">        373 :   return p;</span>
+<span class="lineNum">     188 </span><span class="lineCov">        385 : static LStream *newprefile (lua_State *L) {</span>
+<span class="lineNum">     189 </span><span class="lineCov">        385 :   LStream *p = (LStream *)lua_newuserdata(L, sizeof(LStream));</span>
+<span class="lineNum">     190 </span><span class="lineCov">        385 :   p-&gt;closef = NULL;  /* mark file handle as 'closed' */</span>
+<span class="lineNum">     191 </span><span class="lineCov">        385 :   luaL_setmetatable(L, LUA_FILEHANDLE);</span>
+<span class="lineNum">     192 </span><span class="lineCov">        385 :   return p;</span>
 <span class="lineNum">     193 </span>            : }
 <span class="lineNum">     194 </span>            : 
 <span class="lineNum">     195 </span>            : 
@@ -272,7 +272,7 @@
 <span class="lineNum">     206 </span>            : }
 <span class="lineNum">     207 </span>            : 
 <span class="lineNum">     208 </span>            : 
-<span class="lineNum">     209 </span><span class="lineCov">        110 : static int f_close (lua_State *L) {</span>
+<span class="lineNum">     209 </span><span class="lineCov">        116 : static int f_close (lua_State *L) {</span>
 <span class="lineNum">     210 </span><span class="lineCov">        116 :   tofile(L);  /* make sure argument is an open stream */</span>
 <span class="lineNum">     211 </span><span class="lineCov">        115 :   return aux_close(L);</span>
 <span class="lineNum">     212 </span>            : }
@@ -281,7 +281,7 @@
 <span class="lineNum">     215 </span><span class="lineCov">          6 : static int io_close (lua_State *L) {</span>
 <span class="lineNum">     216 </span><span class="lineCov">          6 :   if (lua_isnone(L, 1))  /* no argument? */</span>
 <span class="lineNum">     217 </span><span class="lineNoCov">          0 :     lua_getfield(L, LUA_REGISTRYINDEX, IO_OUTPUT);  /* use standard output */</span>
-<span class="lineNum">     218 </span><span class="lineCov">          5 :   return f_close(L);</span>
+<span class="lineNum">     218 </span><span class="lineCov">          6 :   return f_close(L);</span>
 <span class="lineNum">     219 </span>            : }
 <span class="lineNum">     220 </span>            : 
 <span class="lineNum">     221 </span>            : 
@@ -303,16 +303,16 @@
 <span class="lineNum">     237 </span>            : }
 <span class="lineNum">     238 </span>            : 
 <span class="lineNum">     239 </span>            : 
-<span class="lineNum">     240 </span>            : static LStream *newfile (lua_State *L) {
+<span class="lineNum">     240 </span><span class="lineCov">         62 : static LStream *newfile (lua_State *L) {</span>
 <span class="lineNum">     241 </span><span class="lineCov">         62 :   LStream *p = newprefile(L);</span>
 <span class="lineNum">     242 </span><span class="lineCov">         62 :   p-&gt;f = NULL;</span>
 <span class="lineNum">     243 </span><span class="lineCov">         62 :   p-&gt;closef = &amp;io_fclose;</span>
-<span class="lineNum">     244 </span>            :   return p;
+<span class="lineNum">     244 </span><span class="lineCov">         62 :   return p;</span>
 <span class="lineNum">     245 </span>            : }
 <span class="lineNum">     246 </span>            : 
 <span class="lineNum">     247 </span>            : 
 <span class="lineNum">     248 </span><span class="lineCov">          4 : static void opencheck (lua_State *L, const char *fname, const char *mode) {</span>
-<span class="lineNum">     249 </span>            :   LStream *p = newfile(L);
+<span class="lineNum">     249 </span><span class="lineCov">          4 :   LStream *p = newfile(L);</span>
 <span class="lineNum">     250 </span><span class="lineCov">          4 :   p-&gt;f = fopen(fname, mode);</span>
 <span class="lineNum">     251 </span><span class="lineCov">          4 :   if (p-&gt;f == NULL)</span>
 <span class="lineNum">     252 </span><span class="lineCov">          1 :     luaL_error(L, &quot;cannot open file '%s' (%s)&quot;, fname, strerror(errno));</span>
@@ -322,8 +322,8 @@
 <span class="lineNum">     256 </span><span class="lineCov">         56 : static int io_open (lua_State *L) {</span>
 <span class="lineNum">     257 </span><span class="lineCov">         56 :   const char *filename = luaL_checkstring(L, 1);</span>
 <span class="lineNum">     258 </span><span class="lineCov">         56 :   const char *mode = luaL_optstring(L, 2, &quot;r&quot;);</span>
-<span class="lineNum">     259 </span>            :   LStream *p = newfile(L);
-<span class="lineNum">     260 </span>            :   const char *md = mode;  /* to traverse/check mode */
+<span class="lineNum">     259 </span><span class="lineCov">         56 :   LStream *p = newfile(L);</span>
+<span class="lineNum">     260 </span><span class="lineCov">         56 :   const char *md = mode;  /* to traverse/check mode */</span>
 <span class="lineNum">     261 </span><span class="lineCov">         56 :   luaL_argcheck(L, l_checkmode(md), 2, &quot;invalid mode&quot;);</span>
 <span class="lineNum">     262 </span><span class="lineCov">         55 :   p-&gt;f = fopen(filename, mode);</span>
 <span class="lineNum">     263 </span><span class="lineCov">         55 :   return (p-&gt;f == NULL) ? luaL_fileresult(L, 0, filename) : 1;</span>
@@ -350,7 +350,7 @@
 <span class="lineNum">     284 </span>            : 
 <span class="lineNum">     285 </span>            : 
 <span class="lineNum">     286 </span><span class="lineCov">          2 : static int io_tmpfile (lua_State *L) {</span>
-<span class="lineNum">     287 </span>            :   LStream *p = newfile(L);
+<span class="lineNum">     287 </span><span class="lineCov">          2 :   LStream *p = newfile(L);</span>
 <span class="lineNum">     288 </span><span class="lineCov">          2 :   p-&gt;f = tmpfile();</span>
 <span class="lineNum">     289 </span><span class="lineCov">          2 :   return (p-&gt;f == NULL) ? luaL_fileresult(L, 0, NULL) : 1;</span>
 <span class="lineNum">     290 </span>            : }
@@ -426,13 +426,13 @@
 <span class="lineNum">     360 </span><span class="lineCov">          2 :     lua_getfield(L, LUA_REGISTRYINDEX, IO_INPUT);  /* get default input */</span>
 <span class="lineNum">     361 </span><span class="lineCov">          2 :     lua_replace(L, 1);  /* put it at index 1 */</span>
 <span class="lineNum">     362 </span><span class="lineCov">          2 :     tofile(L);  /* check that it's a valid file handle */</span>
-<span class="lineNum">     363 </span>            :     toclose = 0;  /* do not close it after iteration */
+<span class="lineNum">     363 </span><span class="lineCov">          2 :     toclose = 0;  /* do not close it after iteration */</span>
 <span class="lineNum">     364 </span>            :   }
 <span class="lineNum">     365 </span>            :   else {  /* open a new file */
 <span class="lineNum">     366 </span><span class="lineCov">          2 :     const char *filename = luaL_checkstring(L, 1);</span>
 <span class="lineNum">     367 </span><span class="lineCov">          2 :     opencheck(L, filename, &quot;r&quot;);</span>
 <span class="lineNum">     368 </span><span class="lineCov">          1 :     lua_replace(L, 1);  /* put file at index 1 */</span>
-<span class="lineNum">     369 </span>            :     toclose = 1;  /* close it after iteration */
+<span class="lineNum">     369 </span><span class="lineCov">          1 :     toclose = 1;  /* close it after iteration */</span>
 <span class="lineNum">     370 </span>            :   }
 <span class="lineNum">     371 </span><span class="lineCov">          3 :   aux_lines(L, toclose);</span>
 <span class="lineNum">     372 </span><span class="lineCov">          3 :   return 1;</span>
@@ -471,7 +471,7 @@
 <span class="lineNum">     405 </span>            :   }
 <span class="lineNum">     406 </span>            :   else {
 <span class="lineNum">     407 </span><span class="lineCov">        230 :     rn-&gt;buff[rn-&gt;n++] = rn-&gt;c;  /* save current char */</span>
-<span class="lineNum">     408 </span><span class="lineCov">        460 :     rn-&gt;c = l_getc(rn-&gt;f);  /* read next one */</span>
+<span class="lineNum">     408 </span><span class="lineCov">        230 :     rn-&gt;c = l_getc(rn-&gt;f);  /* read next one */</span>
 <span class="lineNum">     409 </span><span class="lineCov">        230 :     return 1;</span>
 <span class="lineNum">     410 </span>            :   }
 <span class="lineNum">     411 </span>            : }
@@ -480,10 +480,10 @@
 <span class="lineNum">     414 </span>            : /*
 <span class="lineNum">     415 </span>            : ** Accept current char if it is in 'set' (of size 2)
 <span class="lineNum">     416 </span>            : */
-<span class="lineNum">     417 </span>            : static int test2 (RN *rn, const char *set) {
+<span class="lineNum">     417 </span><span class="lineCov">         45 : static int test2 (RN *rn, const char *set) {</span>
 <span class="lineNum">     418 </span><span class="lineCov">         45 :   if (rn-&gt;c == set[0] || rn-&gt;c == set[1])</span>
 <span class="lineNum">     419 </span><span class="lineCov">          8 :     return nextc(rn);</span>
-<span class="lineNum">     420 </span>            :   else return 0;
+<span class="lineNum">     420 </span><span class="lineCov">         37 :   else return 0;</span>
 <span class="lineNum">     421 </span>            : }
 <span class="lineNum">     422 </span>            : 
 <span class="lineNum">     423 </span>            : 
@@ -491,8 +491,8 @@
 <span class="lineNum">     425 </span>            : ** Read a sequence of (hex)digits
 <span class="lineNum">     426 </span>            : */
 <span class="lineNum">     427 </span><span class="lineCov">         15 : static int readdigits (RN *rn, int hex) {</span>
-<span class="lineNum">     428 </span>            :   int count = 0;
-<span class="lineNum">     429 </span><span class="lineCov">        252 :   while ((hex ? isxdigit(rn-&gt;c) : isdigit(rn-&gt;c)) &amp;&amp; nextc(rn))</span>
+<span class="lineNum">     428 </span><span class="lineCov">         15 :   int count = 0;</span>
+<span class="lineNum">     429 </span><span class="lineCov">        237 :   while ((hex ? isxdigit(rn-&gt;c) : isdigit(rn-&gt;c)) &amp;&amp; nextc(rn))</span>
 <span class="lineNum">     430 </span><span class="lineCov">        222 :     count++;</span>
 <span class="lineNum">     431 </span><span class="lineCov">         15 :   return count;</span>
 <span class="lineNum">     432 </span>            : }
@@ -505,31 +505,31 @@
 <span class="lineNum">     439 </span>            : */
 <span class="lineNum">     440 </span><span class="lineCov">         11 : static int read_number (lua_State *L, FILE *f) {</span>
 <span class="lineNum">     441 </span>            :   RN rn;
-<span class="lineNum">     442 </span>            :   int count = 0;
-<span class="lineNum">     443 </span>            :   int hex = 0;
+<span class="lineNum">     442 </span><span class="lineCov">         11 :   int count = 0;</span>
+<span class="lineNum">     443 </span><span class="lineCov">         11 :   int hex = 0;</span>
 <span class="lineNum">     444 </span>            :   char decp[2];
 <span class="lineNum">     445 </span><span class="lineCov">         11 :   rn.f = f; rn.n = 0;</span>
 <span class="lineNum">     446 </span><span class="lineCov">         11 :   decp[0] = lua_getlocaledecpoint();  /* get decimal point from locale */</span>
-<span class="lineNum">     447 </span>            :   decp[1] = '.';  /* always accept a dot */
+<span class="lineNum">     447 </span><span class="lineCov">         11 :   decp[1] = '.';  /* always accept a dot */</span>
 <span class="lineNum">     448 </span><span class="lineCov">         11 :   l_lockfile(rn.f);</span>
-<span class="lineNum">     449 </span><span class="lineCov">         66 :   do { rn.c = l_getc(rn.f); } while (isspace(rn.c));  /* skip spaces */</span>
-<span class="lineNum">     450 </span>            :   test2(&amp;rn, &quot;-+&quot;);  /* optional signal */
-<span class="lineNum">     451 </span><span class="lineCov">          2 :   if (test2(&amp;rn, &quot;00&quot;)) {</span>
-<span class="lineNum">     452 </span><span class="lineCov">          1 :     if (test2(&amp;rn, &quot;xX&quot;)) hex = 1;  /* numeral is hexadecimal */</span>
-<span class="lineNum">     453 </span>            :     else count = 1;  /* count initial '0' as a valid digit */
+<span class="lineNum">     449 </span><span class="lineCov">         33 :   do { rn.c = l_getc(rn.f); } while (isspace(rn.c));  /* skip spaces */</span>
+<span class="lineNum">     450 </span><span class="lineCov">         11 :   test2(&amp;rn, &quot;-+&quot;);  /* optional signal */</span>
+<span class="lineNum">     451 </span><span class="lineCov">         11 :   if (test2(&amp;rn, &quot;00&quot;)) {</span>
+<span class="lineNum">     452 </span><span class="lineCov">          2 :     if (test2(&amp;rn, &quot;xX&quot;)) hex = 1;  /* numeral is hexadecimal */</span>
+<span class="lineNum">     453 </span><span class="lineCov">          1 :     else count = 1;  /* count initial '0' as a valid digit */</span>
 <span class="lineNum">     454 </span>            :   }
 <span class="lineNum">     455 </span><span class="lineCov">         11 :   count += readdigits(&amp;rn, hex);  /* integral part */</span>
-<span class="lineNum">     456 </span><span class="lineCov">          3 :   if (test2(&amp;rn, decp))  /* decimal point? */</span>
+<span class="lineNum">     456 </span><span class="lineCov">         11 :   if (test2(&amp;rn, decp))  /* decimal point? */</span>
 <span class="lineNum">     457 </span><span class="lineCov">          3 :     count += readdigits(&amp;rn, hex);  /* fractional part */</span>
-<span class="lineNum">     458 </span><span class="lineCov">         12 :   if (count &gt; 0 &amp;&amp; test2(&amp;rn, (hex ? &quot;pP&quot; : &quot;eE&quot;))) {  /* exponent mark? */</span>
-<span class="lineNum">     459 </span>            :     test2(&amp;rn, &quot;-+&quot;);  /* exponent signal */
+<span class="lineNum">     458 </span><span class="lineCov">         11 :   if (count &gt; 0 &amp;&amp; test2(&amp;rn, (hex ? &quot;pP&quot; : &quot;eE&quot;))) {  /* exponent mark? */</span>
+<span class="lineNum">     459 </span><span class="lineCov">          1 :     test2(&amp;rn, &quot;-+&quot;);  /* exponent signal */</span>
 <span class="lineNum">     460 </span><span class="lineCov">          1 :     readdigits(&amp;rn, 0);  /* exponent digits */</span>
 <span class="lineNum">     461 </span>            :   }
 <span class="lineNum">     462 </span><span class="lineCov">         11 :   ungetc(rn.c, rn.f);  /* unread look-ahead char */</span>
 <span class="lineNum">     463 </span><span class="lineCov">         11 :   l_unlockfile(rn.f);</span>
 <span class="lineNum">     464 </span><span class="lineCov">         11 :   rn.buff[rn.n] = '\0';  /* finish string */</span>
 <span class="lineNum">     465 </span><span class="lineCov">         11 :   if (lua_stringtonumber(L, rn.buff))  /* is this a valid number? */</span>
-<span class="lineNum">     466 </span>            :     return 1;  /* ok */
+<span class="lineNum">     466 </span><span class="lineCov">          8 :     return 1;  /* ok */</span>
 <span class="lineNum">     467 </span>            :   else {  /* invalid format */
 <span class="lineNum">     468 </span><span class="lineCov">          3 :    lua_pushnil(L);  /* &quot;result&quot; to be removed */</span>
 <span class="lineNum">     469 </span><span class="lineCov">          3 :    return 0;  /* read fails */</span>
@@ -547,14 +547,14 @@
 <span class="lineNum">     481 </span>            : 
 <span class="lineNum">     482 </span><span class="lineCov">        266 : static int read_line (lua_State *L, FILE *f, int chop) {</span>
 <span class="lineNum">     483 </span>            :   luaL_Buffer b;
-<span class="lineNum">     484 </span>            :   int c = '\0';
+<span class="lineNum">     484 </span><span class="lineCov">        266 :   int c = '\0';</span>
 <span class="lineNum">     485 </span><span class="lineCov">        266 :   luaL_buffinit(L, &amp;b);</span>
-<span class="lineNum">     486 </span><span class="lineCov">        798 :   while (c != EOF &amp;&amp; c != '\n') {  /* repeat until end of line */</span>
+<span class="lineNum">     486 </span><span class="lineCov">        532 :   while (c != EOF &amp;&amp; c != '\n') {  /* repeat until end of line */</span>
 <span class="lineNum">     487 </span><span class="lineCov">        266 :     char *buff = luaL_prepbuffer(&amp;b);  /* preallocate buffer */</span>
-<span class="lineNum">     488 </span>            :     int i = 0;
+<span class="lineNum">     488 </span><span class="lineCov">        266 :     int i = 0;</span>
 <span class="lineNum">     489 </span><span class="lineCov">        266 :     l_lockfile(f);  /* no memory errors can happen inside the lock */</span>
-<span class="lineNum">     490 </span><span class="lineCov">      18404 :     while (i &lt; LUAL_BUFFERSIZE &amp;&amp; (c = l_getc(f)) != EOF &amp;&amp; c != '\n')</span>
-<span class="lineNum">     491 </span><span class="lineCov">       8803 :       buff[i++] = c;</span>
+<span class="lineNum">     490 </span><span class="lineCov">       9155 :     while (i &lt; LUAL_BUFFERSIZE &amp;&amp; (c = l_getc(f)) != EOF &amp;&amp; c != '\n')</span>
+<span class="lineNum">     491 </span><span class="lineCov">       8889 :       buff[i++] = c;</span>
 <span class="lineNum">     492 </span><span class="lineCov">        266 :     l_unlockfile(f);</span>
 <span class="lineNum">     493 </span><span class="lineCov">        266 :     luaL_addsize(&amp;b, i);</span>
 <span class="lineNum">     494 </span>            :   }
@@ -572,7 +572,7 @@
 <span class="lineNum">     506 </span><span class="lineCov">          2 :   luaL_buffinit(L, &amp;b);</span>
 <span class="lineNum">     507 </span>            :   do {  /* read file in chunks of LUAL_BUFFERSIZE bytes */
 <span class="lineNum">     508 </span><span class="lineCov">          2 :     char *p = luaL_prepbuffer(&amp;b);</span>
-<span class="lineNum">     509 </span>            :     nr = fread(p, sizeof(char), LUAL_BUFFERSIZE, f);
+<span class="lineNum">     509 </span><span class="lineCov">          2 :     nr = fread(p, sizeof(char), LUAL_BUFFERSIZE, f);</span>
 <span class="lineNum">     510 </span><span class="lineCov">          2 :     luaL_addsize(&amp;b, nr);</span>
 <span class="lineNum">     511 </span><span class="lineCov">          2 :   } while (nr == LUAL_BUFFERSIZE);</span>
 <span class="lineNum">     512 </span><span class="lineCov">          2 :   luaL_pushresult(&amp;b);  /* close buffer */</span>
@@ -585,7 +585,7 @@
 <span class="lineNum">     519 </span>            :   luaL_Buffer b;
 <span class="lineNum">     520 </span><span class="lineCov">          4 :   luaL_buffinit(L, &amp;b);</span>
 <span class="lineNum">     521 </span><span class="lineCov">          4 :   p = luaL_prepbuffsize(&amp;b, n);  /* prepare buffer to read whole block */</span>
-<span class="lineNum">     522 </span>            :   nr = fread(p, sizeof(char), n, f);  /* try to read 'n' chars */
+<span class="lineNum">     522 </span><span class="lineCov">          4 :   nr = fread(p, sizeof(char), n, f);  /* try to read 'n' chars */</span>
 <span class="lineNum">     523 </span><span class="lineCov">          4 :   luaL_addsize(&amp;b, nr);</span>
 <span class="lineNum">     524 </span><span class="lineCov">          4 :   luaL_pushresult(&amp;b);  /* close buffer */</span>
 <span class="lineNum">     525 </span><span class="lineCov">          4 :   return (nr &gt; 0);  /* true iff read something */</span>
@@ -603,7 +603,7 @@
 <span class="lineNum">     537 </span>            :   }
 <span class="lineNum">     538 </span>            :   else {  /* ensure stack space for all results and for auxlib's buffer */
 <span class="lineNum">     539 </span><span class="lineCov">        100 :     luaL_checkstack(L, nargs+LUA_MINSTACK, &quot;too many arguments&quot;);</span>
-<span class="lineNum">     540 </span>            :     success = 1;
+<span class="lineNum">     540 </span><span class="lineCov">        100 :     success = 1;</span>
 <span class="lineNum">     541 </span><span class="lineCov">        208 :     for (n = first; nargs-- &amp;&amp; success; n++) {</span>
 <span class="lineNum">     542 </span><span class="lineCov">        109 :       if (lua_type(L, n) == LUA_TNUMBER) {</span>
 <span class="lineNum">     543 </span><span class="lineCov">          5 :         size_t l = (size_t)luaL_checkinteger(L, n);</span>
@@ -624,7 +624,7 @@
 <span class="lineNum">     558 </span><span class="lineCov">          2 :             break;</span>
 <span class="lineNum">     559 </span><span class="lineCov">          2 :           case 'a':  /* file */</span>
 <span class="lineNum">     560 </span><span class="lineCov">          2 :             read_all(L, f);  /* read entire file */</span>
-<span class="lineNum">     561 </span>            :             success = 1; /* always success */
+<span class="lineNum">     561 </span><span class="lineCov">          2 :             success = 1; /* always success */</span>
 <span class="lineNum">     562 </span><span class="lineCov">          2 :             break;</span>
 <span class="lineNum">     563 </span><span class="lineCov">          1 :           default:</span>
 <span class="lineNum">     564 </span><span class="lineCov">          1 :             return luaL_argerror(L, n, &quot;invalid format&quot;);</span>
@@ -665,7 +665,7 @@
 <span class="lineNum">     599 </span><span class="lineCov">        174 :   n = g_read(L, p-&gt;f, 2);  /* 'n' is number of results */</span>
 <span class="lineNum">     600 </span>            :   lua_assert(n &gt; 0);  /* should return at least a nil */
 <span class="lineNum">     601 </span><span class="lineCov">        174 :   if (lua_toboolean(L, -n))  /* read at least one value? */</span>
-<span class="lineNum">     602 </span>            :     return n;  /* return them */
+<span class="lineNum">     602 </span><span class="lineCov">        170 :     return n;  /* return them */</span>
 <span class="lineNum">     603 </span>            :   else {  /* first result is nil: EOF or error */
 <span class="lineNum">     604 </span><span class="lineCov">          4 :     if (n &gt; 1) {  /* is there error information? */</span>
 <span class="lineNum">     605 </span>            :       /* 2nd result is error message */
@@ -676,21 +676,21 @@
 <span class="lineNum">     610 </span><span class="lineCov">          1 :       lua_pushvalue(L, lua_upvalueindex(1));</span>
 <span class="lineNum">     611 </span><span class="lineCov">          1 :       aux_close(L);  /* close it */</span>
 <span class="lineNum">     612 </span>            :     }
-<span class="lineNum">     613 </span>            :     return 0;
+<span class="lineNum">     613 </span><span class="lineCov">          4 :     return 0;</span>
 <span class="lineNum">     614 </span>            :   }
 <span class="lineNum">     615 </span>            : }
 <span class="lineNum">     616 </span>            : 
 <span class="lineNum">     617 </span>            : /* }====================================================== */
 <span class="lineNum">     618 </span>            : 
 <span class="lineNum">     619 </span>            : 
-<span class="lineNum">     620 </span><span class="lineCov">       2031 : static int g_write (lua_State *L, FILE *f, int arg) {</span>
-<span class="lineNum">     621 </span><span class="lineCov">       2031 :   int nargs = lua_gettop(L) - arg;</span>
-<span class="lineNum">     622 </span>            :   int status = 1;
-<span class="lineNum">     623 </span><span class="lineCov">       4063 :   for (; nargs--; arg++) {</span>
-<span class="lineNum">     624 </span><span class="lineCov">       2032 :     if (lua_type(L, arg) == LUA_TNUMBER) {</span>
+<span class="lineNum">     620 </span><span class="lineCov">         40 : static int g_write (lua_State *L, FILE *f, int arg) {</span>
+<span class="lineNum">     621 </span><span class="lineCov">         40 :   int nargs = lua_gettop(L) - arg;</span>
+<span class="lineNum">     622 </span><span class="lineCov">         40 :   int status = 1;</span>
+<span class="lineNum">     623 </span><span class="lineCov">         81 :   for (; nargs--; arg++) {</span>
+<span class="lineNum">     624 </span><span class="lineCov">         41 :     if (lua_type(L, arg) == LUA_TNUMBER) {</span>
 <span class="lineNum">     625 </span>            :       /* optimization: could be done exactly as for strings */
 <span class="lineNum">     626 </span><span class="lineCov">          1 :       int len = lua_isinteger(L, arg)</span>
-<span class="lineNum">     627 </span>            :                 ? fprintf(f, LUA_INTEGER_FMT,
+<span class="lineNum">     627 </span><span class="lineCov">          1 :                 ? fprintf(f, LUA_INTEGER_FMT,</span>
 <span class="lineNum">     628 </span><span class="lineCov">          1 :                              (LUAI_UACINT)lua_tointeger(L, arg))</span>
 <span class="lineNum">     629 </span><span class="lineCov">          1 :                 : fprintf(f, LUA_NUMBER_FMT,</span>
 <span class="lineNum">     630 </span><span class="lineNoCov">          0 :                              (LUAI_UACNUMBER)lua_tonumber(L, arg));</span>
@@ -698,11 +698,11 @@
 <span class="lineNum">     632 </span>            :     }
 <span class="lineNum">     633 </span>            :     else {
 <span class="lineNum">     634 </span>            :       size_t l;
-<span class="lineNum">     635 </span><span class="lineCov">       2031 :       const char *s = luaL_checklstring(L, arg, &amp;l);</span>
-<span class="lineNum">     636 </span><span class="lineCov">       2031 :       status = status &amp;&amp; (fwrite(s, sizeof(char), l, f) == l);</span>
+<span class="lineNum">     635 </span><span class="lineCov">         40 :       const char *s = luaL_checklstring(L, arg, &amp;l);</span>
+<span class="lineNum">     636 </span><span class="lineCov">         40 :       status = status &amp;&amp; (fwrite(s, sizeof(char), l, f) == l);</span>
 <span class="lineNum">     637 </span>            :     }
 <span class="lineNum">     638 </span>            :   }
-<span class="lineNum">     639 </span><span class="lineCov">       2031 :   if (status) return 1;  /* file handle already on stack top */</span>
+<span class="lineNum">     639 </span><span class="lineCov">         40 :   if (status) return 1;  /* file handle already on stack top */</span>
 <span class="lineNum">     640 </span><span class="lineNoCov">          0 :   else return luaL_fileresult(L, status, NULL);</span>
 <span class="lineNum">     641 </span>            : }
 <span class="lineNum">     642 </span>            : 
@@ -712,10 +712,10 @@
 <span class="lineNum">     646 </span>            : }
 <span class="lineNum">     647 </span>            : 
 <span class="lineNum">     648 </span>            : 
-<span class="lineNum">     649 </span><span class="lineCov">       2030 : static int f_write (lua_State *L) {</span>
-<span class="lineNum">     650 </span><span class="lineCov">       2030 :   FILE *f = tofile(L);</span>
-<span class="lineNum">     651 </span><span class="lineCov">       2029 :   lua_pushvalue(L, 1);  /* push file at the stack top (to be returned) */</span>
-<span class="lineNum">     652 </span><span class="lineCov">       2029 :   return g_write(L, f, 2);</span>
+<span class="lineNum">     649 </span><span class="lineCov">         39 : static int f_write (lua_State *L) {</span>
+<span class="lineNum">     650 </span><span class="lineCov">         39 :   FILE *f = tofile(L);</span>
+<span class="lineNum">     651 </span><span class="lineCov">         38 :   lua_pushvalue(L, 1);  /* push file at the stack top (to be returned) */</span>
+<span class="lineNum">     652 </span><span class="lineCov">         38 :   return g_write(L, f, 2);</span>
 <span class="lineNum">     653 </span>            : }
 <span class="lineNum">     654 </span>            : 
 <span class="lineNum">     655 </span>            : 
@@ -725,8 +725,8 @@
 <span class="lineNum">     659 </span><span class="lineCov">          3 :   FILE *f = tofile(L);</span>
 <span class="lineNum">     660 </span><span class="lineCov">          2 :   int op = luaL_checkoption(L, 2, &quot;cur&quot;, modenames);</span>
 <span class="lineNum">     661 </span><span class="lineCov">          1 :   lua_Integer p3 = luaL_optinteger(L, 3, 0);</span>
-<span class="lineNum">     662 </span>            :   l_seeknum offset = (l_seeknum)p3;
-<span class="lineNum">     663 </span>            :   luaL_argcheck(L, (lua_Integer)offset == p3, 3,
+<span class="lineNum">     662 </span><span class="lineCov">          1 :   l_seeknum offset = (l_seeknum)p3;</span>
+<span class="lineNum">     663 </span><span class="lineCov">          1 :   luaL_argcheck(L, (lua_Integer)offset == p3, 3,</span>
 <span class="lineNum">     664 </span>            :                   &quot;not an integer in proper range&quot;);
 <span class="lineNum">     665 </span><span class="lineCov">          1 :   op = l_fseek(f, offset, mode[op]);</span>
 <span class="lineNum">     666 </span><span class="lineCov">          1 :   if (op)</span>
@@ -738,14 +738,14 @@
 <span class="lineNum">     672 </span>            : }
 <span class="lineNum">     673 </span>            : 
 <span class="lineNum">     674 </span>            : 
-<span class="lineNum">     675 </span><span class="lineCov">         83 : static int f_setvbuf (lua_State *L) {</span>
+<span class="lineNum">     675 </span><span class="lineCov">          3 : static int f_setvbuf (lua_State *L) {</span>
 <span class="lineNum">     676 </span>            :   static const int mode[] = {_IONBF, _IOFBF, _IOLBF};
 <span class="lineNum">     677 </span>            :   static const char *const modenames[] = {&quot;no&quot;, &quot;full&quot;, &quot;line&quot;, NULL};
-<span class="lineNum">     678 </span><span class="lineCov">         83 :   FILE *f = tofile(L);</span>
-<span class="lineNum">     679 </span><span class="lineCov">         83 :   int op = luaL_checkoption(L, 2, NULL, modenames);</span>
-<span class="lineNum">     680 </span><span class="lineCov">         83 :   lua_Integer sz = luaL_optinteger(L, 3, LUAL_BUFFERSIZE);</span>
-<span class="lineNum">     681 </span><span class="lineCov">         83 :   int res = setvbuf(f, NULL, mode[op], (size_t)sz);</span>
-<span class="lineNum">     682 </span><span class="lineCov">         83 :   return luaL_fileresult(L, res == 0, NULL);</span>
+<span class="lineNum">     678 </span><span class="lineCov">          3 :   FILE *f = tofile(L);</span>
+<span class="lineNum">     679 </span><span class="lineCov">          3 :   int op = luaL_checkoption(L, 2, NULL, modenames);</span>
+<span class="lineNum">     680 </span><span class="lineCov">          3 :   lua_Integer sz = luaL_optinteger(L, 3, LUAL_BUFFERSIZE);</span>
+<span class="lineNum">     681 </span><span class="lineCov">          3 :   int res = setvbuf(f, NULL, mode[op], (size_t)sz);</span>
+<span class="lineNum">     682 </span><span class="lineCov">          3 :   return luaL_fileresult(L, res == 0, NULL);</span>
 <span class="lineNum">     683 </span>            : }
 <span class="lineNum">     684 </span>            : 
 <span class="lineNum">     685 </span>            : 
@@ -796,13 +796,13 @@
 <span class="lineNum">     730 </span>            : };
 <span class="lineNum">     731 </span>            : 
 <span class="lineNum">     732 </span>            : 
-<span class="lineNum">     733 </span><span class="lineCov">         83 : static void createmeta (lua_State *L) {</span>
-<span class="lineNum">     734 </span><span class="lineCov">         83 :   luaL_newmetatable(L, LUA_FILEHANDLE);  /* create metatable for file handles */</span>
-<span class="lineNum">     735 </span><span class="lineCov">         83 :   lua_pushvalue(L, -1);  /* push metatable */</span>
-<span class="lineNum">     736 </span><span class="lineCov">         83 :   lua_setfield(L, -2, &quot;__index&quot;);  /* metatable.__index = metatable */</span>
-<span class="lineNum">     737 </span><span class="lineCov">         83 :   luaL_setfuncs(L, flib, 0);  /* add file methods to new metatable */</span>
-<span class="lineNum">     738 </span><span class="lineCov">         83 :   lua_pop(L, 1);  /* pop new metatable */</span>
-<span class="lineNum">     739 </span><span class="lineCov">         83 : }</span>
+<span class="lineNum">     733 </span><span class="lineCov">         87 : static void createmeta (lua_State *L) {</span>
+<span class="lineNum">     734 </span><span class="lineCov">         87 :   luaL_newmetatable(L, LUA_FILEHANDLE);  /* create metatable for file handles */</span>
+<span class="lineNum">     735 </span><span class="lineCov">         87 :   lua_pushvalue(L, -1);  /* push metatable */</span>
+<span class="lineNum">     736 </span><span class="lineCov">         87 :   lua_setfield(L, -2, &quot;__index&quot;);  /* metatable.__index = metatable */</span>
+<span class="lineNum">     737 </span><span class="lineCov">         87 :   luaL_setfuncs(L, flib, 0);  /* add file methods to new metatable */</span>
+<span class="lineNum">     738 </span><span class="lineCov">         87 :   lua_pop(L, 1);  /* pop new metatable */</span>
+<span class="lineNum">     739 </span><span class="lineCov">         87 : }</span>
 <span class="lineNum">     740 </span>            : 
 <span class="lineNum">     741 </span>            : 
 <span class="lineNum">     742 </span>            : /*
@@ -817,27 +817,27 @@
 <span class="lineNum">     751 </span>            : }
 <span class="lineNum">     752 </span>            : 
 <span class="lineNum">     753 </span>            : 
-<span class="lineNum">     754 </span><span class="lineCov">        249 : static void createstdfile (lua_State *L, FILE *f, const char *k,</span>
+<span class="lineNum">     754 </span><span class="lineCov">        261 : static void createstdfile (lua_State *L, FILE *f, const char *k,</span>
 <span class="lineNum">     755 </span>            :                            const char *fname) {
-<span class="lineNum">     756 </span><span class="lineCov">        249 :   LStream *p = newprefile(L);</span>
-<span class="lineNum">     757 </span><span class="lineCov">        249 :   p-&gt;f = f;</span>
-<span class="lineNum">     758 </span><span class="lineCov">        249 :   p-&gt;closef = &amp;io_noclose;</span>
-<span class="lineNum">     759 </span><span class="lineCov">        249 :   if (k != NULL) {</span>
-<span class="lineNum">     760 </span><span class="lineCov">        166 :     lua_pushvalue(L, -1);</span>
-<span class="lineNum">     761 </span><span class="lineCov">        166 :     lua_setfield(L, LUA_REGISTRYINDEX, k);  /* add file to registry */</span>
+<span class="lineNum">     756 </span><span class="lineCov">        261 :   LStream *p = newprefile(L);</span>
+<span class="lineNum">     757 </span><span class="lineCov">        261 :   p-&gt;f = f;</span>
+<span class="lineNum">     758 </span><span class="lineCov">        261 :   p-&gt;closef = &amp;io_noclose;</span>
+<span class="lineNum">     759 </span><span class="lineCov">        261 :   if (k != NULL) {</span>
+<span class="lineNum">     760 </span><span class="lineCov">        174 :     lua_pushvalue(L, -1);</span>
+<span class="lineNum">     761 </span><span class="lineCov">        174 :     lua_setfield(L, LUA_REGISTRYINDEX, k);  /* add file to registry */</span>
 <span class="lineNum">     762 </span>            :   }
-<span class="lineNum">     763 </span><span class="lineCov">        249 :   lua_setfield(L, -2, fname);  /* add file to module */</span>
-<span class="lineNum">     764 </span><span class="lineCov">        249 : }</span>
+<span class="lineNum">     763 </span><span class="lineCov">        261 :   lua_setfield(L, -2, fname);  /* add file to module */</span>
+<span class="lineNum">     764 </span><span class="lineCov">        261 : }</span>
 <span class="lineNum">     765 </span>            : 
 <span class="lineNum">     766 </span>            : 
-<span class="lineNum">     767 </span><span class="lineCov">         83 : LUAMOD_API int luaopen_io (lua_State *L) {</span>
-<span class="lineNum">     768 </span><span class="lineCov">         83 :   luaL_newlib(L, iolib);  /* new module */</span>
-<span class="lineNum">     769 </span><span class="lineCov">         83 :   createmeta(L);</span>
+<span class="lineNum">     767 </span><span class="lineCov">         87 : LUAMOD_API int luaopen_io (lua_State *L) {</span>
+<span class="lineNum">     768 </span><span class="lineCov">         87 :   luaL_newlib(L, iolib);  /* new module */</span>
+<span class="lineNum">     769 </span><span class="lineCov">         87 :   createmeta(L);</span>
 <span class="lineNum">     770 </span>            :   /* create (and set) default files */
-<span class="lineNum">     771 </span><span class="lineCov">         83 :   createstdfile(L, stdin, IO_INPUT, &quot;stdin&quot;);</span>
-<span class="lineNum">     772 </span><span class="lineCov">         83 :   createstdfile(L, stdout, IO_OUTPUT, &quot;stdout&quot;);</span>
-<span class="lineNum">     773 </span><span class="lineCov">         83 :   createstdfile(L, stderr, NULL, &quot;stderr&quot;);</span>
-<span class="lineNum">     774 </span><span class="lineCov">         83 :   return 1;</span>
+<span class="lineNum">     771 </span><span class="lineCov">         87 :   createstdfile(L, stdin, IO_INPUT, &quot;stdin&quot;);</span>
+<span class="lineNum">     772 </span><span class="lineCov">         87 :   createstdfile(L, stdout, IO_OUTPUT, &quot;stdout&quot;);</span>
+<span class="lineNum">     773 </span><span class="lineCov">         87 :   createstdfile(L, stderr, NULL, &quot;stderr&quot;);</span>
+<span class="lineNum">     774 </span><span class="lineCov">         87 :   return 1;</span>
 <span class="lineNum">     775 </span>            : }
 <span class="lineNum">     776 </span>            : 
 </pre>

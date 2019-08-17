@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2018-10-07 17:32:53</td>
+            <td class="headerValue">2019-06-13 19:44:17</td>
             <td></td>
           </tr>
           <tr>
@@ -123,14 +123,14 @@
 <span class="lineNum">      57 </span>            : };
 <span class="lineNum">      58 </span>            : 
 <span class="lineNum">      59 </span>            : 
-<span class="lineNum">      60 </span><span class="lineCov">         83 : LUALIB_API void luaL_openlibs (lua_State *L) {</span>
+<span class="lineNum">      60 </span><span class="lineCov">         87 : LUALIB_API void luaL_openlibs (lua_State *L) {</span>
 <span class="lineNum">      61 </span>            :   const luaL_Reg *lib;
 <span class="lineNum">      62 </span>            :   /* &quot;require&quot; functions from 'loadedlibs' and set results to global table */
-<span class="lineNum">      63 </span><span class="lineCov">        996 :   for (lib = loadedlibs; lib-&gt;func; lib++) {</span>
-<span class="lineNum">      64 </span><span class="lineCov">        913 :     luaL_requiref(L, lib-&gt;name, lib-&gt;func, 1);</span>
-<span class="lineNum">      65 </span><span class="lineCov">        913 :     lua_pop(L, 1);  /* remove lib */</span>
+<span class="lineNum">      63 </span><span class="lineCov">       1044 :   for (lib = loadedlibs; lib-&gt;func; lib++) {</span>
+<span class="lineNum">      64 </span><span class="lineCov">        957 :     luaL_requiref(L, lib-&gt;name, lib-&gt;func, 1);</span>
+<span class="lineNum">      65 </span><span class="lineCov">        957 :     lua_pop(L, 1);  /* remove lib */</span>
 <span class="lineNum">      66 </span>            :   }
-<span class="lineNum">      67 </span><span class="lineCov">         83 : }</span>
+<span class="lineNum">      67 </span><span class="lineCov">         87 : }</span>
 <span class="lineNum">      68 </span>            : 
 </pre>
       </td>

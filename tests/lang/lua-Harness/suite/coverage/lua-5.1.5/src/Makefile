@@ -8,7 +8,7 @@
 PLAT= none
 
 CC= gcc
-CFLAGS= -fprofile-arcs -ftest-coverage -Wall $(MYCFLAGS)
+CFLAGS= -O0 -fprofile-arcs -ftest-coverage -Wall $(MYCFLAGS)
 AR= ar rcu
 RANLIB= ranlib
 RM= rm -f

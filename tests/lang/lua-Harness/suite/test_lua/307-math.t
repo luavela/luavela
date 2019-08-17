@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2009-2018, Perrad Francois
+-- Copyright (C) 2009-2019, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -36,7 +36,7 @@ local has_mathx = _VERSION < 'Lua 5.3' or profile.compat52 or profile.compat53 o
 local has_log10 = _VERSION < 'Lua 5.2' or profile.compat51 or profile.has_math_log10 or
                   profile.compat52 or profile.compat53 or profile.has_mathx
 local has_log_with_base = _VERSION >= 'Lua 5.2' or profile.compat52
-local has_mod = true -- UJIT: we still support math.mod (TODO: remove alias)
+local has_mod = profile.has_math_mod or ujit
 local nocvts2n = profile.nocvts2n
 
 plan'no_plan'
@@ -257,10 +257,9 @@ do -- random
         if jit then
             todo("LuaJIT intentional. Don't check empty interval.")
         end
-        -- UJIT: random(0) works
-        -- error_like(function () math.random(0) end,
-        --           "^[^:]+:%d+: bad argument #1 to 'random' %(interval is empty%)",
-        --          "function random empty interval")
+        error_like(function () math.random(0) end,
+                   "^[^:]+:%d+: bad argument #1 to 'random' %(interval is empty%)",
+                  "function random empty interval")
     end
 
     if jit then
