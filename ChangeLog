@@ -4,6 +4,7 @@ version 0.24-dev0
   * Added a separate LICENSE file and unified copyright notices across the code base
   * Fixed checking return value of fgets in bytecode dumper
   * Upgraded lua-Harness to 93b550fc
+  * Added configuration file for Travis CI
 
 version 0.23-dev0
   * Added an ability to copy values between tables on-trace without guarded loads:
