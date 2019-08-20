@@ -1,15 +1,21 @@
-.. _overview:
+.. _pub-overview:
 
-|PROJECT| Overview and Features
-===============================
+Overview and Features
+=====================
 
 .. note::
 
    The work on documenting features specific to |PROJECT| is in progress.
 
+Project Overview
+----------------
+
 .. include:: ../../README
      :start-line: 3
      :end-line: 6
+
+Major Features
+--------------
 
 .. toctree::
    :maxdepth: 1

@@ -1,3 +1,3 @@
-.. _installation:
+.. _pub-install:
 
 .. include:: ../../INSTALL

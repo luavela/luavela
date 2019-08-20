@@ -1,7 +1,7 @@
-.. _reduce-test-cases:
+.. _test-reduce-cases:
 
 Reducing Test Cases for Bugs
-=============================
+============================
 
 .. contents:: :local:
 
@@ -72,12 +72,12 @@ Here's a shell script that'll run your code with a whole range of compiler optio
         rm test.dump
 
 Turn the compiler off
-----------------------
+---------------------
 
 Even if you have a large test case and can't reduce it much, the problem trace could still be a short piece of code. You can reduce the size of the dump and track down the problem by turning the jit compiler off for your modules one-by-one. Put ``if jit then jit.off(true, true) end`` at the top of your modules, and see if the problem goes away. If it does go away, remove the line. If the problem persists, that module doesn't need to be compiled to exhibit the problem, and you've just made the dump smaller.
 
 Find unused code
------------------
+----------------
 
 Sorry for the shameless plug, but I use `luatrace <http://github.com/geoffleyland/luatrace>`__ to find unused code that can (possibly) be removed, again reducing the size of the test case.
 

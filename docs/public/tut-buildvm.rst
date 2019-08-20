@@ -33,7 +33,7 @@ Sharing Common Fallback
 
 Consider following code:
 
-.. code-block:: c 
+.. code-block:: c
 
     LJLIB_ASM(math_abs) LJLIB_REC(.)
     {
@@ -42,10 +42,9 @@ Consider following code:
     }
     LJLIB_ASM_(math_floor) LJLIB_REC(.)
 
-In this notation, ``LJLIB_ASM_`` means that a Lua function``math.floor`` is implemented as a fast function inside the VM (the ``LJLIB_ASM`` part of the macro), but its fallback is a body of the last functions declared with the 
-``LJLIB_ASM`` macro. Please note presence/absence of the final underscore. Here, this character carries information about where to find the fallback part:
+In this notation, ``LJLIB_ASM_`` means that a Lua function``math.floor`` is implemented as a fast function inside the VM (the ``LJLIB_ASM`` part of the macro), but its fallback is a body of the last functions declared with the ``LJLIB_ASM`` macro. Please note presence/absence of the final underscore. Here, this character carries information about where to find the fallback part:
 
-.. code:: 
+.. code::
 
             $ nm ujit | fgrep -e ffh_math_floor -e ffh_math_abs
             000000000041715d t lj_ffh_math_abs
@@ -71,7 +70,7 @@ Builtins Accessing Upvalues
 
 As you probably know, ``pairs`` and ``ipairs`` are implemented via a call to to ``next``. Because of late binding, it is crucial to know the exact location of the original ``next`` in run-time, and ``_G.next`` is obviously not an option. To solve the issue, the "native" implementation of ``next`` is set as an upvalue for both ``pairs`` and ``ipairs``. In other words, the platform executes something like:
 
-.. code-block:: lua 
+.. code-block:: lua
 
     local next = _G.next -- here, _G.next is our builtin
     _G.pairs = function(...)

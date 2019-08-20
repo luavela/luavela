@@ -29,7 +29,7 @@ Affected bytecodes
 
       Lua code example:
 
-      .. code-block:: lua 
+      .. code-block:: lua
 
                local a = 0
 
@@ -39,7 +39,7 @@ Affected bytecodes
 
                print(a)
 
-      .. code-block:: lua 
+      .. code-block:: lua
 
                -- BYTECODE -- /home/user/tmp.lua:0-8
                0001    KSHORT   0   0
@@ -57,7 +57,7 @@ Affected bytecodes
 
                10
 
-      .. code:: 
+      .. code::
 
                -- BYTECODE -- /home/user/tmp.lua:0-8
                0001    KSHORT   0   0
@@ -67,7 +67,7 @@ Affected bytecodes
                0005    FORI     1 => 0010
                0006    KSHORT   5   1
                0007    ADD      0   0   5
-               0008    HCNT   
+               0008    HCNT
                0009    FORL     1 => 0006
                0010    GGET     1   0      ; "print"
                0011    MOV      2   0
@@ -77,12 +77,12 @@ Affected bytecodes
                10
 
    -  ``LOOP``
-   
+
       Emitted in 3 cases:
 
       -  ``goto``
 
-         .. code-block:: lua 
+         .. code-block:: lua
 
                   local a = 0
 
@@ -126,7 +126,7 @@ Affected bytecodes
                   0005    ISGE     1   0
                   0006    JMP      1 => 0008
                   0007    JMP      1 => 0011
-                  0008    HCNT   
+                  0008    HCNT
                   0009    LOOP     1 => 0009
                   0010    JMP      1 => 0002
                   0011    GGET     1   0      ; "print"
@@ -138,17 +138,17 @@ Affected bytecodes
 
       -  ``while``
 
-         .. code-block:: lua 
+         .. code-block:: lua
 
                   local a = 0
 
                   while (a < 10) do
                       a = a + 1
                   end
-                   
+
                   print(a)
 
-         .. code:: 
+         .. code::
 
                   -- BYTECODE -- /home/user/tmp.lua:0-8
                   0001    KSHORT   0   0
@@ -166,14 +166,14 @@ Affected bytecodes
 
                   10
 
-         .. code:: 
+         .. code::
 
                   -- BYTECODE -- /home/user/tmp.lua:0-8
                   0001    KSHORT   0   0
                   0002    KSHORT   1  10
                   0003    ISGE     0   1
                   0004    JMP      1 => 0010
-                  0005    HCNT   
+                  0005    HCNT
                   0006    LOOP     1 => 0010
                   0007    KSHORT   1   1
                   0008    ADD      0   0   1
@@ -187,7 +187,7 @@ Affected bytecodes
 
       -  ``repeat``
 
-         .. code-block:: lua 
+         .. code-block:: lua
 
                   local a = 0
 
@@ -197,7 +197,7 @@ Affected bytecodes
 
                   print(a)
 
-         .. code:: 
+         .. code::
 
                   -- BYTECODE -- /home/user/tmp.lua:0-8
                   0001    KSHORT   0   0
@@ -214,11 +214,11 @@ Affected bytecodes
 
                   11
 
-         .. code:: 
+         .. code::
 
                   -- BYTECODE -- /home/user/tmp.lua:0-8
                   0001    KSHORT   0   0
-                  0002    HCNT   
+                  0002    HCNT
                   0003    LOOP     1 => 0009
                   0004    KSHORT   1   1
                   0005    ADD      0   0   1
@@ -236,18 +236,18 @@ Affected bytecodes
 
    Is emitted immediately after ``ITERC`` or ``ITERN`` instructions. Adding ``HOTCNT`` between ``ITERN`` and ``ITERL`` will produce a core dump. But it's possible to add ``HOTCNT`` before ``ITERN``/``ITERC``:
 
-      .. code-block:: lua 
+      .. code-block:: lua
 
                local a = {5, 5, 5, 5, 5}
                local sum = 0
-                 
+
                for k, v in ipairs(a) do
                    sum = sum + v
                end
 
                print(sum)
 
-      .. code:: 
+      .. code::
 
                -- BYTECODE -- /home/user/tmp.lua:0-9
                0001    TDUP     0   0
@@ -266,7 +266,7 @@ Affected bytecodes
 
                25
 
-      .. code:: 
+      .. code::
 
                -- BYTECODE -- /home/user/tmp.lua:0-9
                0001    TDUP     0   0
@@ -276,7 +276,7 @@ Affected bytecodes
                0005    CALL     2   4   2
                0006    JMP      5 => 0009
                0007    ADD      1   1   6
-               0008    HCNT   
+               0008    HCNT
                0009    ITERC    5   3   3
                0010    ITERL    5 => 0007
                0011    GGET     2   2      ; "print"
@@ -299,7 +299,7 @@ Affected bytecodes
 
    -  ``FUNCF``
 
-      .. code-block:: lua 
+      .. code-block:: lua
 
                function foo(a)
                    print(a)
@@ -325,10 +325,10 @@ Affected bytecodes
 
                1
 
-      .. code:: 
+      .. code::
 
                -- BYTECODE -- /home/user/tmp.lua:1-3
-               0001    HCNT       
+               0001    HCNT
                0002    GGET     1   0      ; "print"
                0003    MOV      2   0
                0004    CALL     1   1   2
@@ -372,7 +372,7 @@ Miscellaneous
 
    Seems that is not impossible to compare bytecodes:
 
-   .. code-block:: lua 
+   .. code-block:: lua
 
             local function foo()
               local t = {}
@@ -386,11 +386,11 @@ Miscellaneous
             foo()
             assert(string.dump(foo) == d1) -- fail
 
--  **Hotcounting and hooks** 
+-  **Hotcounting and hooks**
 
    Since we added new bytecode (before ``FORL``), total number of executed instructions differs from the reference value.
 
-   .. code-block:: lua 
+   .. code-block:: lua
 
             local a = 0
             debug.sethook(function (e) a = a + 1 end, "", 1)
