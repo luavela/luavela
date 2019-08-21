@@ -1,6 +1,9 @@
 README for LuaVela (codename uJIT)
 ----------------------------------
 
+.. image:: https://travis-ci.org/iponweb/luavela.svg?branch=master
+    :target: https://travis-ci.org/iponweb/luavela
+
 LuaVela is an interpreter and a Just-In-Time (JIT) compiler for the Lua
 programming language.
 
