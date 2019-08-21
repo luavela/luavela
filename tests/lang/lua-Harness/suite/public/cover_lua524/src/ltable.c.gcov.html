@@ -31,13 +31,13 @@
             <td class="headerValue">Lua 5.2.4</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntry">220</td>
-            <td class="headerCovTableEntry">235</td>
-            <td class="headerCovTableEntryHi">93.6 %</td>
+            <td class="headerCovTableEntry">261</td>
+            <td class="headerCovTableEntry">279</td>
+            <td class="headerCovTableEntryHi">93.5 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2018-10-07 17:32:52</td>
+            <td class="headerValue">2019-06-13 19:44:16</td>
             <td></td>
           </tr>
           <tr>
@@ -143,15 +143,15 @@
 <span class="lineNum">      77 </span>            : /*
 <span class="lineNum">      78 </span>            : ** hash for lua_Numbers
 <span class="lineNum">      79 </span>            : */
-<span class="lineNum">      80 </span>            : static Node *hashnum (const Table *t, lua_Number n) {
+<span class="lineNum">      80 </span><span class="lineCov">      53199 : static Node *hashnum (const Table *t, lua_Number n) {</span>
 <span class="lineNum">      81 </span>            :   int i;
-<span class="lineNum">      82 </span><span class="lineCov">      54215 :   luai_hashnum(i, n);</span>
-<span class="lineNum">      83 </span><span class="lineCov">      54215 :   if (i &lt; 0) {</span>
-<span class="lineNum">      84 </span><span class="lineCov">        612 :     if (cast(unsigned int, i) == 0u - i)  /* use unsigned to avoid overflows */</span>
-<span class="lineNum">      85 </span>            :       i = 0;  /* handle INT_MIN */
-<span class="lineNum">      86 </span><span class="lineCov">        612 :     i = -i;  /* must be a positive value */</span>
+<span class="lineNum">      82 </span><span class="lineCov">      53199 :   luai_hashnum(i, n);</span>
+<span class="lineNum">      83 </span><span class="lineCov">      53199 :   if (i &lt; 0) {</span>
+<span class="lineNum">      84 </span><span class="lineCov">        686 :     if (cast(unsigned int, i) == 0u - i)  /* use unsigned to avoid overflows */</span>
+<span class="lineNum">      85 </span><span class="lineNoCov">          0 :       i = 0;  /* handle INT_MIN */</span>
+<span class="lineNum">      86 </span><span class="lineCov">        686 :     i = -i;  /* must be a positive value */</span>
 <span class="lineNum">      87 </span>            :   }
-<span class="lineNum">      88 </span><span class="lineCov">      54215 :   return hashmod(t, i);</span>
+<span class="lineNum">      88 </span><span class="lineCov">      53199 :   return hashmod(t, i);</span>
 <span class="lineNum">      89 </span>            : }
 <span class="lineNum">      90 </span>            : 
 <span class="lineNum">      91 </span>            : 
@@ -160,28 +160,28 @@
 <span class="lineNum">      94 </span>            : ** returns the `main' position of an element in a table (that is, the index
 <span class="lineNum">      95 </span>            : ** of its hash value)
 <span class="lineNum">      96 </span>            : */
-<span class="lineNum">      97 </span><span class="lineCov">     332460 : static Node *mainposition (const Table *t, const TValue *key) {</span>
-<span class="lineNum">      98 </span><span class="lineCov">     332460 :   switch (ttype(key)) {</span>
-<span class="lineNum">      99 </span><span class="lineCov">      26999 :     case LUA_TNUMBER:</span>
-<span class="lineNum">     100 </span><span class="lineCov">      53998 :       return hashnum(t, nvalue(key));</span>
-<span class="lineNum">     101 </span><span class="lineCov">       2004 :     case LUA_TLNGSTR: {</span>
-<span class="lineNum">     102 </span><span class="lineCov">       2004 :       TString *s = rawtsvalue(key);</span>
-<span class="lineNum">     103 </span><span class="lineCov">       2004 :       if (s-&gt;tsv.extra == 0) {  /* no hash? */</span>
-<span class="lineNum">     104 </span><span class="lineCov">        400 :         s-&gt;tsv.hash = luaS_hash(getstr(s), s-&gt;tsv.len, s-&gt;tsv.hash);</span>
-<span class="lineNum">     105 </span><span class="lineCov">        400 :         s-&gt;tsv.extra = 1;  /* now it has its hash */</span>
+<span class="lineNum">      97 </span><span class="lineCov">     161203 : static Node *mainposition (const Table *t, const TValue *key) {</span>
+<span class="lineNum">      98 </span><span class="lineCov">     161203 :   switch (ttype(key)) {</span>
+<span class="lineNum">      99 </span><span class="lineCov">      26430 :     case LUA_TNUMBER:</span>
+<span class="lineNum">     100 </span><span class="lineCov">      26430 :       return hashnum(t, nvalue(key));</span>
+<span class="lineNum">     101 </span><span class="lineCov">       1283 :     case LUA_TLNGSTR: {</span>
+<span class="lineNum">     102 </span><span class="lineCov">       1283 :       TString *s = rawtsvalue(key);</span>
+<span class="lineNum">     103 </span><span class="lineCov">       1283 :       if (s-&gt;tsv.extra == 0) {  /* no hash? */</span>
+<span class="lineNum">     104 </span><span class="lineCov">        293 :         s-&gt;tsv.hash = luaS_hash(getstr(s), s-&gt;tsv.len, s-&gt;tsv.hash);</span>
+<span class="lineNum">     105 </span><span class="lineCov">        293 :         s-&gt;tsv.extra = 1;  /* now it has its hash */</span>
 <span class="lineNum">     106 </span>            :       }
-<span class="lineNum">     107 </span><span class="lineCov">       2004 :       return hashstr(t, rawtsvalue(key));</span>
+<span class="lineNum">     107 </span><span class="lineCov">       1283 :       return hashstr(t, rawtsvalue(key));</span>
 <span class="lineNum">     108 </span>            :     }
-<span class="lineNum">     109 </span><span class="lineCov">     298342 :     case LUA_TSHRSTR:</span>
-<span class="lineNum">     110 </span><span class="lineCov">     298342 :       return hashstr(t, rawtsvalue(key));</span>
-<span class="lineNum">     111 </span><span class="lineCov">       3170 :     case LUA_TBOOLEAN:</span>
-<span class="lineNum">     112 </span><span class="lineCov">       3170 :       return hashboolean(t, bvalue(key));</span>
+<span class="lineNum">     109 </span><span class="lineCov">     132332 :     case LUA_TSHRSTR:</span>
+<span class="lineNum">     110 </span><span class="lineCov">     132332 :       return hashstr(t, rawtsvalue(key));</span>
+<span class="lineNum">     111 </span><span class="lineCov">        739 :     case LUA_TBOOLEAN:</span>
+<span class="lineNum">     112 </span><span class="lineCov">        739 :       return hashboolean(t, bvalue(key));</span>
 <span class="lineNum">     113 </span><span class="lineNoCov">          0 :     case LUA_TLIGHTUSERDATA:</span>
 <span class="lineNum">     114 </span><span class="lineNoCov">          0 :       return hashpointer(t, pvalue(key));</span>
 <span class="lineNum">     115 </span><span class="lineCov">          5 :     case LUA_TLCF:</span>
 <span class="lineNum">     116 </span><span class="lineCov">          5 :       return hashpointer(t, fvalue(key));</span>
-<span class="lineNum">     117 </span><span class="lineCov">       1940 :     default:</span>
-<span class="lineNum">     118 </span><span class="lineCov">       1940 :       return hashpointer(t, gcvalue(key));</span>
+<span class="lineNum">     117 </span><span class="lineCov">        414 :     default:</span>
+<span class="lineNum">     118 </span><span class="lineCov">        414 :       return hashpointer(t, gcvalue(key));</span>
 <span class="lineNum">     119 </span>            :   }
 <span class="lineNum">     120 </span>            : }
 <span class="lineNum">     121 </span>            : 
@@ -190,15 +190,15 @@
 <span class="lineNum">     124 </span>            : ** returns the index for `key' if `key' is an appropriate key to live in
 <span class="lineNum">     125 </span>            : ** the array part of the table, -1 otherwise.
 <span class="lineNum">     126 </span>            : */
-<span class="lineNum">     127 </span>            : static int arrayindex (const TValue *key) {
-<span class="lineNum">     128 </span><span class="lineCov">     165091 :   if (ttisnumber(key)) {</span>
-<span class="lineNum">     129 </span>            :     lua_Number n = nvalue(key);
+<span class="lineNum">     127 </span><span class="lineCov">      83600 : static int arrayindex (const TValue *key) {</span>
+<span class="lineNum">     128 </span><span class="lineCov">      83600 :   if (ttisnumber(key)) {</span>
+<span class="lineNum">     129 </span><span class="lineCov">      24929 :     lua_Number n = nvalue(key);</span>
 <span class="lineNum">     130 </span>            :     int k;
-<span class="lineNum">     131 </span><span class="lineCov">      25206 :     lua_number2int(k, n);</span>
-<span class="lineNum">     132 </span><span class="lineCov">      25206 :     if (luai_numeq(cast_num(k), n))</span>
-<span class="lineNum">     133 </span>            :       return k;
+<span class="lineNum">     131 </span><span class="lineCov">      24929 :     lua_number2int(k, n);</span>
+<span class="lineNum">     132 </span><span class="lineCov">      24929 :     if (luai_numeq(cast_num(k), n))</span>
+<span class="lineNum">     133 </span><span class="lineCov">      24829 :       return k;</span>
 <span class="lineNum">     134 </span>            :   }
-<span class="lineNum">     135 </span>            :   return -1;  /* `key' did not match some condition */
+<span class="lineNum">     135 </span><span class="lineCov">      58771 :   return -1;  /* `key' did not match some condition */</span>
 <span class="lineNum">     136 </span>            : }
 <span class="lineNum">     137 </span>            : 
 <span class="lineNum">     138 </span>            : 
@@ -207,48 +207,48 @@
 <span class="lineNum">     141 </span>            : ** elements in the array part, then elements in the hash part. The
 <span class="lineNum">     142 </span>            : ** beginning of a traversal is signaled by -1.
 <span class="lineNum">     143 </span>            : */
-<span class="lineNum">     144 </span><span class="lineCov">       2537 : static int findindex (lua_State *L, Table *t, StkId key) {</span>
+<span class="lineNum">     144 </span><span class="lineCov">       1646 : static int findindex (lua_State *L, Table *t, StkId key) {</span>
 <span class="lineNum">     145 </span>            :   int i;
-<span class="lineNum">     146 </span><span class="lineCov">       2537 :   if (ttisnil(key)) return -1;  /* first iteration */</span>
-<span class="lineNum">     147 </span><span class="lineCov">       2368 :   i = arrayindex(key);</span>
-<span class="lineNum">     148 </span><span class="lineCov">         87 :   if (0 &lt; i &amp;&amp; i &lt;= t-&gt;sizearray)  /* is `key' inside array part? */</span>
-<span class="lineNum">     149 </span><span class="lineCov">         72 :     return i-1;  /* yes; that's the index (corrected to C) */</span>
+<span class="lineNum">     146 </span><span class="lineCov">       1646 :   if (ttisnil(key)) return -1;  /* first iteration */</span>
+<span class="lineNum">     147 </span><span class="lineCov">       1546 :   i = arrayindex(key);</span>
+<span class="lineNum">     148 </span><span class="lineCov">       1546 :   if (0 &lt; i &amp;&amp; i &lt;= t-&gt;sizearray)  /* is `key' inside array part? */</span>
+<span class="lineNum">     149 </span><span class="lineCov">         22 :     return i-1;  /* yes; that's the index (corrected to C) */</span>
 <span class="lineNum">     150 </span>            :   else {
-<span class="lineNum">     151 </span><span class="lineCov">       2296 :     Node *n = mainposition(t, key);</span>
+<span class="lineNum">     151 </span><span class="lineCov">       1524 :     Node *n = mainposition(t, key);</span>
 <span class="lineNum">     152 </span>            :     for (;;) {  /* check whether `key' is somewhere in the chain */
 <span class="lineNum">     153 </span>            :       /* key may be dead already, but it is ok to use it in `next' */
-<span class="lineNum">     154 </span><span class="lineCov">       3883 :       if (luaV_rawequalobj(gkey(n), key) ||</span>
-<span class="lineNum">     155 </span><span class="lineCov">        794 :             (ttisdeadkey(gkey(n)) &amp;&amp; iscollectable(key) &amp;&amp;</span>
-<span class="lineNum">     156 </span><span class="lineNoCov">          0 :              deadvalue(gkey(n)) == gcvalue(key))) {</span>
-<span class="lineNum">     157 </span><span class="lineCov">       2295 :         i = cast_int(n - gnode(t, 0));  /* key index in hash table */</span>
+<span class="lineNum">     154 </span><span class="lineCov">       2063 :       if (luaV_rawequalobj(gkey(n), key) ||</span>
+<span class="lineNum">     155 </span><span class="lineCov">        540 :             (ttisdeadkey(gkey(n)) &amp;&amp; iscollectable(key) &amp;&amp;</span>
+<span class="lineNum">     156 </span><span class="lineCov">          2 :              deadvalue(gkey(n)) == gcvalue(key))) {</span>
+<span class="lineNum">     157 </span><span class="lineCov">       1523 :         i = cast_int(n - gnode(t, 0));  /* key index in hash table */</span>
 <span class="lineNum">     158 </span>            :         /* hash elements are numbered after array ones */
-<span class="lineNum">     159 </span><span class="lineCov">       2295 :         return i + t-&gt;sizearray;</span>
+<span class="lineNum">     159 </span><span class="lineCov">       1523 :         return i + t-&gt;sizearray;</span>
 <span class="lineNum">     160 </span>            :       }
-<span class="lineNum">     161 </span><span class="lineCov">        794 :       else n = gnext(n);</span>
-<span class="lineNum">     162 </span><span class="lineCov">        794 :       if (n == NULL)</span>
+<span class="lineNum">     161 </span><span class="lineCov">        540 :       else n = gnext(n);</span>
+<span class="lineNum">     162 </span><span class="lineCov">        540 :       if (n == NULL)</span>
 <span class="lineNum">     163 </span><span class="lineCov">          1 :         luaG_runerror(L, &quot;invalid key to &quot; LUA_QL(&quot;next&quot;));  /* key not found */</span>
 <span class="lineNum">     164 </span>            :     }
 <span class="lineNum">     165 </span>            :   }
 <span class="lineNum">     166 </span>            : }
 <span class="lineNum">     167 </span>            : 
 <span class="lineNum">     168 </span>            : 
-<span class="lineNum">     169 </span><span class="lineCov">       2537 : int luaH_next (lua_State *L, Table *t, StkId key) {</span>
-<span class="lineNum">     170 </span><span class="lineCov">       2537 :   int i = findindex(L, t, key);  /* find original element */</span>
-<span class="lineNum">     171 </span><span class="lineCov">       2536 :   for (i++; i &lt; t-&gt;sizearray; i++) {  /* try first array part */</span>
-<span class="lineNum">     172 </span><span class="lineCov">         71 :     if (!ttisnil(&amp;t-&gt;array[i])) {  /* a non-nil value? */</span>
-<span class="lineNum">     173 </span><span class="lineCov">         71 :       setnvalue(key, cast_num(i+1));</span>
-<span class="lineNum">     174 </span><span class="lineCov">         71 :       setobj2s(L, key+1, &amp;t-&gt;array[i]);</span>
-<span class="lineNum">     175 </span><span class="lineCov">         71 :       return 1;</span>
+<span class="lineNum">     169 </span><span class="lineCov">       1646 : int luaH_next (lua_State *L, Table *t, StkId key) {</span>
+<span class="lineNum">     170 </span><span class="lineCov">       1646 :   int i = findindex(L, t, key);  /* find original element */</span>
+<span class="lineNum">     171 </span><span class="lineCov">       1645 :   for (i++; i &lt; t-&gt;sizearray; i++) {  /* try first array part */</span>
+<span class="lineNum">     172 </span><span class="lineCov">         21 :     if (!ttisnil(&amp;t-&gt;array[i])) {  /* a non-nil value? */</span>
+<span class="lineNum">     173 </span><span class="lineCov">         21 :       setnvalue(key, cast_num(i+1));</span>
+<span class="lineNum">     174 </span><span class="lineCov">         21 :       setobj2s(L, key+1, &amp;t-&gt;array[i]);</span>
+<span class="lineNum">     175 </span><span class="lineCov">         21 :       return 1;</span>
 <span class="lineNum">     176 </span>            :     }
 <span class="lineNum">     177 </span>            :   }
-<span class="lineNum">     178 </span><span class="lineCov">       3342 :   for (i -= t-&gt;sizearray; i &lt; sizenode(t); i++) {  /* then hash part */</span>
-<span class="lineNum">     179 </span><span class="lineCov">       3173 :     if (!ttisnil(gval(gnode(t, i)))) {  /* a non-nil value? */</span>
-<span class="lineNum">     180 </span><span class="lineCov">       2296 :       setobj2s(L, key, gkey(gnode(t, i)));</span>
-<span class="lineNum">     181 </span><span class="lineCov">       2296 :       setobj2s(L, key+1, gval(gnode(t, i)));</span>
-<span class="lineNum">     182 </span><span class="lineCov">       2296 :       return 1;</span>
+<span class="lineNum">     178 </span><span class="lineCov">       2074 :   for (i -= t-&gt;sizearray; i &lt; sizenode(t); i++) {  /* then hash part */</span>
+<span class="lineNum">     179 </span><span class="lineCov">       1976 :     if (!ttisnil(gval(gnode(t, i)))) {  /* a non-nil value? */</span>
+<span class="lineNum">     180 </span><span class="lineCov">       1526 :       setobj2s(L, key, gkey(gnode(t, i)));</span>
+<span class="lineNum">     181 </span><span class="lineCov">       1526 :       setobj2s(L, key+1, gval(gnode(t, i)));</span>
+<span class="lineNum">     182 </span><span class="lineCov">       1526 :       return 1;</span>
 <span class="lineNum">     183 </span>            :     }
 <span class="lineNum">     184 </span>            :   }
-<span class="lineNum">     185 </span>            :   return 0;  /* no more elements */
+<span class="lineNum">     185 </span><span class="lineCov">         98 :   return 0;  /* no more elements */</span>
 <span class="lineNum">     186 </span>            : }
 <span class="lineNum">     187 </span>            : 
 <span class="lineNum">     188 </span>            : 
@@ -259,124 +259,124 @@
 <span class="lineNum">     193 </span>            : */
 <span class="lineNum">     194 </span>            : 
 <span class="lineNum">     195 </span>            : 
-<span class="lineNum">     196 </span>            : static int computesizes (int nums[], int *narray) {
+<span class="lineNum">     196 </span><span class="lineCov">      34743 : static int computesizes (int nums[], int *narray) {</span>
 <span class="lineNum">     197 </span>            :   int i;
 <span class="lineNum">     198 </span>            :   int twotoi;  /* 2^i */
-<span class="lineNum">     199 </span>            :   int a = 0;  /* number of elements smaller than 2^i */
-<span class="lineNum">     200 </span>            :   int na = 0;  /* number of elements to go to array part */
-<span class="lineNum">     201 </span>            :   int n = 0;  /* optimal size for array part */
-<span class="lineNum">     202 </span><span class="lineCov">      36453 :   for (i = 0, twotoi = 1; twotoi/2 &lt; *narray; i++, twotoi *= 2) {</span>
-<span class="lineNum">     203 </span><span class="lineCov">      61965 :     if (nums[i] &gt; 0) {</span>
-<span class="lineNum">     204 </span><span class="lineCov">      61699 :       a += nums[i];</span>
-<span class="lineNum">     205 </span><span class="lineCov">      61699 :       if (a &gt; twotoi/2) {  /* more than half elements present? */</span>
-<span class="lineNum">     206 </span>            :         n = twotoi;  /* optimal size (till now) */
-<span class="lineNum">     207 </span>            :         na = a;  /* all elements smaller than n will go to array part */
+<span class="lineNum">     199 </span><span class="lineCov">      34743 :   int a = 0;  /* number of elements smaller than 2^i */</span>
+<span class="lineNum">     200 </span><span class="lineCov">      34743 :   int na = 0;  /* number of elements to go to array part */</span>
+<span class="lineNum">     201 </span><span class="lineCov">      34743 :   int n = 0;  /* optimal size for array part */</span>
+<span class="lineNum">     202 </span><span class="lineCov">      71231 :   for (i = 0, twotoi = 1; twotoi/2 &lt; *narray; i++, twotoi *= 2) {</span>
+<span class="lineNum">     203 </span><span class="lineCov">      61385 :     if (nums[i] &gt; 0) {</span>
+<span class="lineNum">     204 </span><span class="lineCov">      61114 :       a += nums[i];</span>
+<span class="lineNum">     205 </span><span class="lineCov">      61114 :       if (a &gt; twotoi/2) {  /* more than half elements present? */</span>
+<span class="lineNum">     206 </span><span class="lineCov">      61067 :         n = twotoi;  /* optimal size (till now) */</span>
+<span class="lineNum">     207 </span><span class="lineCov">      61067 :         na = a;  /* all elements smaller than n will go to array part */</span>
 <span class="lineNum">     208 </span>            :       }
 <span class="lineNum">     209 </span>            :     }
-<span class="lineNum">     210 </span><span class="lineCov">      61965 :     if (a == *narray) break;  /* all elements already counted */</span>
+<span class="lineNum">     210 </span><span class="lineCov">      61385 :     if (a == *narray) break;  /* all elements already counted */</span>
 <span class="lineNum">     211 </span>            :   }
-<span class="lineNum">     212 </span><span class="lineCov">      49079 :   *narray = n;</span>
+<span class="lineNum">     212 </span><span class="lineCov">      34743 :   *narray = n;</span>
 <span class="lineNum">     213 </span>            :   lua_assert(*narray/2 &lt;= na &amp;&amp; na &lt;= *narray);
-<span class="lineNum">     214 </span>            :   return na;
+<span class="lineNum">     214 </span><span class="lineCov">      34743 :   return na;</span>
 <span class="lineNum">     215 </span>            : }
 <span class="lineNum">     216 </span>            : 
 <span class="lineNum">     217 </span>            : 
-<span class="lineNum">     218 </span><span class="lineCov">     162723 : static int countint (const TValue *key, int *nums) {</span>
-<span class="lineNum">     219 </span><span class="lineCov">     162723 :   int k = arrayindex(key);</span>
-<span class="lineNum">     220 </span><span class="lineCov">     162723 :   if (0 &lt; k &amp;&amp; k &lt;= MAXASIZE) {  /* is `key' an appropriate array index? */</span>
-<span class="lineNum">     221 </span><span class="lineCov">      24882 :     nums[luaO_ceillog2(k)]++;  /* count as such */</span>
-<span class="lineNum">     222 </span><span class="lineCov">      24882 :     return 1;</span>
+<span class="lineNum">     218 </span><span class="lineCov">      82054 : static int countint (const TValue *key, int *nums) {</span>
+<span class="lineNum">     219 </span><span class="lineCov">      82054 :   int k = arrayindex(key);</span>
+<span class="lineNum">     220 </span><span class="lineCov">      82054 :   if (0 &lt; k &amp;&amp; k &lt;= MAXASIZE) {  /* is `key' an appropriate array index? */</span>
+<span class="lineNum">     221 </span><span class="lineCov">      24654 :     nums[luaO_ceillog2(k)]++;  /* count as such */</span>
+<span class="lineNum">     222 </span><span class="lineCov">      24654 :     return 1;</span>
 <span class="lineNum">     223 </span>            :   }
 <span class="lineNum">     224 </span>            :   else
-<span class="lineNum">     225 </span>            :     return 0;
+<span class="lineNum">     225 </span><span class="lineCov">      57400 :     return 0;</span>
 <span class="lineNum">     226 </span>            : }
 <span class="lineNum">     227 </span>            : 
 <span class="lineNum">     228 </span>            : 
-<span class="lineNum">     229 </span><span class="lineCov">      49079 : static int numusearray (const Table *t, int *nums) {</span>
+<span class="lineNum">     229 </span><span class="lineCov">      34743 : static int numusearray (const Table *t, int *nums) {</span>
 <span class="lineNum">     230 </span>            :   int lg;
 <span class="lineNum">     231 </span>            :   int ttlg;  /* 2^lg */
-<span class="lineNum">     232 </span>            :   int ause = 0;  /* summation of `nums' */
-<span class="lineNum">     233 </span>            :   int i = 1;  /* count to traverse all array keys */
-<span class="lineNum">     234 </span><span class="lineCov">      37278 :   for (lg=0, ttlg=1; lg&lt;=MAXBITS; lg++, ttlg*=2) {  /* for each slice */</span>
-<span class="lineNum">     235 </span>            :     int lc = 0;  /* counter */
-<span class="lineNum">     236 </span>            :     int lim = ttlg;
-<span class="lineNum">     237 </span><span class="lineCov">      86357 :     if (lim &gt; t-&gt;sizearray) {</span>
-<span class="lineNum">     238 </span>            :       lim = t-&gt;sizearray;  /* adjust upper limit */
-<span class="lineNum">     239 </span><span class="lineCov">      49082 :       if (i &gt; lim)</span>
-<span class="lineNum">     240 </span>            :         break;  /* no more elements to count */
+<span class="lineNum">     232 </span><span class="lineCov">      34743 :   int ause = 0;  /* summation of `nums' */</span>
+<span class="lineNum">     233 </span><span class="lineCov">      34743 :   int i = 1;  /* count to traverse all array keys */</span>
+<span class="lineNum">     234 </span><span class="lineCov">      71696 :   for (lg=0, ttlg=1; lg&lt;=MAXBITS; lg++, ttlg*=2) {  /* for each slice */</span>
+<span class="lineNum">     235 </span><span class="lineCov">      71696 :     int lc = 0;  /* counter */</span>
+<span class="lineNum">     236 </span><span class="lineCov">      71696 :     int lim = ttlg;</span>
+<span class="lineNum">     237 </span><span class="lineCov">      71696 :     if (lim &gt; t-&gt;sizearray) {</span>
+<span class="lineNum">     238 </span><span class="lineCov">      34746 :       lim = t-&gt;sizearray;  /* adjust upper limit */</span>
+<span class="lineNum">     239 </span><span class="lineCov">      34746 :       if (i &gt; lim)</span>
+<span class="lineNum">     240 </span><span class="lineCov">      34743 :         break;  /* no more elements to count */</span>
 <span class="lineNum">     241 </span>            :     }
 <span class="lineNum">     242 </span>            :     /* count elements in range (2^(lg-1), 2^lg] */
-<span class="lineNum">     243 </span><span class="lineCov">      45250 :     for (; i &lt;= lim; i++) {</span>
-<span class="lineNum">     244 </span><span class="lineCov">      45250 :       if (!ttisnil(&amp;t-&gt;array[i-1]))</span>
-<span class="lineNum">     245 </span><span class="lineCov">      45180 :         lc++;</span>
+<span class="lineNum">     243 </span><span class="lineCov">      81880 :     for (; i &lt;= lim; i++) {</span>
+<span class="lineNum">     244 </span><span class="lineCov">      44927 :       if (!ttisnil(&amp;t-&gt;array[i-1]))</span>
+<span class="lineNum">     245 </span><span class="lineCov">      44855 :         lc++;</span>
 <span class="lineNum">     246 </span>            :     }
-<span class="lineNum">     247 </span><span class="lineCov">      37278 :     nums[lg] += lc;</span>
-<span class="lineNum">     248 </span><span class="lineCov">      37278 :     ause += lc;</span>
+<span class="lineNum">     247 </span><span class="lineCov">      36953 :     nums[lg] += lc;</span>
+<span class="lineNum">     248 </span><span class="lineCov">      36953 :     ause += lc;</span>
 <span class="lineNum">     249 </span>            :   }
-<span class="lineNum">     250 </span><span class="lineCov">      49079 :   return ause;</span>
+<span class="lineNum">     250 </span><span class="lineCov">      34743 :   return ause;</span>
 <span class="lineNum">     251 </span>            : }
 <span class="lineNum">     252 </span>            : 
 <span class="lineNum">     253 </span>            : 
-<span class="lineNum">     254 </span><span class="lineCov">      49079 : static int numusehash (const Table *t, int *nums, int *pnasize) {</span>
-<span class="lineNum">     255 </span>            :   int totaluse = 0;  /* total number of elements */
-<span class="lineNum">     256 </span>            :   int ause = 0;  /* summation of `nums' */
-<span class="lineNum">     257 </span><span class="lineCov">      49079 :   int i = sizenode(t);</span>
-<span class="lineNum">     258 </span><span class="lineCov">     191617 :   while (i--) {</span>
-<span class="lineNum">     259 </span><span class="lineCov">     142538 :     Node *n = &amp;t-&gt;node[i];</span>
-<span class="lineNum">     260 </span><span class="lineCov">     142538 :     if (!ttisnil(gval(n))) {</span>
-<span class="lineNum">     261 </span><span class="lineCov">     113644 :       ause += countint(gkey(n), nums);</span>
-<span class="lineNum">     262 </span><span class="lineCov">     113644 :       totaluse++;</span>
+<span class="lineNum">     254 </span><span class="lineCov">      34743 : static int numusehash (const Table *t, int *nums, int *pnasize) {</span>
+<span class="lineNum">     255 </span><span class="lineCov">      34743 :   int totaluse = 0;  /* total number of elements */</span>
+<span class="lineNum">     256 </span><span class="lineCov">      34743 :   int ause = 0;  /* summation of `nums' */</span>
+<span class="lineNum">     257 </span><span class="lineCov">      34743 :   int i = sizenode(t);</span>
+<span class="lineNum">     258 </span><span class="lineCov">     108077 :   while (i--) {</span>
+<span class="lineNum">     259 </span><span class="lineCov">      73334 :     Node *n = &amp;t-&gt;node[i];</span>
+<span class="lineNum">     260 </span><span class="lineCov">      73334 :     if (!ttisnil(gval(n))) {</span>
+<span class="lineNum">     261 </span><span class="lineCov">      47311 :       ause += countint(gkey(n), nums);</span>
+<span class="lineNum">     262 </span><span class="lineCov">      47311 :       totaluse++;</span>
 <span class="lineNum">     263 </span>            :     }
 <span class="lineNum">     264 </span>            :   }
-<span class="lineNum">     265 </span><span class="lineCov">      49079 :   *pnasize += ause;</span>
-<span class="lineNum">     266 </span><span class="lineCov">      49079 :   return totaluse;</span>
+<span class="lineNum">     265 </span><span class="lineCov">      34743 :   *pnasize += ause;</span>
+<span class="lineNum">     266 </span><span class="lineCov">      34743 :   return totaluse;</span>
 <span class="lineNum">     267 </span>            : }
 <span class="lineNum">     268 </span>            : 
 <span class="lineNum">     269 </span>            : 
-<span class="lineNum">     270 </span><span class="lineCov">      26662 : static void setarrayvector (lua_State *L, Table *t, int size) {</span>
+<span class="lineNum">     270 </span><span class="lineCov">      24635 : static void setarrayvector (lua_State *L, Table *t, int size) {</span>
 <span class="lineNum">     271 </span>            :   int i;
-<span class="lineNum">     272 </span><span class="lineCov">      26662 :   luaM_reallocvector(L, t-&gt;array, t-&gt;sizearray, size, TValue);</span>
-<span class="lineNum">     273 </span><span class="lineCov">      79176 :   for (i=t-&gt;sizearray; i&lt;size; i++)</span>
-<span class="lineNum">     274 </span><span class="lineCov">      52514 :      setnilvalue(&amp;t-&gt;array[i]);</span>
-<span class="lineNum">     275 </span><span class="lineCov">      26662 :   t-&gt;sizearray = size;</span>
-<span class="lineNum">     276 </span><span class="lineCov">      26662 : }</span>
+<span class="lineNum">     272 </span><span class="lineCov">      24635 :   luaM_reallocvector(L, t-&gt;array, t-&gt;sizearray, size, TValue);</span>
+<span class="lineNum">     273 </span><span class="lineCov">      75089 :   for (i=t-&gt;sizearray; i&lt;size; i++)</span>
+<span class="lineNum">     274 </span><span class="lineCov">      50454 :      setnilvalue(&amp;t-&gt;array[i]);</span>
+<span class="lineNum">     275 </span><span class="lineCov">      24635 :   t-&gt;sizearray = size;</span>
+<span class="lineNum">     276 </span><span class="lineCov">      24635 : }</span>
 <span class="lineNum">     277 </span>            : 
 <span class="lineNum">     278 </span>            : 
-<span class="lineNum">     279 </span><span class="lineCov">      52642 : static void setnodevector (lua_State *L, Table *t, int size) {</span>
+<span class="lineNum">     279 </span><span class="lineCov">      46631 : static void setnodevector (lua_State *L, Table *t, int size) {</span>
 <span class="lineNum">     280 </span>            :   int lsize;
-<span class="lineNum">     281 </span><span class="lineCov">      52642 :   if (size == 0) {  /* no elements to hash part? */</span>
-<span class="lineNum">     282 </span><span class="lineCov">      41250 :     t-&gt;node = cast(Node *, dummynode);  /* use common `dummynode' */</span>
-<span class="lineNum">     283 </span>            :     lsize = 0;
+<span class="lineNum">     281 </span><span class="lineCov">      46631 :   if (size == 0) {  /* no elements to hash part? */</span>
+<span class="lineNum">     282 </span><span class="lineCov">      34493 :     t-&gt;node = cast(Node *, dummynode);  /* use common `dummynode' */</span>
+<span class="lineNum">     283 </span><span class="lineCov">      34493 :     lsize = 0;</span>
 <span class="lineNum">     284 </span>            :   }
 <span class="lineNum">     285 </span>            :   else {
 <span class="lineNum">     286 </span>            :     int i;
-<span class="lineNum">     287 </span><span class="lineCov">      26585 :     lsize = luaO_ceillog2(size);</span>
-<span class="lineNum">     288 </span><span class="lineCov">      26585 :     if (lsize &gt; MAXBITS)</span>
+<span class="lineNum">     287 </span><span class="lineCov">      12138 :     lsize = luaO_ceillog2(size);</span>
+<span class="lineNum">     288 </span><span class="lineCov">      12138 :     if (lsize &gt; MAXBITS)</span>
 <span class="lineNum">     289 </span><span class="lineNoCov">          0 :       luaG_runerror(L, &quot;table overflow&quot;);</span>
-<span class="lineNum">     290 </span><span class="lineCov">      26585 :     size = twoto(lsize);</span>
-<span class="lineNum">     291 </span><span class="lineCov">      26585 :     t-&gt;node = luaM_newvector(L, size, Node);</span>
-<span class="lineNum">     292 </span><span class="lineCov">     263554 :     for (i=0; i&lt;size; i++) {</span>
-<span class="lineNum">     293 </span><span class="lineCov">     236969 :       Node *n = gnode(t, i);</span>
-<span class="lineNum">     294 </span><span class="lineCov">     236969 :       gnext(n) = NULL;</span>
-<span class="lineNum">     295 </span><span class="lineCov">     236969 :       setnilvalue(gkey(n));</span>
-<span class="lineNum">     296 </span><span class="lineCov">     236969 :       setnilvalue(gval(n));</span>
+<span class="lineNum">     290 </span><span class="lineCov">      12138 :     size = twoto(lsize);</span>
+<span class="lineNum">     291 </span><span class="lineCov">      12138 :     t-&gt;node = luaM_newvector(L, size, Node);</span>
+<span class="lineNum">     292 </span><span class="lineCov">     117686 :     for (i=0; i&lt;size; i++) {</span>
+<span class="lineNum">     293 </span><span class="lineCov">     105548 :       Node *n = gnode(t, i);</span>
+<span class="lineNum">     294 </span><span class="lineCov">     105548 :       gnext(n) = NULL;</span>
+<span class="lineNum">     295 </span><span class="lineCov">     105548 :       setnilvalue(gkey(n));</span>
+<span class="lineNum">     296 </span><span class="lineCov">     105548 :       setnilvalue(gval(n));</span>
 <span class="lineNum">     297 </span>            :     }
 <span class="lineNum">     298 </span>            :   }
-<span class="lineNum">     299 </span><span class="lineCov">      67835 :   t-&gt;lsizenode = cast_byte(lsize);</span>
-<span class="lineNum">     300 </span><span class="lineCov">      67835 :   t-&gt;lastfree = gnode(t, size);  /* all positions are free */</span>
-<span class="lineNum">     301 </span><span class="lineCov">      52642 : }</span>
+<span class="lineNum">     299 </span><span class="lineCov">      46631 :   t-&gt;lsizenode = cast_byte(lsize);</span>
+<span class="lineNum">     300 </span><span class="lineCov">      46631 :   t-&gt;lastfree = gnode(t, size);  /* all positions are free */</span>
+<span class="lineNum">     301 </span><span class="lineCov">      46631 : }</span>
 <span class="lineNum">     302 </span>            : 
 <span class="lineNum">     303 </span>            : 
-<span class="lineNum">     304 </span><span class="lineCov">      52642 : void luaH_resize (lua_State *L, Table *t, int nasize, int nhsize) {</span>
+<span class="lineNum">     304 </span><span class="lineCov">      36432 : void luaH_resize (lua_State *L, Table *t, int nasize, int nhsize) {</span>
 <span class="lineNum">     305 </span>            :   int i;
-<span class="lineNum">     306 </span><span class="lineCov">      52642 :   int oldasize = t-&gt;sizearray;</span>
-<span class="lineNum">     307 </span><span class="lineCov">      52642 :   int oldhsize = t-&gt;lsizenode;</span>
-<span class="lineNum">     308 </span><span class="lineCov">      52642 :   Node *nold = t-&gt;node;  /* save old hash ... */</span>
-<span class="lineNum">     309 </span><span class="lineCov">      52642 :   if (nasize &gt; oldasize)  /* array part must grow? */</span>
-<span class="lineNum">     310 </span><span class="lineCov">      26662 :     setarrayvector(L, t, nasize);</span>
+<span class="lineNum">     306 </span><span class="lineCov">      36432 :   int oldasize = t-&gt;sizearray;</span>
+<span class="lineNum">     307 </span><span class="lineCov">      36432 :   int oldhsize = t-&gt;lsizenode;</span>
+<span class="lineNum">     308 </span><span class="lineCov">      36432 :   Node *nold = t-&gt;node;  /* save old hash ... */</span>
+<span class="lineNum">     309 </span><span class="lineCov">      36432 :   if (nasize &gt; oldasize)  /* array part must grow? */</span>
+<span class="lineNum">     310 </span><span class="lineCov">      24635 :     setarrayvector(L, t, nasize);</span>
 <span class="lineNum">     311 </span>            :   /* create new hash part with appropriate size */
-<span class="lineNum">     312 </span><span class="lineCov">      52642 :   setnodevector(L, t, nhsize);</span>
-<span class="lineNum">     313 </span><span class="lineCov">      52642 :   if (nasize &lt; oldasize) {  /* array part must shrink? */</span>
+<span class="lineNum">     312 </span><span class="lineCov">      36432 :   setnodevector(L, t, nhsize);</span>
+<span class="lineNum">     313 </span><span class="lineCov">      36432 :   if (nasize &lt; oldasize) {  /* array part must shrink? */</span>
 <span class="lineNum">     314 </span><span class="lineNoCov">          0 :     t-&gt;sizearray = nasize;</span>
 <span class="lineNum">     315 </span>            :     /* re-insert elements from vanishing slice */
 <span class="lineNum">     316 </span><span class="lineNoCov">          0 :     for (i=nasize; i&lt;oldasize; i++) {</span>
@@ -387,42 +387,42 @@
 <span class="lineNum">     321 </span><span class="lineNoCov">          0 :     luaM_reallocvector(L, t-&gt;array, oldasize, nasize, TValue);</span>
 <span class="lineNum">     322 </span>            :   }
 <span class="lineNum">     323 </span>            :   /* re-insert elements from hash part */
-<span class="lineNum">     324 </span><span class="lineCov">     198743 :   for (i = twoto(oldhsize) - 1; i &gt;= 0; i--) {</span>
-<span class="lineNum">     325 </span><span class="lineCov">     146101 :     Node *old = nold+i;</span>
-<span class="lineNum">     326 </span><span class="lineCov">     146101 :     if (!ttisnil(gval(old))) {</span>
+<span class="lineNum">     324 </span><span class="lineCov">     111455 :   for (i = twoto(oldhsize) - 1; i &gt;= 0; i--) {</span>
+<span class="lineNum">     325 </span><span class="lineCov">      75023 :     Node *old = nold+i;</span>
+<span class="lineNum">     326 </span><span class="lineCov">      75023 :     if (!ttisnil(gval(old))) {</span>
 <span class="lineNum">     327 </span>            :       /* doesn't need barrier/invalidate cache, as entry was
 <span class="lineNum">     328 </span>            :          already present in the table */
-<span class="lineNum">     329 </span><span class="lineCov">     113644 :       setobjt2t(L, luaH_set(L, t, gkey(old)), gval(old));</span>
+<span class="lineNum">     329 </span><span class="lineCov">      47311 :       setobjt2t(L, luaH_set(L, t, gkey(old)), gval(old));</span>
 <span class="lineNum">     330 </span>            :     }
 <span class="lineNum">     331 </span>            :   }
-<span class="lineNum">     332 </span><span class="lineCov">      52642 :   if (!isdummy(nold))</span>
-<span class="lineNum">     333 </span><span class="lineCov">      20212 :     luaM_freearray(L, nold, cast(size_t, twoto(oldhsize))); /* free old array */</span>
-<span class="lineNum">     334 </span><span class="lineCov">      52642 : }</span>
+<span class="lineNum">     332 </span><span class="lineCov">      36432 :   if (!isdummy(nold))</span>
+<span class="lineNum">     333 </span><span class="lineCov">       8720 :     luaM_freearray(L, nold, cast(size_t, twoto(oldhsize))); /* free old array */</span>
+<span class="lineNum">     334 </span><span class="lineCov">      36432 : }</span>
 <span class="lineNum">     335 </span>            : 
 <span class="lineNum">     336 </span>            : 
-<span class="lineNum">     337 </span><span class="lineCov">       1990 : void luaH_resizearray (lua_State *L, Table *t, int nasize) {</span>
-<span class="lineNum">     338 </span><span class="lineCov">       1990 :   int nsize = isdummy(t-&gt;node) ? 0 : sizenode(t);</span>
-<span class="lineNum">     339 </span><span class="lineCov">       1990 :   luaH_resize(L, t, nasize, nsize);</span>
-<span class="lineNum">     340 </span><span class="lineCov">       1990 : }</span>
+<span class="lineNum">     337 </span><span class="lineCov">        219 : void luaH_resizearray (lua_State *L, Table *t, int nasize) {</span>
+<span class="lineNum">     338 </span><span class="lineCov">        219 :   int nsize = isdummy(t-&gt;node) ? 0 : sizenode(t);</span>
+<span class="lineNum">     339 </span><span class="lineCov">        219 :   luaH_resize(L, t, nasize, nsize);</span>
+<span class="lineNum">     340 </span><span class="lineCov">        219 : }</span>
 <span class="lineNum">     341 </span>            : 
 <span class="lineNum">     342 </span>            : 
-<span class="lineNum">     343 </span><span class="lineCov">      49079 : static void rehash (lua_State *L, Table *t, const TValue *ek) {</span>
+<span class="lineNum">     343 </span><span class="lineCov">      34743 : static void rehash (lua_State *L, Table *t, const TValue *ek) {</span>
 <span class="lineNum">     344 </span>            :   int nasize, na;
 <span class="lineNum">     345 </span>            :   int nums[MAXBITS+1];  /* nums[i] = number of keys with 2^(i-1) &lt; k &lt;= 2^i */
 <span class="lineNum">     346 </span>            :   int i;
 <span class="lineNum">     347 </span>            :   int totaluse;
-<span class="lineNum">     348 </span><span class="lineCov">      49079 :   for (i=0; i&lt;=MAXBITS; i++) nums[i] = 0;  /* reset counts */</span>
-<span class="lineNum">     349 </span><span class="lineCov">      49079 :   nasize = numusearray(t, nums);  /* count keys in array part */</span>
-<span class="lineNum">     350 </span>            :   totaluse = nasize;  /* all those keys are integer keys */
-<span class="lineNum">     351 </span><span class="lineCov">      49079 :   totaluse += numusehash(t, nums, &amp;nasize);  /* count keys in hash part */</span>
+<span class="lineNum">     348 </span><span class="lineCov">    1111776 :   for (i=0; i&lt;=MAXBITS; i++) nums[i] = 0;  /* reset counts */</span>
+<span class="lineNum">     349 </span><span class="lineCov">      34743 :   nasize = numusearray(t, nums);  /* count keys in array part */</span>
+<span class="lineNum">     350 </span><span class="lineCov">      34743 :   totaluse = nasize;  /* all those keys are integer keys */</span>
+<span class="lineNum">     351 </span><span class="lineCov">      34743 :   totaluse += numusehash(t, nums, &amp;nasize);  /* count keys in hash part */</span>
 <span class="lineNum">     352 </span>            :   /* count extra key */
-<span class="lineNum">     353 </span><span class="lineCov">      49079 :   nasize += countint(ek, nums);</span>
-<span class="lineNum">     354 </span><span class="lineCov">      49079 :   totaluse++;</span>
+<span class="lineNum">     353 </span><span class="lineCov">      34743 :   nasize += countint(ek, nums);</span>
+<span class="lineNum">     354 </span><span class="lineCov">      34743 :   totaluse++;</span>
 <span class="lineNum">     355 </span>            :   /* compute new size for array part */
-<span class="lineNum">     356 </span>            :   na = computesizes(nums, &amp;nasize);
+<span class="lineNum">     356 </span><span class="lineCov">      34743 :   na = computesizes(nums, &amp;nasize);</span>
 <span class="lineNum">     357 </span>            :   /* resize the table to new computed sizes */
-<span class="lineNum">     358 </span><span class="lineCov">      49079 :   luaH_resize(L, t, nasize, totaluse - na);</span>
-<span class="lineNum">     359 </span><span class="lineCov">      49079 : }</span>
+<span class="lineNum">     358 </span><span class="lineCov">      34743 :   luaH_resize(L, t, nasize, totaluse - na);</span>
+<span class="lineNum">     359 </span><span class="lineCov">      34743 : }</span>
 <span class="lineNum">     360 </span>            : 
 <span class="lineNum">     361 </span>            : 
 <span class="lineNum">     362 </span>            : 
@@ -431,32 +431,32 @@
 <span class="lineNum">     365 </span>            : */
 <span class="lineNum">     366 </span>            : 
 <span class="lineNum">     367 </span>            : 
-<span class="lineNum">     368 </span><span class="lineCov">      15193 : Table *luaH_new (lua_State *L) {</span>
-<span class="lineNum">     369 </span><span class="lineCov">      15193 :   Table *t = &amp;luaC_newobj(L, LUA_TTABLE, sizeof(Table), NULL, 0)-&gt;h;</span>
-<span class="lineNum">     370 </span><span class="lineCov">      15193 :   t-&gt;metatable = NULL;</span>
-<span class="lineNum">     371 </span><span class="lineCov">      15193 :   t-&gt;flags = cast_byte(~0);</span>
-<span class="lineNum">     372 </span><span class="lineCov">      15193 :   t-&gt;array = NULL;</span>
-<span class="lineNum">     373 </span><span class="lineCov">      15193 :   t-&gt;sizearray = 0;</span>
-<span class="lineNum">     374 </span>            :   setnodevector(L, t, 0);
-<span class="lineNum">     375 </span><span class="lineCov">      15193 :   return t;</span>
+<span class="lineNum">     368 </span><span class="lineCov">      10199 : Table *luaH_new (lua_State *L) {</span>
+<span class="lineNum">     369 </span><span class="lineCov">      10199 :   Table *t = &amp;luaC_newobj(L, LUA_TTABLE, sizeof(Table), NULL, 0)-&gt;h;</span>
+<span class="lineNum">     370 </span><span class="lineCov">      10199 :   t-&gt;metatable = NULL;</span>
+<span class="lineNum">     371 </span><span class="lineCov">      10199 :   t-&gt;flags = cast_byte(~0);</span>
+<span class="lineNum">     372 </span><span class="lineCov">      10199 :   t-&gt;array = NULL;</span>
+<span class="lineNum">     373 </span><span class="lineCov">      10199 :   t-&gt;sizearray = 0;</span>
+<span class="lineNum">     374 </span><span class="lineCov">      10199 :   setnodevector(L, t, 0);</span>
+<span class="lineNum">     375 </span><span class="lineCov">      10199 :   return t;</span>
 <span class="lineNum">     376 </span>            : }
 <span class="lineNum">     377 </span>            : 
 <span class="lineNum">     378 </span>            : 
-<span class="lineNum">     379 </span><span class="lineCov">      15099 : void luaH_free (lua_State *L, Table *t) {</span>
-<span class="lineNum">     380 </span><span class="lineCov">      15099 :   if (!isdummy(t-&gt;node))</span>
-<span class="lineNum">     381 </span><span class="lineCov">       6309 :     luaM_freearray(L, t-&gt;node, cast(size_t, sizenode(t)));</span>
-<span class="lineNum">     382 </span><span class="lineCov">      15099 :   luaM_freearray(L, t-&gt;array, t-&gt;sizearray);</span>
-<span class="lineNum">     383 </span><span class="lineCov">      15099 :   luaM_free(L, t);</span>
-<span class="lineNum">     384 </span><span class="lineCov">      15099 : }</span>
+<span class="lineNum">     379 </span><span class="lineCov">       9972 : void luaH_free (lua_State *L, Table *t) {</span>
+<span class="lineNum">     380 </span><span class="lineCov">       9972 :   if (!isdummy(t-&gt;node))</span>
+<span class="lineNum">     381 </span><span class="lineCov">       3233 :     luaM_freearray(L, t-&gt;node, cast(size_t, sizenode(t)));</span>
+<span class="lineNum">     382 </span><span class="lineCov">       9972 :   luaM_freearray(L, t-&gt;array, t-&gt;sizearray);</span>
+<span class="lineNum">     383 </span><span class="lineCov">       9972 :   luaM_free(L, t);</span>
+<span class="lineNum">     384 </span><span class="lineCov">       9972 : }</span>
 <span class="lineNum">     385 </span>            : 
 <span class="lineNum">     386 </span>            : 
-<span class="lineNum">     387 </span>            : static Node *getfreepos (Table *t) {
-<span class="lineNum">     388 </span><span class="lineCov">     213470 :   while (t-&gt;lastfree &gt; t-&gt;node) {</span>
-<span class="lineNum">     389 </span><span class="lineCov">     164391 :     t-&gt;lastfree--;</span>
-<span class="lineNum">     390 </span><span class="lineCov">     164391 :     if (ttisnil(gkey(t-&gt;lastfree)))</span>
-<span class="lineNum">     391 </span>            :       return t-&gt;lastfree;
+<span class="lineNum">     387 </span><span class="lineCov">      67748 : static Node *getfreepos (Table *t) {</span>
+<span class="lineNum">     388 </span><span class="lineCov">     107310 :   while (t-&gt;lastfree &gt; t-&gt;node) {</span>
+<span class="lineNum">     389 </span><span class="lineCov">      72567 :     t-&gt;lastfree--;</span>
+<span class="lineNum">     390 </span><span class="lineCov">      72567 :     if (ttisnil(gkey(t-&gt;lastfree)))</span>
+<span class="lineNum">     391 </span><span class="lineCov">      33005 :       return t-&gt;lastfree;</span>
 <span class="lineNum">     392 </span>            :   }
-<span class="lineNum">     393 </span>            :   return NULL;  /* could not find a free place */
+<span class="lineNum">     393 </span><span class="lineCov">      34743 :   return NULL;  /* could not find a free place */</span>
 <span class="lineNum">     394 </span>            : }
 <span class="lineNum">     395 </span>            : 
 <span class="lineNum">     396 </span>            : 
@@ -468,60 +468,60 @@
 <span class="lineNum">     402 </span>            : ** put new key in its main position; otherwise (colliding node is in its main
 <span class="lineNum">     403 </span>            : ** position), new key goes to an empty position.
 <span class="lineNum">     404 </span>            : */
-<span class="lineNum">     405 </span><span class="lineCov">     251081 : TValue *luaH_newkey (lua_State *L, Table *t, const TValue *key) {</span>
+<span class="lineNum">     405 </span><span class="lineCov">     125035 : TValue *luaH_newkey (lua_State *L, Table *t, const TValue *key) {</span>
 <span class="lineNum">     406 </span>            :   Node *mp;
-<span class="lineNum">     407 </span><span class="lineCov">     251081 :   if (ttisnil(key)) luaG_runerror(L, &quot;table index is nil&quot;);</span>
-<span class="lineNum">     408 </span><span class="lineCov">     251079 :   else if (ttisnumber(key) &amp;&amp; luai_numisnan(L, nvalue(key)))</span>
+<span class="lineNum">     407 </span><span class="lineCov">     125035 :   if (ttisnil(key)) luaG_runerror(L, &quot;table index is nil&quot;);</span>
+<span class="lineNum">     408 </span><span class="lineCov">     125033 :   else if (ttisnumber(key) &amp;&amp; luai_numisnan(L, nvalue(key)))</span>
 <span class="lineNum">     409 </span><span class="lineCov">          1 :     luaG_runerror(L, &quot;table index is NaN&quot;);</span>
-<span class="lineNum">     410 </span><span class="lineCov">     251078 :   mp = mainposition(t, key);</span>
-<span class="lineNum">     411 </span><span class="lineCov">     251078 :   if (!ttisnil(gval(mp)) || isdummy(mp)) {  /* main position is taken? */</span>
+<span class="lineNum">     410 </span><span class="lineCov">     125032 :   mp = mainposition(t, key);</span>
+<span class="lineNum">     411 </span><span class="lineCov">     125032 :   if (!ttisnil(gval(mp)) || isdummy(mp)) {  /* main position is taken? */</span>
 <span class="lineNum">     412 </span>            :     Node *othern;
-<span class="lineNum">     413 </span><span class="lineCov">     123576 :     Node *n = getfreepos(t);  /* get a free place */</span>
-<span class="lineNum">     414 </span><span class="lineCov">     123576 :     if (n == NULL) {  /* cannot find a free place? */</span>
-<span class="lineNum">     415 </span><span class="lineCov">      49079 :       rehash(L, t, key);  /* grow table */</span>
+<span class="lineNum">     413 </span><span class="lineCov">      67748 :     Node *n = getfreepos(t);  /* get a free place */</span>
+<span class="lineNum">     414 </span><span class="lineCov">      67748 :     if (n == NULL) {  /* cannot find a free place? */</span>
+<span class="lineNum">     415 </span><span class="lineCov">      34743 :       rehash(L, t, key);  /* grow table */</span>
 <span class="lineNum">     416 </span>            :       /* whatever called 'newkey' take care of TM cache and GC barrier */
-<span class="lineNum">     417 </span><span class="lineCov">      49079 :       return luaH_set(L, t, key);  /* insert key into grown table */</span>
+<span class="lineNum">     417 </span><span class="lineCov">      34743 :       return luaH_set(L, t, key);  /* insert key into grown table */</span>
 <span class="lineNum">     418 </span>            :     }
 <span class="lineNum">     419 </span>            :     lua_assert(!isdummy(n));
-<span class="lineNum">     420 </span><span class="lineCov">      74497 :     othern = mainposition(t, gkey(mp));</span>
-<span class="lineNum">     421 </span><span class="lineCov">      74497 :     if (othern != mp) {  /* is colliding node out of its main position? */</span>
+<span class="lineNum">     420 </span><span class="lineCov">      33005 :     othern = mainposition(t, gkey(mp));</span>
+<span class="lineNum">     421 </span><span class="lineCov">      33005 :     if (othern != mp) {  /* is colliding node out of its main position? */</span>
 <span class="lineNum">     422 </span>            :       /* yes; move colliding node into free position */
-<span class="lineNum">     423 </span><span class="lineCov">      15827 :       while (gnext(othern) != mp) othern = gnext(othern);  /* find previous */</span>
-<span class="lineNum">     424 </span><span class="lineCov">      13280 :       gnext(othern) = n;  /* redo the chain with `n' in place of `mp' */</span>
-<span class="lineNum">     425 </span><span class="lineCov">      13280 :       *n = *mp;  /* copy colliding node into free pos. (mp-&gt;next also goes) */</span>
-<span class="lineNum">     426 </span><span class="lineCov">      13280 :       gnext(mp) = NULL;  /* now `mp' is free */</span>
-<span class="lineNum">     427 </span><span class="lineCov">      13280 :       setnilvalue(gval(mp));</span>
+<span class="lineNum">     423 </span><span class="lineCov">       6467 :       while (gnext(othern) != mp) othern = gnext(othern);  /* find previous */</span>
+<span class="lineNum">     424 </span><span class="lineCov">       5435 :       gnext(othern) = n;  /* redo the chain with `n' in place of `mp' */</span>
+<span class="lineNum">     425 </span><span class="lineCov">       5435 :       *n = *mp;  /* copy colliding node into free pos. (mp-&gt;next also goes) */</span>
+<span class="lineNum">     426 </span><span class="lineCov">       5435 :       gnext(mp) = NULL;  /* now `mp' is free */</span>
+<span class="lineNum">     427 </span><span class="lineCov">       5435 :       setnilvalue(gval(mp));</span>
 <span class="lineNum">     428 </span>            :     }
 <span class="lineNum">     429 </span>            :     else {  /* colliding node is in its own main position */
 <span class="lineNum">     430 </span>            :       /* new node will go into free position */
-<span class="lineNum">     431 </span><span class="lineCov">      61217 :       gnext(n) = gnext(mp);  /* chain new position */</span>
-<span class="lineNum">     432 </span><span class="lineCov">      61217 :       gnext(mp) = n;</span>
-<span class="lineNum">     433 </span>            :       mp = n;
+<span class="lineNum">     431 </span><span class="lineCov">      27570 :       gnext(n) = gnext(mp);  /* chain new position */</span>
+<span class="lineNum">     432 </span><span class="lineCov">      27570 :       gnext(mp) = n;</span>
+<span class="lineNum">     433 </span><span class="lineCov">      27570 :       mp = n;</span>
 <span class="lineNum">     434 </span>            :     }
 <span class="lineNum">     435 </span>            :   }
-<span class="lineNum">     436 </span><span class="lineCov">     201999 :   setobj2t(L, gkey(mp), key);</span>
-<span class="lineNum">     437 </span><span class="lineCov">     201999 :   luaC_barrierback(L, obj2gco(t), key);</span>
+<span class="lineNum">     436 </span><span class="lineCov">      90289 :   setobj2t(L, gkey(mp), key);</span>
+<span class="lineNum">     437 </span><span class="lineCov">      90289 :   luaC_barrierback(L, obj2gco(t), key);</span>
 <span class="lineNum">     438 </span>            :   lua_assert(ttisnil(gval(mp)));
-<span class="lineNum">     439 </span><span class="lineCov">     201999 :   return gval(mp);</span>
+<span class="lineNum">     439 </span><span class="lineCov">      90289 :   return gval(mp);</span>
 <span class="lineNum">     440 </span>            : }
 <span class="lineNum">     441 </span>            : 
 <span class="lineNum">     442 </span>            : 
 <span class="lineNum">     443 </span>            : /*
 <span class="lineNum">     444 </span>            : ** search function for integers
 <span class="lineNum">     445 </span>            : */
-<span class="lineNum">     446 </span><span class="lineCov">     539053 : const TValue *luaH_getint (Table *t, int key) {</span>
+<span class="lineNum">     446 </span><span class="lineCov">     536231 : const TValue *luaH_getint (Table *t, int key) {</span>
 <span class="lineNum">     447 </span>            :   /* (1 &lt;= key &amp;&amp; key &lt;= t-&gt;sizearray) */
-<span class="lineNum">     448 </span><span class="lineCov">     539053 :   if (cast(unsigned int, key-1) &lt; cast(unsigned int, t-&gt;sizearray))</span>
-<span class="lineNum">     449 </span><span class="lineCov">     511837 :     return &amp;t-&gt;array[key-1];</span>
+<span class="lineNum">     448 </span><span class="lineCov">     536231 :   if (cast(unsigned int, key-1) &lt; cast(unsigned int, t-&gt;sizearray))</span>
+<span class="lineNum">     449 </span><span class="lineCov">     509462 :     return &amp;t-&gt;array[key-1];</span>
 <span class="lineNum">     450 </span>            :   else {
-<span class="lineNum">     451 </span><span class="lineCov">      27216 :     lua_Number nk = cast_num(key);</span>
-<span class="lineNum">     452 </span><span class="lineCov">      27216 :     Node *n = hashnum(t, nk);</span>
+<span class="lineNum">     451 </span><span class="lineCov">      26769 :     lua_Number nk = cast_num(key);</span>
+<span class="lineNum">     452 </span><span class="lineCov">      26769 :     Node *n = hashnum(t, nk);</span>
 <span class="lineNum">     453 </span>            :     do {  /* check whether `key' is somewhere in the chain */
-<span class="lineNum">     454 </span><span class="lineCov">      28299 :       if (ttisnumber(gkey(n)) &amp;&amp; luai_numeq(nvalue(gkey(n)), nk))</span>
-<span class="lineNum">     455 </span><span class="lineCov">        915 :         return gval(n);  /* that's it */</span>
-<span class="lineNum">     456 </span><span class="lineCov">      27384 :       else n = gnext(n);</span>
-<span class="lineNum">     457 </span><span class="lineCov">      27384 :     } while (n);</span>
-<span class="lineNum">     458 </span>            :     return luaO_nilobject;
+<span class="lineNum">     454 </span><span class="lineCov">      27338 :       if (ttisnumber(gkey(n)) &amp;&amp; luai_numeq(nvalue(gkey(n)), nk))</span>
+<span class="lineNum">     455 </span><span class="lineCov">        858 :         return gval(n);  /* that's it */</span>
+<span class="lineNum">     456 </span><span class="lineCov">      26480 :       else n = gnext(n);</span>
+<span class="lineNum">     457 </span><span class="lineCov">      26480 :     } while (n);</span>
+<span class="lineNum">     458 </span><span class="lineCov">      25911 :     return luaO_nilobject;</span>
 <span class="lineNum">     459 </span>            :   }
 <span class="lineNum">     460 </span>            : }
 <span class="lineNum">     461 </span>            : 
@@ -529,41 +529,41 @@
 <span class="lineNum">     463 </span>            : /*
 <span class="lineNum">     464 </span>            : ** search function for short strings
 <span class="lineNum">     465 </span>            : */
-<span class="lineNum">     466 </span><span class="lineCov">      40688 : const TValue *luaH_getstr (Table *t, TString *key) {</span>
-<span class="lineNum">     467 </span><span class="lineCov">     543506 :   Node *n = hashstr(t, key);</span>
+<span class="lineNum">     466 </span><span class="lineCov">     242526 : const TValue *luaH_getstr (Table *t, TString *key) {</span>
+<span class="lineNum">     467 </span><span class="lineCov">     242526 :   Node *n = hashstr(t, key);</span>
 <span class="lineNum">     468 </span>            :   lua_assert(key-&gt;tsv.tt == LUA_TSHRSTR);
 <span class="lineNum">     469 </span>            :   do {  /* check whether `key' is somewhere in the chain */
-<span class="lineNum">     470 </span><span class="lineCov">     649901 :     if (ttisshrstring(gkey(n)) &amp;&amp; eqshrstr(rawtsvalue(gkey(n)), key))</span>
-<span class="lineNum">     471 </span><span class="lineCov">     284538 :       return gval(n);  /* that's it */</span>
-<span class="lineNum">     472 </span><span class="lineCov">     365363 :     else n = gnext(n);</span>
-<span class="lineNum">     473 </span><span class="lineCov">     365363 :   } while (n);</span>
-<span class="lineNum">     474 </span>            :   return luaO_nilobject;
+<span class="lineNum">     470 </span><span class="lineCov">     298863 :     if (ttisshrstring(gkey(n)) &amp;&amp; eqshrstr(rawtsvalue(gkey(n)), key))</span>
+<span class="lineNum">     471 </span><span class="lineCov">     140474 :       return gval(n);  /* that's it */</span>
+<span class="lineNum">     472 </span><span class="lineCov">     158389 :     else n = gnext(n);</span>
+<span class="lineNum">     473 </span><span class="lineCov">     158389 :   } while (n);</span>
+<span class="lineNum">     474 </span><span class="lineCov">     102052 :   return luaO_nilobject;</span>
 <span class="lineNum">     475 </span>            : }
 <span class="lineNum">     476 </span>            : 
 <span class="lineNum">     477 </span>            : 
 <span class="lineNum">     478 </span>            : /*
 <span class="lineNum">     479 </span>            : ** main search function
 <span class="lineNum">     480 </span>            : */
-<span class="lineNum">     481 </span><span class="lineCov">     659559 : const TValue *luaH_get (Table *t, const TValue *key) {</span>
-<span class="lineNum">     482 </span><span class="lineCov">     659559 :   switch (ttype(key)) {</span>
-<span class="lineNum">     483 </span><span class="lineCov">     502818 :     case LUA_TSHRSTR: return luaH_getstr(t, rawtsvalue(key));</span>
-<span class="lineNum">     484 </span>            :     case LUA_TNIL: return luaO_nilobject;
-<span class="lineNum">     485 </span><span class="lineCov">     152330 :     case LUA_TNUMBER: {</span>
+<span class="lineNum">     481 </span><span class="lineCov">     386881 : const TValue *luaH_get (Table *t, const TValue *key) {</span>
+<span class="lineNum">     482 </span><span class="lineCov">     386881 :   switch (ttype(key)) {</span>
+<span class="lineNum">     483 </span><span class="lineCov">     234071 :     case LUA_TSHRSTR: return luaH_getstr(t, rawtsvalue(key));</span>
+<span class="lineNum">     484 </span><span class="lineCov">          4 :     case LUA_TNIL: return luaO_nilobject;</span>
+<span class="lineNum">     485 </span><span class="lineCov">     151366 :     case LUA_TNUMBER: {</span>
 <span class="lineNum">     486 </span>            :       int k;
-<span class="lineNum">     487 </span><span class="lineCov">     152330 :       lua_Number n = nvalue(key);</span>
-<span class="lineNum">     488 </span><span class="lineCov">     152330 :       lua_number2int(k, n);</span>
-<span class="lineNum">     489 </span><span class="lineCov">     152330 :       if (luai_numeq(cast_num(k), n)) /* index is int? */</span>
-<span class="lineNum">     490 </span><span class="lineCov">     152148 :         return luaH_getint(t, k);  /* use specialized version */</span>
+<span class="lineNum">     487 </span><span class="lineCov">     151366 :       lua_Number n = nvalue(key);</span>
+<span class="lineNum">     488 </span><span class="lineCov">     151366 :       lua_number2int(k, n);</span>
+<span class="lineNum">     489 </span><span class="lineCov">     151366 :       if (luai_numeq(cast_num(k), n)) /* index is int? */</span>
+<span class="lineNum">     490 </span><span class="lineCov">     151164 :         return luaH_getint(t, k);  /* use specialized version */</span>
 <span class="lineNum">     491 </span>            :       /* else go through */
 <span class="lineNum">     492 </span>            :     }
 <span class="lineNum">     493 </span>            :     default: {
-<span class="lineNum">     494 </span><span class="lineCov">       4589 :       Node *n = mainposition(t, key);</span>
+<span class="lineNum">     494 </span><span class="lineCov">       1642 :       Node *n = mainposition(t, key);</span>
 <span class="lineNum">     495 </span>            :       do {  /* check whether `key' is somewhere in the chain */
-<span class="lineNum">     496 </span><span class="lineCov">       5423 :         if (luaV_rawequalobj(gkey(n), key))</span>
-<span class="lineNum">     497 </span><span class="lineCov">       2358 :           return gval(n);  /* that's it */</span>
-<span class="lineNum">     498 </span><span class="lineCov">       3065 :         else n = gnext(n);</span>
-<span class="lineNum">     499 </span><span class="lineCov">       3065 :       } while (n);</span>
-<span class="lineNum">     500 </span>            :       return luaO_nilobject;
+<span class="lineNum">     496 </span><span class="lineCov">       2224 :         if (luaV_rawequalobj(gkey(n), key))</span>
+<span class="lineNum">     497 </span><span class="lineCov">        693 :           return gval(n);  /* that's it */</span>
+<span class="lineNum">     498 </span><span class="lineCov">       1531 :         else n = gnext(n);</span>
+<span class="lineNum">     499 </span><span class="lineCov">       1531 :       } while (n);</span>
+<span class="lineNum">     500 </span><span class="lineCov">        949 :       return luaO_nilobject;</span>
 <span class="lineNum">     501 </span>            :     }
 <span class="lineNum">     502 </span>            :   }
 <span class="lineNum">     503 </span>            : }
@@ -573,49 +573,49 @@
 <span class="lineNum">     507 </span>            : ** beware: when using this function you probably need to check a GC
 <span class="lineNum">     508 </span>            : ** barrier and invalidate the TM cache.
 <span class="lineNum">     509 </span>            : */
-<span class="lineNum">     510 </span><span class="lineCov">     336729 : TValue *luaH_set (lua_State *L, Table *t, const TValue *key) {</span>
-<span class="lineNum">     511 </span><span class="lineCov">     336729 :   const TValue *p = luaH_get(t, key);</span>
-<span class="lineNum">     512 </span><span class="lineCov">     336729 :   if (p != luaO_nilobject)</span>
-<span class="lineNum">     513 </span>            :     return cast(TValue *, p);
-<span class="lineNum">     514 </span><span class="lineCov">     206615 :   else return luaH_newkey(L, t, key);</span>
+<span class="lineNum">     510 </span><span class="lineCov">     149608 : TValue *luaH_set (lua_State *L, Table *t, const TValue *key) {</span>
+<span class="lineNum">     511 </span><span class="lineCov">     149608 :   const TValue *p = luaH_get(t, key);</span>
+<span class="lineNum">     512 </span><span class="lineCov">     149608 :   if (p != luaO_nilobject)</span>
+<span class="lineNum">     513 </span><span class="lineCov">      66237 :     return cast(TValue *, p);</span>
+<span class="lineNum">     514 </span><span class="lineCov">      83371 :   else return luaH_newkey(L, t, key);</span>
 <span class="lineNum">     515 </span>            : }
 <span class="lineNum">     516 </span>            : 
 <span class="lineNum">     517 </span>            : 
-<span class="lineNum">     518 </span><span class="lineCov">      89739 : void luaH_setint (lua_State *L, Table *t, int key, TValue *value) {</span>
-<span class="lineNum">     519 </span><span class="lineCov">      89739 :   const TValue *p = luaH_getint(t, key);</span>
+<span class="lineNum">     518 </span><span class="lineCov">      87947 : void luaH_setint (lua_State *L, Table *t, int key, TValue *value) {</span>
+<span class="lineNum">     519 </span><span class="lineCov">      87947 :   const TValue *p = luaH_getint(t, key);</span>
 <span class="lineNum">     520 </span>            :   TValue *cell;
-<span class="lineNum">     521 </span><span class="lineCov">      89739 :   if (p != luaO_nilobject)</span>
-<span class="lineNum">     522 </span>            :     cell = cast(TValue *, p);
+<span class="lineNum">     521 </span><span class="lineCov">      87947 :   if (p != luaO_nilobject)</span>
+<span class="lineNum">     522 </span><span class="lineCov">      87684 :     cell = cast(TValue *, p);</span>
 <span class="lineNum">     523 </span>            :   else {
 <span class="lineNum">     524 </span>            :     TValue k;
-<span class="lineNum">     525 </span><span class="lineCov">        249 :     setnvalue(&amp;k, cast_num(key));</span>
-<span class="lineNum">     526 </span><span class="lineCov">        249 :     cell = luaH_newkey(L, t, &amp;k);</span>
+<span class="lineNum">     525 </span><span class="lineCov">        263 :     setnvalue(&amp;k, cast_num(key));</span>
+<span class="lineNum">     526 </span><span class="lineCov">        263 :     cell = luaH_newkey(L, t, &amp;k);</span>
 <span class="lineNum">     527 </span>            :   }
-<span class="lineNum">     528 </span><span class="lineCov">      89739 :   setobj2t(L, cell, value);</span>
-<span class="lineNum">     529 </span><span class="lineCov">      89739 : }</span>
+<span class="lineNum">     528 </span><span class="lineCov">      87947 :   setobj2t(L, cell, value);</span>
+<span class="lineNum">     529 </span><span class="lineCov">      87947 : }</span>
 <span class="lineNum">     530 </span>            : 
 <span class="lineNum">     531 </span>            : 
-<span class="lineNum">     532 </span><span class="lineCov">          6 : static int unbound_search (Table *t, unsigned int j) {</span>
-<span class="lineNum">     533 </span>            :   unsigned int i = j;  /* i is zero or a present index */
-<span class="lineNum">     534 </span><span class="lineCov">          6 :   j++;</span>
+<span class="lineNum">     532 </span><span class="lineCov">          2 : static int unbound_search (Table *t, unsigned int j) {</span>
+<span class="lineNum">     533 </span><span class="lineCov">          2 :   unsigned int i = j;  /* i is zero or a present index */</span>
+<span class="lineNum">     534 </span><span class="lineCov">          2 :   j++;</span>
 <span class="lineNum">     535 </span>            :   /* find `i' and `j' such that i is present and j is not */
-<span class="lineNum">     536 </span><span class="lineCov">         12 :   while (!ttisnil(luaH_getint(t, j))) {</span>
-<span class="lineNum">     537 </span>            :     i = j;
+<span class="lineNum">     536 </span><span class="lineCov">          2 :   while (!ttisnil(luaH_getint(t, j))) {</span>
+<span class="lineNum">     537 </span><span class="lineNoCov">          0 :     i = j;</span>
 <span class="lineNum">     538 </span><span class="lineNoCov">          0 :     j *= 2;</span>
 <span class="lineNum">     539 </span><span class="lineNoCov">          0 :     if (j &gt; cast(unsigned int, MAX_INT)) {  /* overflow? */</span>
 <span class="lineNum">     540 </span>            :       /* table was built with bad purposes: resort to linear search */
-<span class="lineNum">     541 </span>            :       i = 1;
+<span class="lineNum">     541 </span><span class="lineNoCov">          0 :       i = 1;</span>
 <span class="lineNum">     542 </span><span class="lineNoCov">          0 :       while (!ttisnil(luaH_getint(t, i))) i++;</span>
 <span class="lineNum">     543 </span><span class="lineNoCov">          0 :       return i - 1;</span>
 <span class="lineNum">     544 </span>            :     }
 <span class="lineNum">     545 </span>            :   }
 <span class="lineNum">     546 </span>            :   /* now do a binary search between them */
-<span class="lineNum">     547 </span><span class="lineCov">          6 :   while (j - i &gt; 1) {</span>
+<span class="lineNum">     547 </span><span class="lineCov">          2 :   while (j - i &gt; 1) {</span>
 <span class="lineNum">     548 </span><span class="lineNoCov">          0 :     unsigned int m = (i+j)/2;</span>
 <span class="lineNum">     549 </span><span class="lineNoCov">          0 :     if (ttisnil(luaH_getint(t, m))) j = m;</span>
-<span class="lineNum">     550 </span>            :     else i = m;
+<span class="lineNum">     550 </span><span class="lineNoCov">          0 :     else i = m;</span>
 <span class="lineNum">     551 </span>            :   }
-<span class="lineNum">     552 </span><span class="lineCov">          6 :   return i;</span>
+<span class="lineNum">     552 </span><span class="lineCov">          2 :   return i;</span>
 <span class="lineNum">     553 </span>            : }
 <span class="lineNum">     554 </span>            : 
 <span class="lineNum">     555 </span>            : 
@@ -623,22 +623,22 @@
 <span class="lineNum">     557 </span>            : ** Try to find a boundary in table `t'. A `boundary' is an integer index
 <span class="lineNum">     558 </span>            : ** such that t[i] is non-nil and t[i+1] is nil (and 0 if t[1] is nil).
 <span class="lineNum">     559 </span>            : */
-<span class="lineNum">     560 </span><span class="lineCov">      20730 : int luaH_getn (Table *t) {</span>
-<span class="lineNum">     561 </span><span class="lineCov">      20730 :   unsigned int j = t-&gt;sizearray;</span>
-<span class="lineNum">     562 </span><span class="lineCov">      20730 :   if (j &gt; 0 &amp;&amp; ttisnil(&amp;t-&gt;array[j - 1])) {</span>
+<span class="lineNum">     560 </span><span class="lineCov">      18670 : int luaH_getn (Table *t) {</span>
+<span class="lineNum">     561 </span><span class="lineCov">      18670 :   unsigned int j = t-&gt;sizearray;</span>
+<span class="lineNum">     562 </span><span class="lineCov">      18670 :   if (j &gt; 0 &amp;&amp; ttisnil(&amp;t-&gt;array[j - 1])) {</span>
 <span class="lineNum">     563 </span>            :     /* there is a boundary in the array part: (binary) search for it */
-<span class="lineNum">     564 </span>            :     unsigned int i = 0;
+<span class="lineNum">     564 </span><span class="lineCov">      17797 :     unsigned int i = 0;</span>
 <span class="lineNum">     565 </span><span class="lineCov">      70992 :     while (j - i &gt; 1) {</span>
 <span class="lineNum">     566 </span><span class="lineCov">      53195 :       unsigned int m = (i+j)/2;</span>
 <span class="lineNum">     567 </span><span class="lineCov">      53195 :       if (ttisnil(&amp;t-&gt;array[m - 1])) j = m;</span>
-<span class="lineNum">     568 </span>            :       else i = m;
+<span class="lineNum">     568 </span><span class="lineCov">      50621 :       else i = m;</span>
 <span class="lineNum">     569 </span>            :     }
 <span class="lineNum">     570 </span><span class="lineCov">      17797 :     return i;</span>
 <span class="lineNum">     571 </span>            :   }
 <span class="lineNum">     572 </span>            :   /* else must find a boundary in hash part */
-<span class="lineNum">     573 </span><span class="lineCov">       2933 :   else if (isdummy(t-&gt;node))  /* hash part is empty? */</span>
-<span class="lineNum">     574 </span>            :     return j;  /* that is easy... */
-<span class="lineNum">     575 </span><span class="lineCov">          6 :   else return unbound_search(t, j);</span>
+<span class="lineNum">     573 </span><span class="lineCov">        873 :   else if (isdummy(t-&gt;node))  /* hash part is empty? */</span>
+<span class="lineNum">     574 </span><span class="lineCov">        871 :     return j;  /* that is easy... */</span>
+<span class="lineNum">     575 </span><span class="lineCov">          2 :   else return unbound_search(t, j);</span>
 <span class="lineNum">     576 </span>            : }
 <span class="lineNum">     577 </span>            : 
 <span class="lineNum">     578 </span>            : 

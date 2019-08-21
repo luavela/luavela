@@ -1,11 +1,10 @@
 # lua-Harness test suite
 
-This is a modified lua-Harness test suite from
-https://framagit.org/fperrad/lua-Harness. (Cloned from
-[119ee537](https://framagit.org/fperrad/lua-Harness/commit/119ee5376906813038f0f59c32bd806dceb26270))
+This is a carbon copy of the lua-Harness test suite from
+https://framagit.org/fperrad/lua-Harness. Cloned from commit
+[93b550fc](https://framagit.org/fperrad/lua-Harness/commit/93b550fc07b128c38cccb598c812ff18122a59c1).
 
-For lua-Harness license infomation see suite/COPYRIGHT.
+For lua-Harness license information see suite/COPYRIGHT.
 
-Currently we run with LuaJIT 2.0 (Lua 5.2 compat) profile with some tests
-modified to expect some functions to behave like Lua 5.1 does. For
-modifications, search for "UJIT:" comments.
+Currently we run the suite without any modifications, the profile is
+LuaJIT 2.0 (with Lua 5.2 compatibility enabled when appropriate).

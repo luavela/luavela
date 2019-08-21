@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2010-2018, Perrad Francois
+-- Copyright (C) 2010-2019, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -30,6 +30,7 @@ L<https://www.lua.org/manual/5.3/manual.html#9>
 require'tap'
 local profile = require'profile'
 local has_goto = _VERSION >= 'Lua 5.2' or jit
+local has_anno = _VERSION >= 'Lua 5.4'
 local loadstring = loadstring or load
 
 plan'no_plan'
@@ -64,10 +65,12 @@ function f()
     print "after"
 end
 ]]
-    if _VERSION == 'Lua 5.1' or _VERSION >= 'Lua 5.4' then
+    if _VERSION == 'Lua 5.1' then
         like(msg, "^[^:]+:%d+: no loop to break", "orphan break")
-    else
+    elseif _VERSION <= 'Lua 5.3' then
         like(msg, "^[^:]+:%d+: <break> at line 5 not inside a loop", "orphan break")
+    else
+        like(msg, "^[^:]+:%d+: break outside loop at line 5", "orphan break")
     end
 end
 
@@ -206,6 +209,17 @@ do --[[ syntax error ]]
 
     f, msg = loadstring [[while true f() end]]
     like(msg, ":%d+: 'do' expected near 'f", "while do")
+end
+
+if has_anno then
+    local f, msg = load [[local < bar > foo = 'bar']]
+    like(msg, "^[^:]+:%d+: unknown attribute 'bar'")
+
+    f, msg = load [[local <const> foo = 'bar'; foo = 'baz']]
+    like(msg, "^[^:]+:%d+: attempt to assign to const variable 'foo'")
+
+    f, msg = load [[local <toclose> foo = 'bar'; foo = 'baz']]
+    like(msg, "^[^:]+:%d+: attempt to assign to const variable 'foo'")
 end
 
 done_testing()

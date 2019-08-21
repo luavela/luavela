@@ -37,8 +37,7 @@ if not pcall(require, 'ffi') then
     os.exit(0)
 end
 
--- UJIT: don't run ffi.abi tests - 21 tests instead of 33
-plan(21)
+plan(33)
 
 is(_G.ffi, nil, "ffi not loaded by default")
 ffi = require'ffi'
@@ -49,8 +48,6 @@ do -- C
     type_ok(ffi.C, 'userdata', 'C')
 end
 
--- UJIT: ffi.abi is not supported
---[[
 do -- abi
     type_ok(ffi.abi('32bit'), 'boolean', "abi")
     type_ok(ffi.abi('64bit'), 'boolean')
@@ -68,7 +65,6 @@ do -- abi
                "^[^:]+:%d+: bad argument #1 to 'abi' %(string expected, got boolean%)",
                "function unpack missing size")
 end
---]]
 
 do -- alignof
     type_ok(ffi.alignof, 'function', "alignof")

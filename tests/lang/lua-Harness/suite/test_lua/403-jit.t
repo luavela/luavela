@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2018, Perrad Francois
+-- Copyright (C) 2018-2019, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -32,7 +32,7 @@ end
 
 local compiled_with_jit = jit.status()
 local has_jit_opt = compiled_with_jit
-local has_jit_util = false -- UJIT: we don't have jit.util.* methods
+local has_jit_util = (jit.version_num < 20100) and not ujit
 
 plan'no_plan'
 

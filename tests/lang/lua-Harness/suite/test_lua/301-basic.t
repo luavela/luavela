@@ -43,8 +43,11 @@ local has_newproxy = _VERSION == 'Lua 5.1'
 local has_rawlen = _VERSION >= 'Lua 5.2' or profile.luajit_compat52
 local has_unpack = _VERSION == 'Lua 5.1'
 local has_alias_unpack = profile.compat51
+local has_warn = _VERSION >= 'Lua 5.4'
 local has_xpcall52 = _VERSION >= 'Lua 5.2' or jit
 local has_xpcall53 = _VERSION >= 'Lua 5.3' or jit
+
+local lua = arg[-3] or arg[-1]
 
 plan'no_plan'
 
@@ -717,6 +720,39 @@ elseif has_alias_unpack then
     is(unpack, table.unpack, "alias unpack")
 else
     is(unpack, nil, "no unpack")
+end
+
+-- warn
+if has_warn then
+    is(warn('foo'), nil, "function warn")
+
+    local r, f = pcall(io.popen, lua .. [[ -e "warn'foo'" 2>&1]])
+    if r then
+        is(f:read'*l', 'Lua warning: foo', "warn called with popen")
+        is(f:read'*l', nil)
+        is(f:close(), true)
+    else
+        diag("io.popen not supported")
+    end
+
+    r, f = pcall(io.popen, lua .. [[ -e "warn('foo', 'bar')" 2>&1]])
+    if r then
+        is(f:read'*l', 'Lua warning: foobar', "warn called with popen")
+        is(f:read'*l', nil)
+        is(f:close(), true)
+    else
+        diag("io.popen not supported")
+    end
+
+    error_like(function () warn('foo', warn) end,
+               "^[^:]+:%d+: bad argument #2 to 'warn' %(string expected, got function%)",
+               "function warn (no arg)")
+
+    error_like(function () warn() end,
+               "^[^:]+:%d+: bad argument #1 to 'warn' %(string expected, got no value%)",
+               "function warn (no arg)")
+else
+    is(warn, nil, "no warn")
 end
 
 do -- xpcall

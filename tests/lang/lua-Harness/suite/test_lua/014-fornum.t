@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2009-2018, Perrad Francois
+-- Copyright (C) 2009-2019, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -90,9 +90,11 @@ end
 
 do
     local v = false
-    for i = 5, 7, 0 do
-        v = true
-        break -- avoid infinite loop with LuaJIT
+    if _VERSION <= 'Lua 5.3' then
+        for i = 5, 7, 0 do
+            v = true
+            break -- avoid infinite loop with LuaJIT
+        end
     end
     if jit then
         print("not ok 28 - for 5, 7, 0 # TODO # LuaJIT intentional.")

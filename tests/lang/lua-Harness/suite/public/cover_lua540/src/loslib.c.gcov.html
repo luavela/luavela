@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - Lua 5.4.0-work2 - src/loslib.c</title>
+  <title>LCOV - Lua 5.4.0-alpha - src/loslib.c</title>
   <link rel="stylesheet" type="text/css" href="../gcov.css">
 </head>
 
@@ -28,16 +28,16 @@
           </tr>
           <tr>
             <td class="headerItem">Test:</td>
-            <td class="headerValue">Lua 5.4.0-work2</td>
+            <td class="headerValue">Lua 5.4.0-alpha</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntry">126</td>
-            <td class="headerCovTableEntry">132</td>
-            <td class="headerCovTableEntryHi">95.5 %</td>
+            <td class="headerCovTableEntry">136</td>
+            <td class="headerCovTableEntry">143</td>
+            <td class="headerCovTableEntryHi">95.1 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2018-10-07 17:32:54</td>
+            <td class="headerValue">2019-06-13 19:44:19</td>
             <td></td>
           </tr>
           <tr>
@@ -65,7 +65,7 @@
 <pre class="sourceHeading">          Line data    Source code</pre>
 <pre class="source">
 <span class="lineNum">       1 </span>            : /*
-<span class="lineNum">       2 </span>            : ** $Id: loslib.c,v 1.66 2017/03/14 12:40:44 roberto Exp $
+<span class="lineNum">       2 </span>            : ** $Id: loslib.c $
 <span class="lineNum">       3 </span>            : ** Standard Operating System library
 <span class="lineNum">       4 </span>            : ** See Copyright Notice in lua.h
 <span class="lineNum">       5 </span>            : */
@@ -76,403 +76,402 @@
 <span class="lineNum">      10 </span>            : #include &quot;lprefix.h&quot;
 <span class="lineNum">      11 </span>            : 
 <span class="lineNum">      12 </span>            : 
-<span class="lineNum">      13 </span>            : #include &lt;errno.h&gt;
-<span class="lineNum">      14 </span>            : #include &lt;locale.h&gt;
-<span class="lineNum">      15 </span>            : #include &lt;stdlib.h&gt;
-<span class="lineNum">      16 </span>            : #include &lt;string.h&gt;
-<span class="lineNum">      17 </span>            : #include &lt;time.h&gt;
-<span class="lineNum">      18 </span>            : 
-<span class="lineNum">      19 </span>            : #include &quot;lua.h&quot;
-<span class="lineNum">      20 </span>            : 
-<span class="lineNum">      21 </span>            : #include &quot;lauxlib.h&quot;
-<span class="lineNum">      22 </span>            : #include &quot;lualib.h&quot;
+<span class="lineNum">      13 </span>            : #include &lt;locale.h&gt;
+<span class="lineNum">      14 </span>            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      15 </span>            : #include &lt;string.h&gt;
+<span class="lineNum">      16 </span>            : #include &lt;time.h&gt;
+<span class="lineNum">      17 </span>            : 
+<span class="lineNum">      18 </span>            : #include &quot;lua.h&quot;
+<span class="lineNum">      19 </span>            : 
+<span class="lineNum">      20 </span>            : #include &quot;lauxlib.h&quot;
+<span class="lineNum">      21 </span>            : #include &quot;lualib.h&quot;
+<span class="lineNum">      22 </span>            : 
 <span class="lineNum">      23 </span>            : 
-<span class="lineNum">      24 </span>            : 
-<span class="lineNum">      25 </span>            : /*
-<span class="lineNum">      26 </span>            : ** {==================================================================
-<span class="lineNum">      27 </span>            : ** List of valid conversion specifiers for the 'strftime' function;
-<span class="lineNum">      28 </span>            : ** options are grouped by length; group of length 2 start with '||'.
-<span class="lineNum">      29 </span>            : ** ===================================================================
-<span class="lineNum">      30 </span>            : */
-<span class="lineNum">      31 </span>            : #if !defined(LUA_STRFTIMEOPTIONS)       /* { */
-<span class="lineNum">      32 </span>            : 
-<span class="lineNum">      33 </span>            : /* options for ANSI C 89 (only 1-char options) */
-<span class="lineNum">      34 </span>            : #define L_STRFTIMEC89           &quot;aAbBcdHIjmMpSUwWxXyYZ%&quot;
-<span class="lineNum">      35 </span>            : 
-<span class="lineNum">      36 </span>            : /* options for ISO C 99 and POSIX */
-<span class="lineNum">      37 </span>            : #define L_STRFTIMEC99 &quot;aAbBcCdDeFgGhHIjmMnprRStTuUVwWxXyYzZ%&quot; \
-<span class="lineNum">      38 </span>            :     &quot;||&quot; &quot;EcECExEXEyEY&quot; &quot;OdOeOHOIOmOMOSOuOUOVOwOWOy&quot;  /* two-char options */
-<span class="lineNum">      39 </span>            : 
-<span class="lineNum">      40 </span>            : /* options for Windows */
-<span class="lineNum">      41 </span>            : #define L_STRFTIMEWIN &quot;aAbBcdHIjmMpSUwWxXyYzZ%&quot; \
-<span class="lineNum">      42 </span>            :     &quot;||&quot; &quot;#c#x#d#H#I#j#m#M#S#U#w#W#y#Y&quot;  /* two-char options */
-<span class="lineNum">      43 </span>            : 
-<span class="lineNum">      44 </span>            : #if defined(LUA_USE_WINDOWS)
-<span class="lineNum">      45 </span>            : #define LUA_STRFTIMEOPTIONS     L_STRFTIMEWIN
-<span class="lineNum">      46 </span>            : #elif defined(LUA_USE_C89)
-<span class="lineNum">      47 </span>            : #define LUA_STRFTIMEOPTIONS     L_STRFTIMEC89
-<span class="lineNum">      48 </span>            : #else  /* C99 specification */
-<span class="lineNum">      49 </span>            : #define LUA_STRFTIMEOPTIONS     L_STRFTIMEC99
-<span class="lineNum">      50 </span>            : #endif
-<span class="lineNum">      51 </span>            : 
-<span class="lineNum">      52 </span>            : #endif                                  /* } */
-<span class="lineNum">      53 </span>            : /* }================================================================== */
+<span class="lineNum">      24 </span>            : /*
+<span class="lineNum">      25 </span>            : ** {==================================================================
+<span class="lineNum">      26 </span>            : ** List of valid conversion specifiers for the 'strftime' function;
+<span class="lineNum">      27 </span>            : ** options are grouped by length; group of length 2 start with '||'.
+<span class="lineNum">      28 </span>            : ** ===================================================================
+<span class="lineNum">      29 </span>            : */
+<span class="lineNum">      30 </span>            : #if !defined(LUA_STRFTIMEOPTIONS)       /* { */
+<span class="lineNum">      31 </span>            : 
+<span class="lineNum">      32 </span>            : /* options for ANSI C 89 (only 1-char options) */
+<span class="lineNum">      33 </span>            : #define L_STRFTIMEC89           &quot;aAbBcdHIjmMpSUwWxXyYZ%&quot;
+<span class="lineNum">      34 </span>            : 
+<span class="lineNum">      35 </span>            : /* options for ISO C 99 and POSIX */
+<span class="lineNum">      36 </span>            : #define L_STRFTIMEC99 &quot;aAbBcCdDeFgGhHIjmMnprRStTuUVwWxXyYzZ%&quot; \
+<span class="lineNum">      37 </span>            :     &quot;||&quot; &quot;EcECExEXEyEY&quot; &quot;OdOeOHOIOmOMOSOuOUOVOwOWOy&quot;  /* two-char options */
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span>            : /* options for Windows */
+<span class="lineNum">      40 </span>            : #define L_STRFTIMEWIN &quot;aAbBcdHIjmMpSUwWxXyYzZ%&quot; \
+<span class="lineNum">      41 </span>            :     &quot;||&quot; &quot;#c#x#d#H#I#j#m#M#S#U#w#W#y#Y&quot;  /* two-char options */
+<span class="lineNum">      42 </span>            : 
+<span class="lineNum">      43 </span>            : #if defined(LUA_USE_WINDOWS)
+<span class="lineNum">      44 </span>            : #define LUA_STRFTIMEOPTIONS     L_STRFTIMEWIN
+<span class="lineNum">      45 </span>            : #elif defined(LUA_USE_C89)
+<span class="lineNum">      46 </span>            : #define LUA_STRFTIMEOPTIONS     L_STRFTIMEC89
+<span class="lineNum">      47 </span>            : #else  /* C99 specification */
+<span class="lineNum">      48 </span>            : #define LUA_STRFTIMEOPTIONS     L_STRFTIMEC99
+<span class="lineNum">      49 </span>            : #endif
+<span class="lineNum">      50 </span>            : 
+<span class="lineNum">      51 </span>            : #endif                                  /* } */
+<span class="lineNum">      52 </span>            : /* }================================================================== */
+<span class="lineNum">      53 </span>            : 
 <span class="lineNum">      54 </span>            : 
-<span class="lineNum">      55 </span>            : 
-<span class="lineNum">      56 </span>            : /*
-<span class="lineNum">      57 </span>            : ** {==================================================================
-<span class="lineNum">      58 </span>            : ** Configuration for time-related stuff
-<span class="lineNum">      59 </span>            : ** ===================================================================
-<span class="lineNum">      60 </span>            : */
-<span class="lineNum">      61 </span>            : 
-<span class="lineNum">      62 </span>            : #if !defined(l_time_t)          /* { */
-<span class="lineNum">      63 </span>            : /*
-<span class="lineNum">      64 </span>            : ** type to represent time_t in Lua
-<span class="lineNum">      65 </span>            : */
-<span class="lineNum">      66 </span>            : #define l_timet                 lua_Integer
-<span class="lineNum">      67 </span>            : #define l_pushtime(L,t)         lua_pushinteger(L,(lua_Integer)(t))
-<span class="lineNum">      68 </span>            : 
-<span class="lineNum">      69 </span>            : static time_t l_checktime (lua_State *L, int arg) {
-<span class="lineNum">      70 </span><span class="lineCov">          5 :   lua_Integer t = luaL_checkinteger(L, arg);</span>
-<span class="lineNum">      71 </span>            :   luaL_argcheck(L, (time_t)t == t, arg, &quot;time out-of-bounds&quot;);
-<span class="lineNum">      72 </span>            :   return (time_t)t;
-<span class="lineNum">      73 </span>            : }
-<span class="lineNum">      74 </span>            : 
-<span class="lineNum">      75 </span>            : #endif                          /* } */
+<span class="lineNum">      55 </span>            : /*
+<span class="lineNum">      56 </span>            : ** {==================================================================
+<span class="lineNum">      57 </span>            : ** Configuration for time-related stuff
+<span class="lineNum">      58 </span>            : ** ===================================================================
+<span class="lineNum">      59 </span>            : */
+<span class="lineNum">      60 </span>            : 
+<span class="lineNum">      61 </span>            : #if !defined(l_time_t)          /* { */
+<span class="lineNum">      62 </span>            : /*
+<span class="lineNum">      63 </span>            : ** type to represent time_t in Lua
+<span class="lineNum">      64 </span>            : */
+<span class="lineNum">      65 </span>            : #define l_timet                 lua_Integer
+<span class="lineNum">      66 </span>            : #define l_pushtime(L,t)         lua_pushinteger(L,(lua_Integer)(t))
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span><span class="lineCov">          6 : static time_t l_checktime (lua_State *L, int arg) {</span>
+<span class="lineNum">      69 </span><span class="lineCov">          6 :   lua_Integer t = luaL_checkinteger(L, arg);</span>
+<span class="lineNum">      70 </span>            :   luaL_argcheck(L, (time_t)t == t, arg, &quot;time out-of-bounds&quot;);
+<span class="lineNum">      71 </span><span class="lineCov">          6 :   return (time_t)t;</span>
+<span class="lineNum">      72 </span>            : }
+<span class="lineNum">      73 </span>            : 
+<span class="lineNum">      74 </span>            : #endif                          /* } */
+<span class="lineNum">      75 </span>            : 
 <span class="lineNum">      76 </span>            : 
-<span class="lineNum">      77 </span>            : 
-<span class="lineNum">      78 </span>            : #if !defined(l_gmtime)          /* { */
-<span class="lineNum">      79 </span>            : /*
-<span class="lineNum">      80 </span>            : ** By default, Lua uses gmtime/localtime, except when POSIX is available,
-<span class="lineNum">      81 </span>            : ** where it uses gmtime_r/localtime_r
-<span class="lineNum">      82 </span>            : */
-<span class="lineNum">      83 </span>            : 
-<span class="lineNum">      84 </span>            : #if defined(LUA_USE_POSIX)      /* { */
-<span class="lineNum">      85 </span>            : 
-<span class="lineNum">      86 </span>            : #define l_gmtime(t,r)           gmtime_r(t,r)
-<span class="lineNum">      87 </span>            : #define l_localtime(t,r)        localtime_r(t,r)
-<span class="lineNum">      88 </span>            : 
-<span class="lineNum">      89 </span>            : #else                           /* }{ */
-<span class="lineNum">      90 </span>            : 
-<span class="lineNum">      91 </span>            : /* ISO C definitions */
-<span class="lineNum">      92 </span>            : #define l_gmtime(t,r)           ((void)(r)-&gt;tm_sec, gmtime(t))
-<span class="lineNum">      93 </span>            : #define l_localtime(t,r)        ((void)(r)-&gt;tm_sec, localtime(t))
-<span class="lineNum">      94 </span>            : 
-<span class="lineNum">      95 </span>            : #endif                          /* } */
-<span class="lineNum">      96 </span>            : 
-<span class="lineNum">      97 </span>            : #endif                          /* } */
-<span class="lineNum">      98 </span>            : 
-<span class="lineNum">      99 </span>            : /* }================================================================== */
+<span class="lineNum">      77 </span>            : #if !defined(l_gmtime)          /* { */
+<span class="lineNum">      78 </span>            : /*
+<span class="lineNum">      79 </span>            : ** By default, Lua uses gmtime/localtime, except when POSIX is available,
+<span class="lineNum">      80 </span>            : ** where it uses gmtime_r/localtime_r
+<span class="lineNum">      81 </span>            : */
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : #if defined(LUA_USE_POSIX)      /* { */
+<span class="lineNum">      84 </span>            : 
+<span class="lineNum">      85 </span>            : #define l_gmtime(t,r)           gmtime_r(t,r)
+<span class="lineNum">      86 </span>            : #define l_localtime(t,r)        localtime_r(t,r)
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            : #else                           /* }{ */
+<span class="lineNum">      89 </span>            : 
+<span class="lineNum">      90 </span>            : /* ISO C definitions */
+<span class="lineNum">      91 </span>            : #define l_gmtime(t,r)           ((void)(r)-&gt;tm_sec, gmtime(t))
+<span class="lineNum">      92 </span>            : #define l_localtime(t,r)        ((void)(r)-&gt;tm_sec, localtime(t))
+<span class="lineNum">      93 </span>            : 
+<span class="lineNum">      94 </span>            : #endif                          /* } */
+<span class="lineNum">      95 </span>            : 
+<span class="lineNum">      96 </span>            : #endif                          /* } */
+<span class="lineNum">      97 </span>            : 
+<span class="lineNum">      98 </span>            : /* }================================================================== */
+<span class="lineNum">      99 </span>            : 
 <span class="lineNum">     100 </span>            : 
-<span class="lineNum">     101 </span>            : 
-<span class="lineNum">     102 </span>            : /*
-<span class="lineNum">     103 </span>            : ** {==================================================================
-<span class="lineNum">     104 </span>            : ** Configuration for 'tmpnam':
-<span class="lineNum">     105 </span>            : ** By default, Lua uses tmpnam except when POSIX is available, where
-<span class="lineNum">     106 </span>            : ** it uses mkstemp.
-<span class="lineNum">     107 </span>            : ** ===================================================================
-<span class="lineNum">     108 </span>            : */
-<span class="lineNum">     109 </span>            : #if !defined(lua_tmpnam)        /* { */
-<span class="lineNum">     110 </span>            : 
-<span class="lineNum">     111 </span>            : #if defined(LUA_USE_POSIX)      /* { */
-<span class="lineNum">     112 </span>            : 
-<span class="lineNum">     113 </span>            : #include &lt;unistd.h&gt;
-<span class="lineNum">     114 </span>            : 
-<span class="lineNum">     115 </span>            : #define LUA_TMPNAMBUFSIZE       32
-<span class="lineNum">     116 </span>            : 
-<span class="lineNum">     117 </span>            : #if !defined(LUA_TMPNAMTEMPLATE)
-<span class="lineNum">     118 </span>            : #define LUA_TMPNAMTEMPLATE      &quot;/tmp/lua_XXXXXX&quot;
-<span class="lineNum">     119 </span>            : #endif
-<span class="lineNum">     120 </span>            : 
-<span class="lineNum">     121 </span>            : #define lua_tmpnam(b,e) { \
-<span class="lineNum">     122 </span>            :         strcpy(b, LUA_TMPNAMTEMPLATE); \
-<span class="lineNum">     123 </span>            :         e = mkstemp(b); \
-<span class="lineNum">     124 </span>            :         if (e != -1) close(e); \
-<span class="lineNum">     125 </span>            :         e = (e == -1); }
-<span class="lineNum">     126 </span>            : 
-<span class="lineNum">     127 </span>            : #else                           /* }{ */
-<span class="lineNum">     128 </span>            : 
-<span class="lineNum">     129 </span>            : /* ISO C definitions */
-<span class="lineNum">     130 </span>            : #define LUA_TMPNAMBUFSIZE       L_tmpnam
-<span class="lineNum">     131 </span>            : #define lua_tmpnam(b,e)         { e = (tmpnam(b) == NULL); }
-<span class="lineNum">     132 </span>            : 
-<span class="lineNum">     133 </span>            : #endif                          /* } */
-<span class="lineNum">     134 </span>            : 
-<span class="lineNum">     135 </span>            : #endif                          /* } */
-<span class="lineNum">     136 </span>            : /* }================================================================== */
+<span class="lineNum">     101 </span>            : /*
+<span class="lineNum">     102 </span>            : ** {==================================================================
+<span class="lineNum">     103 </span>            : ** Configuration for 'tmpnam':
+<span class="lineNum">     104 </span>            : ** By default, Lua uses tmpnam except when POSIX is available, where
+<span class="lineNum">     105 </span>            : ** it uses mkstemp.
+<span class="lineNum">     106 </span>            : ** ===================================================================
+<span class="lineNum">     107 </span>            : */
+<span class="lineNum">     108 </span>            : #if !defined(lua_tmpnam)        /* { */
+<span class="lineNum">     109 </span>            : 
+<span class="lineNum">     110 </span>            : #if defined(LUA_USE_POSIX)      /* { */
+<span class="lineNum">     111 </span>            : 
+<span class="lineNum">     112 </span>            : #include &lt;unistd.h&gt;
+<span class="lineNum">     113 </span>            : 
+<span class="lineNum">     114 </span>            : #define LUA_TMPNAMBUFSIZE       32
+<span class="lineNum">     115 </span>            : 
+<span class="lineNum">     116 </span>            : #if !defined(LUA_TMPNAMTEMPLATE)
+<span class="lineNum">     117 </span>            : #define LUA_TMPNAMTEMPLATE      &quot;/tmp/lua_XXXXXX&quot;
+<span class="lineNum">     118 </span>            : #endif
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : #define lua_tmpnam(b,e) { \
+<span class="lineNum">     121 </span>            :         strcpy(b, LUA_TMPNAMTEMPLATE); \
+<span class="lineNum">     122 </span>            :         e = mkstemp(b); \
+<span class="lineNum">     123 </span>            :         if (e != -1) close(e); \
+<span class="lineNum">     124 </span>            :         e = (e == -1); }
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            : #else                           /* }{ */
+<span class="lineNum">     127 </span>            : 
+<span class="lineNum">     128 </span>            : /* ISO C definitions */
+<span class="lineNum">     129 </span>            : #define LUA_TMPNAMBUFSIZE       L_tmpnam
+<span class="lineNum">     130 </span>            : #define lua_tmpnam(b,e)         { e = (tmpnam(b) == NULL); }
+<span class="lineNum">     131 </span>            : 
+<span class="lineNum">     132 </span>            : #endif                          /* } */
+<span class="lineNum">     133 </span>            : 
+<span class="lineNum">     134 </span>            : #endif                          /* } */
+<span class="lineNum">     135 </span>            : /* }================================================================== */
+<span class="lineNum">     136 </span>            : 
 <span class="lineNum">     137 </span>            : 
 <span class="lineNum">     138 </span>            : 
 <span class="lineNum">     139 </span>            : 
-<span class="lineNum">     140 </span>            : 
-<span class="lineNum">     141 </span><span class="lineCov">          8 : static int os_execute (lua_State *L) {</span>
-<span class="lineNum">     142 </span><span class="lineCov">          8 :   const char *cmd = luaL_optstring(L, 1, NULL);</span>
-<span class="lineNum">     143 </span><span class="lineCov">          8 :   int stat = system(cmd);</span>
-<span class="lineNum">     144 </span><span class="lineCov">          8 :   if (cmd != NULL)</span>
-<span class="lineNum">     145 </span><span class="lineCov">          7 :     return luaL_execresult(L, stat);</span>
-<span class="lineNum">     146 </span>            :   else {
-<span class="lineNum">     147 </span><span class="lineCov">          1 :     lua_pushboolean(L, stat);  /* true if there is a shell */</span>
-<span class="lineNum">     148 </span><span class="lineCov">          1 :     return 1;</span>
-<span class="lineNum">     149 </span>            :   }
-<span class="lineNum">     150 </span>            : }
+<span class="lineNum">     140 </span><span class="lineCov">          8 : static int os_execute (lua_State *L) {</span>
+<span class="lineNum">     141 </span><span class="lineCov">          8 :   const char *cmd = luaL_optstring(L, 1, NULL);</span>
+<span class="lineNum">     142 </span><span class="lineCov">          8 :   int stat = system(cmd);</span>
+<span class="lineNum">     143 </span><span class="lineCov">          8 :   if (cmd != NULL)</span>
+<span class="lineNum">     144 </span><span class="lineCov">          7 :     return luaL_execresult(L, stat);</span>
+<span class="lineNum">     145 </span>            :   else {
+<span class="lineNum">     146 </span><span class="lineCov">          1 :     lua_pushboolean(L, stat);  /* true if there is a shell */</span>
+<span class="lineNum">     147 </span><span class="lineCov">          1 :     return 1;</span>
+<span class="lineNum">     148 </span>            :   }
+<span class="lineNum">     149 </span>            : }
+<span class="lineNum">     150 </span>            : 
 <span class="lineNum">     151 </span>            : 
-<span class="lineNum">     152 </span>            : 
-<span class="lineNum">     153 </span><span class="lineCov">         31 : static int os_remove (lua_State *L) {</span>
-<span class="lineNum">     154 </span><span class="lineCov">         31 :   const char *filename = luaL_checkstring(L, 1);</span>
-<span class="lineNum">     155 </span><span class="lineCov">         31 :   return luaL_fileresult(L, remove(filename) == 0, filename);</span>
-<span class="lineNum">     156 </span>            : }
+<span class="lineNum">     152 </span><span class="lineCov">         31 : static int os_remove (lua_State *L) {</span>
+<span class="lineNum">     153 </span><span class="lineCov">         31 :   const char *filename = luaL_checkstring(L, 1);</span>
+<span class="lineNum">     154 </span><span class="lineCov">         31 :   return luaL_fileresult(L, remove(filename) == 0, filename);</span>
+<span class="lineNum">     155 </span>            : }
+<span class="lineNum">     156 </span>            : 
 <span class="lineNum">     157 </span>            : 
-<span class="lineNum">     158 </span>            : 
-<span class="lineNum">     159 </span><span class="lineCov">          2 : static int os_rename (lua_State *L) {</span>
-<span class="lineNum">     160 </span><span class="lineCov">          2 :   const char *fromname = luaL_checkstring(L, 1);</span>
-<span class="lineNum">     161 </span><span class="lineCov">          2 :   const char *toname = luaL_checkstring(L, 2);</span>
-<span class="lineNum">     162 </span><span class="lineCov">          2 :   return luaL_fileresult(L, rename(fromname, toname) == 0, NULL);</span>
-<span class="lineNum">     163 </span>            : }
+<span class="lineNum">     158 </span><span class="lineCov">          2 : static int os_rename (lua_State *L) {</span>
+<span class="lineNum">     159 </span><span class="lineCov">          2 :   const char *fromname = luaL_checkstring(L, 1);</span>
+<span class="lineNum">     160 </span><span class="lineCov">          2 :   const char *toname = luaL_checkstring(L, 2);</span>
+<span class="lineNum">     161 </span><span class="lineCov">          2 :   return luaL_fileresult(L, rename(fromname, toname) == 0, NULL);</span>
+<span class="lineNum">     162 </span>            : }
+<span class="lineNum">     163 </span>            : 
 <span class="lineNum">     164 </span>            : 
-<span class="lineNum">     165 </span>            : 
-<span class="lineNum">     166 </span><span class="lineCov">          2 : static int os_tmpname (lua_State *L) {</span>
-<span class="lineNum">     167 </span>            :   char buff[LUA_TMPNAMBUFSIZE];
-<span class="lineNum">     168 </span>            :   int err;
-<span class="lineNum">     169 </span><span class="lineCov">          2 :   lua_tmpnam(buff, err);</span>
-<span class="lineNum">     170 </span><span class="lineCov">          2 :   if (err)</span>
-<span class="lineNum">     171 </span><span class="lineNoCov">          0 :     return luaL_error(L, &quot;unable to generate a unique filename&quot;);</span>
-<span class="lineNum">     172 </span><span class="lineCov">          2 :   lua_pushstring(L, buff);</span>
-<span class="lineNum">     173 </span><span class="lineCov">          2 :   return 1;</span>
-<span class="lineNum">     174 </span>            : }
+<span class="lineNum">     165 </span><span class="lineCov">          2 : static int os_tmpname (lua_State *L) {</span>
+<span class="lineNum">     166 </span>            :   char buff[LUA_TMPNAMBUFSIZE];
+<span class="lineNum">     167 </span>            :   int err;
+<span class="lineNum">     168 </span><span class="lineCov">          2 :   lua_tmpnam(buff, err);</span>
+<span class="lineNum">     169 </span><span class="lineCov">          2 :   if (err)</span>
+<span class="lineNum">     170 </span><span class="lineNoCov">          0 :     return luaL_error(L, &quot;unable to generate a unique filename&quot;);</span>
+<span class="lineNum">     171 </span><span class="lineCov">          2 :   lua_pushstring(L, buff);</span>
+<span class="lineNum">     172 </span><span class="lineCov">          2 :   return 1;</span>
+<span class="lineNum">     173 </span>            : }
+<span class="lineNum">     174 </span>            : 
 <span class="lineNum">     175 </span>            : 
-<span class="lineNum">     176 </span>            : 
-<span class="lineNum">     177 </span><span class="lineCov">          2 : static int os_getenv (lua_State *L) {</span>
-<span class="lineNum">     178 </span><span class="lineCov">          2 :   lua_pushstring(L, getenv(luaL_checkstring(L, 1)));  /* if NULL push nil */</span>
-<span class="lineNum">     179 </span><span class="lineCov">          2 :   return 1;</span>
-<span class="lineNum">     180 </span>            : }
+<span class="lineNum">     176 </span><span class="lineCov">          2 : static int os_getenv (lua_State *L) {</span>
+<span class="lineNum">     177 </span><span class="lineCov">          2 :   lua_pushstring(L, getenv(luaL_checkstring(L, 1)));  /* if NULL push nil */</span>
+<span class="lineNum">     178 </span><span class="lineCov">          2 :   return 1;</span>
+<span class="lineNum">     179 </span>            : }
+<span class="lineNum">     180 </span>            : 
 <span class="lineNum">     181 </span>            : 
-<span class="lineNum">     182 </span>            : 
-<span class="lineNum">     183 </span><span class="lineCov">          2 : static int os_clock (lua_State *L) {</span>
-<span class="lineNum">     184 </span><span class="lineCov">          2 :   lua_pushnumber(L, ((lua_Number)clock())/(lua_Number)CLOCKS_PER_SEC);</span>
-<span class="lineNum">     185 </span><span class="lineCov">          2 :   return 1;</span>
-<span class="lineNum">     186 </span>            : }
+<span class="lineNum">     182 </span><span class="lineCov">          2 : static int os_clock (lua_State *L) {</span>
+<span class="lineNum">     183 </span><span class="lineCov">          2 :   lua_pushnumber(L, ((lua_Number)clock())/(lua_Number)CLOCKS_PER_SEC);</span>
+<span class="lineNum">     184 </span><span class="lineCov">          2 :   return 1;</span>
+<span class="lineNum">     185 </span>            : }
+<span class="lineNum">     186 </span>            : 
 <span class="lineNum">     187 </span>            : 
-<span class="lineNum">     188 </span>            : 
-<span class="lineNum">     189 </span>            : /*
-<span class="lineNum">     190 </span>            : ** {======================================================
-<span class="lineNum">     191 </span>            : ** Time/Date operations
-<span class="lineNum">     192 </span>            : ** { year=%Y, month=%m, day=%d, hour=%H, min=%M, sec=%S,
-<span class="lineNum">     193 </span>            : **   wday=%w+1, yday=%j, isdst=? }
-<span class="lineNum">     194 </span>            : ** =======================================================
-<span class="lineNum">     195 </span>            : */
-<span class="lineNum">     196 </span>            : 
-<span class="lineNum">     197 </span>            : static void setfield (lua_State *L, const char *key, int value) {
-<span class="lineNum">     198 </span><span class="lineCov">         16 :   lua_pushinteger(L, value);</span>
-<span class="lineNum">     199 </span><span class="lineCov">         16 :   lua_setfield(L, -2, key);</span>
-<span class="lineNum">     200 </span>            : }
-<span class="lineNum">     201 </span>            : 
-<span class="lineNum">     202 </span><span class="lineCov">          2 : static void setboolfield (lua_State *L, const char *key, int value) {</span>
-<span class="lineNum">     203 </span><span class="lineCov">          2 :   if (value &lt; 0)  /* undefined? */</span>
-<span class="lineNum">     204 </span>            :     return;  /* does not set field */
-<span class="lineNum">     205 </span><span class="lineCov">          2 :   lua_pushboolean(L, value);</span>
-<span class="lineNum">     206 </span><span class="lineCov">          2 :   lua_setfield(L, -2, key);</span>
-<span class="lineNum">     207 </span>            : }
+<span class="lineNum">     188 </span>            : /*
+<span class="lineNum">     189 </span>            : ** {======================================================
+<span class="lineNum">     190 </span>            : ** Time/Date operations
+<span class="lineNum">     191 </span>            : ** { year=%Y, month=%m, day=%d, hour=%H, min=%M, sec=%S,
+<span class="lineNum">     192 </span>            : **   wday=%w+1, yday=%j, isdst=? }
+<span class="lineNum">     193 </span>            : ** =======================================================
+<span class="lineNum">     194 </span>            : */
+<span class="lineNum">     195 </span>            : 
+<span class="lineNum">     196 </span><span class="lineCov">         16 : static void setfield (lua_State *L, const char *key, int value) {</span>
+<span class="lineNum">     197 </span><span class="lineCov">         16 :   lua_pushinteger(L, value);</span>
+<span class="lineNum">     198 </span><span class="lineCov">         16 :   lua_setfield(L, -2, key);</span>
+<span class="lineNum">     199 </span><span class="lineCov">         16 : }</span>
+<span class="lineNum">     200 </span>            : 
+<span class="lineNum">     201 </span><span class="lineCov">          2 : static void setboolfield (lua_State *L, const char *key, int value) {</span>
+<span class="lineNum">     202 </span><span class="lineCov">          2 :   if (value &lt; 0)  /* undefined? */</span>
+<span class="lineNum">     203 </span><span class="lineNoCov">          0 :     return;  /* does not set field */</span>
+<span class="lineNum">     204 </span><span class="lineCov">          2 :   lua_pushboolean(L, value);</span>
+<span class="lineNum">     205 </span><span class="lineCov">          2 :   lua_setfield(L, -2, key);</span>
+<span class="lineNum">     206 </span>            : }
+<span class="lineNum">     207 </span>            : 
 <span class="lineNum">     208 </span>            : 
-<span class="lineNum">     209 </span>            : 
-<span class="lineNum">     210 </span>            : /*
-<span class="lineNum">     211 </span>            : ** Set all fields from structure 'tm' in the table on top of the stack
-<span class="lineNum">     212 </span>            : */
-<span class="lineNum">     213 </span><span class="lineCov">          2 : static void setallfields (lua_State *L, struct tm *stm) {</span>
-<span class="lineNum">     214 </span><span class="lineCov">          2 :   setfield(L, &quot;sec&quot;, stm-&gt;tm_sec);</span>
-<span class="lineNum">     215 </span><span class="lineCov">          2 :   setfield(L, &quot;min&quot;, stm-&gt;tm_min);</span>
-<span class="lineNum">     216 </span><span class="lineCov">          2 :   setfield(L, &quot;hour&quot;, stm-&gt;tm_hour);</span>
-<span class="lineNum">     217 </span><span class="lineCov">          2 :   setfield(L, &quot;day&quot;, stm-&gt;tm_mday);</span>
-<span class="lineNum">     218 </span><span class="lineCov">          2 :   setfield(L, &quot;month&quot;, stm-&gt;tm_mon + 1);</span>
-<span class="lineNum">     219 </span><span class="lineCov">          2 :   setfield(L, &quot;year&quot;, stm-&gt;tm_year + 1900);</span>
-<span class="lineNum">     220 </span><span class="lineCov">          2 :   setfield(L, &quot;wday&quot;, stm-&gt;tm_wday + 1);</span>
-<span class="lineNum">     221 </span><span class="lineCov">          2 :   setfield(L, &quot;yday&quot;, stm-&gt;tm_yday + 1);</span>
-<span class="lineNum">     222 </span><span class="lineCov">          2 :   setboolfield(L, &quot;isdst&quot;, stm-&gt;tm_isdst);</span>
-<span class="lineNum">     223 </span><span class="lineCov">          2 : }</span>
+<span class="lineNum">     209 </span>            : /*
+<span class="lineNum">     210 </span>            : ** Set all fields from structure 'tm' in the table on top of the stack
+<span class="lineNum">     211 </span>            : */
+<span class="lineNum">     212 </span><span class="lineCov">          2 : static void setallfields (lua_State *L, struct tm *stm) {</span>
+<span class="lineNum">     213 </span><span class="lineCov">          2 :   setfield(L, &quot;sec&quot;, stm-&gt;tm_sec);</span>
+<span class="lineNum">     214 </span><span class="lineCov">          2 :   setfield(L, &quot;min&quot;, stm-&gt;tm_min);</span>
+<span class="lineNum">     215 </span><span class="lineCov">          2 :   setfield(L, &quot;hour&quot;, stm-&gt;tm_hour);</span>
+<span class="lineNum">     216 </span><span class="lineCov">          2 :   setfield(L, &quot;day&quot;, stm-&gt;tm_mday);</span>
+<span class="lineNum">     217 </span><span class="lineCov">          2 :   setfield(L, &quot;month&quot;, stm-&gt;tm_mon + 1);</span>
+<span class="lineNum">     218 </span><span class="lineCov">          2 :   setfield(L, &quot;year&quot;, stm-&gt;tm_year + 1900);</span>
+<span class="lineNum">     219 </span><span class="lineCov">          2 :   setfield(L, &quot;wday&quot;, stm-&gt;tm_wday + 1);</span>
+<span class="lineNum">     220 </span><span class="lineCov">          2 :   setfield(L, &quot;yday&quot;, stm-&gt;tm_yday + 1);</span>
+<span class="lineNum">     221 </span><span class="lineCov">          2 :   setboolfield(L, &quot;isdst&quot;, stm-&gt;tm_isdst);</span>
+<span class="lineNum">     222 </span><span class="lineCov">          2 : }</span>
+<span class="lineNum">     223 </span>            : 
 <span class="lineNum">     224 </span>            : 
-<span class="lineNum">     225 </span>            : 
-<span class="lineNum">     226 </span><span class="lineCov">          1 : static int getboolfield (lua_State *L, const char *key) {</span>
-<span class="lineNum">     227 </span>            :   int res;
-<span class="lineNum">     228 </span><span class="lineCov">          1 :   res = (lua_getfield(L, -1, key) == LUA_TNIL) ? -1 : lua_toboolean(L, -1);</span>
-<span class="lineNum">     229 </span><span class="lineCov">          1 :   lua_pop(L, 1);</span>
-<span class="lineNum">     230 </span><span class="lineCov">          1 :   return res;</span>
-<span class="lineNum">     231 </span>            : }
+<span class="lineNum">     225 </span><span class="lineCov">          1 : static int getboolfield (lua_State *L, const char *key) {</span>
+<span class="lineNum">     226 </span>            :   int res;
+<span class="lineNum">     227 </span><span class="lineCov">          1 :   res = (lua_getfield(L, -1, key) == LUA_TNIL) ? -1 : lua_toboolean(L, -1);</span>
+<span class="lineNum">     228 </span><span class="lineCov">          1 :   lua_pop(L, 1);</span>
+<span class="lineNum">     229 </span><span class="lineCov">          1 :   return res;</span>
+<span class="lineNum">     230 </span>            : }
+<span class="lineNum">     231 </span>            : 
 <span class="lineNum">     232 </span>            : 
-<span class="lineNum">     233 </span>            : 
-<span class="lineNum">     234 </span>            : /* maximum value for date fields (to avoid arithmetic overflows with 'int') */
-<span class="lineNum">     235 </span>            : #if !defined(L_MAXDATEFIELD)
-<span class="lineNum">     236 </span>            : #define L_MAXDATEFIELD  (INT_MAX / 2)
-<span class="lineNum">     237 </span>            : #endif
-<span class="lineNum">     238 </span>            : 
-<span class="lineNum">     239 </span><span class="lineCov">         18 : static int getfield (lua_State *L, const char *key, int d, int delta) {</span>
-<span class="lineNum">     240 </span>            :   int isnum;
-<span class="lineNum">     241 </span><span class="lineCov">         18 :   int t = lua_getfield(L, -1, key);  /* get field and its type */</span>
-<span class="lineNum">     242 </span><span class="lineCov">         18 :   lua_Integer res = lua_tointegerx(L, -1, &amp;isnum);</span>
-<span class="lineNum">     243 </span><span class="lineCov">         18 :   if (!isnum) {  /* field is not an integer? */</span>
-<span class="lineNum">     244 </span><span class="lineCov">         12 :     if (t != LUA_TNIL)  /* some other value? */</span>
-<span class="lineNum">     245 </span><span class="lineCov">          2 :       return luaL_error(L, &quot;field '%s' is not an integer&quot;, key);</span>
-<span class="lineNum">     246 </span><span class="lineCov">         10 :     else if (d &lt; 0)  /* absent field; no default? */</span>
-<span class="lineNum">     247 </span><span class="lineCov">          1 :       return luaL_error(L, &quot;field '%s' missing in date table&quot;, key);</span>
-<span class="lineNum">     248 </span><span class="lineCov">          9 :     res = d;</span>
-<span class="lineNum">     249 </span>            :   }
-<span class="lineNum">     250 </span>            :   else {
-<span class="lineNum">     251 </span><span class="lineCov">          6 :     if (!(-L_MAXDATEFIELD &lt;= res &amp;&amp; res &lt;= L_MAXDATEFIELD))</span>
-<span class="lineNum">     252 </span><span class="lineNoCov">          0 :       return luaL_error(L, &quot;field '%s' is out-of-bound&quot;, key);</span>
-<span class="lineNum">     253 </span><span class="lineCov">          6 :     res -= delta;</span>
-<span class="lineNum">     254 </span>            :   }
-<span class="lineNum">     255 </span><span class="lineCov">         15 :   lua_pop(L, 1);</span>
-<span class="lineNum">     256 </span><span class="lineCov">         15 :   return (int)res;</span>
-<span class="lineNum">     257 </span>            : }
+<span class="lineNum">     233 </span>            : /* maximum value for date fields (to avoid arithmetic overflows with 'int') */
+<span class="lineNum">     234 </span>            : #if !defined(L_MAXDATEFIELD)
+<span class="lineNum">     235 </span>            : #define L_MAXDATEFIELD  (INT_MAX / 2)
+<span class="lineNum">     236 </span>            : #endif
+<span class="lineNum">     237 </span>            : 
+<span class="lineNum">     238 </span><span class="lineCov">         18 : static int getfield (lua_State *L, const char *key, int d, int delta) {</span>
+<span class="lineNum">     239 </span>            :   int isnum;
+<span class="lineNum">     240 </span><span class="lineCov">         18 :   int t = lua_getfield(L, -1, key);  /* get field and its type */</span>
+<span class="lineNum">     241 </span><span class="lineCov">         18 :   lua_Integer res = lua_tointegerx(L, -1, &amp;isnum);</span>
+<span class="lineNum">     242 </span><span class="lineCov">         18 :   if (!isnum) {  /* field is not an integer? */</span>
+<span class="lineNum">     243 </span><span class="lineCov">         12 :     if (t != LUA_TNIL)  /* some other value? */</span>
+<span class="lineNum">     244 </span><span class="lineCov">          2 :       return luaL_error(L, &quot;field '%s' is not an integer&quot;, key);</span>
+<span class="lineNum">     245 </span><span class="lineCov">         10 :     else if (d &lt; 0)  /* absent field; no default? */</span>
+<span class="lineNum">     246 </span><span class="lineCov">          1 :       return luaL_error(L, &quot;field '%s' missing in date table&quot;, key);</span>
+<span class="lineNum">     247 </span><span class="lineCov">          9 :     res = d;</span>
+<span class="lineNum">     248 </span>            :   }
+<span class="lineNum">     249 </span>            :   else {
+<span class="lineNum">     250 </span><span class="lineCov">          6 :     if (!(-L_MAXDATEFIELD &lt;= res &amp;&amp; res &lt;= L_MAXDATEFIELD))</span>
+<span class="lineNum">     251 </span><span class="lineNoCov">          0 :       return luaL_error(L, &quot;field '%s' is out-of-bound&quot;, key);</span>
+<span class="lineNum">     252 </span><span class="lineCov">          6 :     res -= delta;</span>
+<span class="lineNum">     253 </span>            :   }
+<span class="lineNum">     254 </span><span class="lineCov">         15 :   lua_pop(L, 1);</span>
+<span class="lineNum">     255 </span><span class="lineCov">         15 :   return (int)res;</span>
+<span class="lineNum">     256 </span>            : }
+<span class="lineNum">     257 </span>            : 
 <span class="lineNum">     258 </span>            : 
-<span class="lineNum">     259 </span>            : 
-<span class="lineNum">     260 </span><span class="lineCov">         11 : static const char *checkoption (lua_State *L, const char *conv,</span>
-<span class="lineNum">     261 </span>            :                                 ptrdiff_t convlen, char *buff) {
-<span class="lineNum">     262 </span>            :   const char *option = LUA_STRFTIMEOPTIONS;
-<span class="lineNum">     263 </span>            :   int oplen = 1;  /* length of options being checked */
-<span class="lineNum">     264 </span><span class="lineCov">        282 :   for (; *option != '\0' &amp;&amp; oplen &lt;= convlen; option += oplen) {</span>
-<span class="lineNum">     265 </span><span class="lineCov">        281 :     if (*option == '|')  /* next block? */</span>
-<span class="lineNum">     266 </span><span class="lineCov">          2 :       oplen++;  /* will check options with next length (+1) */</span>
-<span class="lineNum">     267 </span><span class="lineCov">        279 :     else if (memcmp(conv, option, oplen) == 0) {  /* match? */</span>
-<span class="lineNum">     268 </span>            :       memcpy(buff, conv, oplen);  /* copy valid option to buffer */
-<span class="lineNum">     269 </span><span class="lineCov">         10 :       buff[oplen] = '\0';</span>
-<span class="lineNum">     270 </span><span class="lineCov">         10 :       return conv + oplen;  /* return next item */</span>
-<span class="lineNum">     271 </span>            :     }
-<span class="lineNum">     272 </span>            :   }
-<span class="lineNum">     273 </span><span class="lineCov">          1 :   luaL_argerror(L, 1,</span>
-<span class="lineNum">     274 </span>            :     lua_pushfstring(L, &quot;invalid conversion specifier '%%%s'&quot;, conv));
-<span class="lineNum">     275 </span><span class="lineNoCov">          0 :   return conv;  /* to avoid warnings */</span>
-<span class="lineNum">     276 </span>            : }
+<span class="lineNum">     259 </span><span class="lineCov">         11 : static const char *checkoption (lua_State *L, const char *conv,</span>
+<span class="lineNum">     260 </span>            :                                 ptrdiff_t convlen, char *buff) {
+<span class="lineNum">     261 </span><span class="lineCov">         11 :   const char *option = LUA_STRFTIMEOPTIONS;</span>
+<span class="lineNum">     262 </span><span class="lineCov">         11 :   int oplen = 1;  /* length of options being checked */</span>
+<span class="lineNum">     263 </span><span class="lineCov">        282 :   for (; *option != '\0' &amp;&amp; oplen &lt;= convlen; option += oplen) {</span>
+<span class="lineNum">     264 </span><span class="lineCov">        281 :     if (*option == '|')  /* next block? */</span>
+<span class="lineNum">     265 </span><span class="lineCov">          2 :       oplen++;  /* will check options with next length (+1) */</span>
+<span class="lineNum">     266 </span><span class="lineCov">        279 :     else if (memcmp(conv, option, oplen) == 0) {  /* match? */</span>
+<span class="lineNum">     267 </span><span class="lineCov">         10 :       memcpy(buff, conv, oplen);  /* copy valid option to buffer */</span>
+<span class="lineNum">     268 </span><span class="lineCov">         10 :       buff[oplen] = '\0';</span>
+<span class="lineNum">     269 </span><span class="lineCov">         10 :       return conv + oplen;  /* return next item */</span>
+<span class="lineNum">     270 </span>            :     }
+<span class="lineNum">     271 </span>            :   }
+<span class="lineNum">     272 </span><span class="lineCov">          1 :   luaL_argerror(L, 1,</span>
+<span class="lineNum">     273 </span>            :     lua_pushfstring(L, &quot;invalid conversion specifier '%%%s'&quot;, conv));
+<span class="lineNum">     274 </span><span class="lineNoCov">          0 :   return conv;  /* to avoid warnings */</span>
+<span class="lineNum">     275 </span>            : }
+<span class="lineNum">     276 </span>            : 
 <span class="lineNum">     277 </span>            : 
-<span class="lineNum">     278 </span>            : 
-<span class="lineNum">     279 </span>            : /* maximum size for an individual 'strftime' item */
-<span class="lineNum">     280 </span>            : #define SIZETIMEFMT     250
+<span class="lineNum">     278 </span>            : /* maximum size for an individual 'strftime' item */
+<span class="lineNum">     279 </span>            : #define SIZETIMEFMT     250
+<span class="lineNum">     280 </span>            : 
 <span class="lineNum">     281 </span>            : 
-<span class="lineNum">     282 </span>            : 
-<span class="lineNum">     283 </span><span class="lineCov">          5 : static int os_date (lua_State *L) {</span>
-<span class="lineNum">     284 </span>            :   size_t slen;
-<span class="lineNum">     285 </span><span class="lineCov">          5 :   const char *s = luaL_optlstring(L, 1, &quot;%c&quot;, &amp;slen);</span>
-<span class="lineNum">     286 </span><span class="lineCov">         10 :   time_t t = luaL_opt(L, l_checktime, 2, time(NULL));</span>
-<span class="lineNum">     287 </span><span class="lineCov">          5 :   const char *se = s + slen;  /* 's' end */</span>
-<span class="lineNum">     288 </span>            :   struct tm tmr, *stm;
-<span class="lineNum">     289 </span><span class="lineCov">          5 :   if (*s == '!') {  /* UTC? */</span>
-<span class="lineNum">     290 </span><span class="lineCov">          2 :     stm = l_gmtime(&amp;t, &amp;tmr);</span>
-<span class="lineNum">     291 </span><span class="lineCov">          2 :     s++;  /* skip '!' */</span>
-<span class="lineNum">     292 </span>            :   }
-<span class="lineNum">     293 </span>            :   else
-<span class="lineNum">     294 </span><span class="lineCov">          3 :     stm = l_localtime(&amp;t, &amp;tmr);</span>
-<span class="lineNum">     295 </span><span class="lineCov">          5 :   if (stm == NULL)  /* invalid date? */</span>
-<span class="lineNum">     296 </span><span class="lineNoCov">          0 :     return luaL_error(L,</span>
-<span class="lineNum">     297 </span>            :                  &quot;time result cannot be represented in this installation&quot;);
-<span class="lineNum">     298 </span><span class="lineCov">          5 :   if (strcmp(s, &quot;*t&quot;) == 0) {</span>
-<span class="lineNum">     299 </span><span class="lineCov">          1 :     lua_createtable(L, 0, 9);  /* 9 = number of fields */</span>
-<span class="lineNum">     300 </span><span class="lineCov">          1 :     setallfields(L, stm);</span>
-<span class="lineNum">     301 </span>            :   }
-<span class="lineNum">     302 </span>            :   else {
-<span class="lineNum">     303 </span>            :     char cc[4];  /* buffer for individual conversion specifiers */
-<span class="lineNum">     304 </span>            :     luaL_Buffer b;
-<span class="lineNum">     305 </span><span class="lineCov">          4 :     cc[0] = '%';</span>
-<span class="lineNum">     306 </span><span class="lineCov">          4 :     luaL_buffinit(L, &amp;b);</span>
-<span class="lineNum">     307 </span><span class="lineCov">         25 :     while (s &lt; se) {</span>
-<span class="lineNum">     308 </span><span class="lineCov">         18 :       if (*s != '%')  /* not a conversion specifier? */</span>
-<span class="lineNum">     309 </span><span class="lineCov">          7 :         luaL_addchar(&amp;b, *s++);</span>
-<span class="lineNum">     310 </span>            :       else {
-<span class="lineNum">     311 </span>            :         size_t reslen;
-<span class="lineNum">     312 </span><span class="lineCov">         11 :         char *buff = luaL_prepbuffsize(&amp;b, SIZETIMEFMT);</span>
-<span class="lineNum">     313 </span><span class="lineCov">         11 :         s++;  /* skip '%' */</span>
-<span class="lineNum">     314 </span><span class="lineCov">         11 :         s = checkoption(L, s, se - s, cc + 1);  /* copy specifier to 'cc' */</span>
-<span class="lineNum">     315 </span><span class="lineCov">         10 :         reslen = strftime(buff, SIZETIMEFMT, cc, stm);</span>
-<span class="lineNum">     316 </span><span class="lineCov">         10 :         luaL_addsize(&amp;b, reslen);</span>
-<span class="lineNum">     317 </span>            :       }
-<span class="lineNum">     318 </span>            :     }
-<span class="lineNum">     319 </span><span class="lineCov">          3 :     luaL_pushresult(&amp;b);</span>
-<span class="lineNum">     320 </span>            :   }
-<span class="lineNum">     321 </span>            :   return 1;
-<span class="lineNum">     322 </span>            : }
+<span class="lineNum">     282 </span><span class="lineCov">          5 : static int os_date (lua_State *L) {</span>
+<span class="lineNum">     283 </span>            :   size_t slen;
+<span class="lineNum">     284 </span><span class="lineCov">          5 :   const char *s = luaL_optlstring(L, 1, &quot;%c&quot;, &amp;slen);</span>
+<span class="lineNum">     285 </span><span class="lineCov">          5 :   time_t t = luaL_opt(L, l_checktime, 2, time(NULL));</span>
+<span class="lineNum">     286 </span><span class="lineCov">          5 :   const char *se = s + slen;  /* 's' end */</span>
+<span class="lineNum">     287 </span>            :   struct tm tmr, *stm;
+<span class="lineNum">     288 </span><span class="lineCov">          5 :   if (*s == '!') {  /* UTC? */</span>
+<span class="lineNum">     289 </span><span class="lineCov">          2 :     stm = l_gmtime(&amp;t, &amp;tmr);</span>
+<span class="lineNum">     290 </span><span class="lineCov">          2 :     s++;  /* skip '!' */</span>
+<span class="lineNum">     291 </span>            :   }
+<span class="lineNum">     292 </span>            :   else
+<span class="lineNum">     293 </span><span class="lineCov">          3 :     stm = l_localtime(&amp;t, &amp;tmr);</span>
+<span class="lineNum">     294 </span><span class="lineCov">          5 :   if (stm == NULL)  /* invalid date? */</span>
+<span class="lineNum">     295 </span><span class="lineNoCov">          0 :     return luaL_error(L,</span>
+<span class="lineNum">     296 </span>            :                  &quot;time result cannot be represented in this installation&quot;);
+<span class="lineNum">     297 </span><span class="lineCov">          5 :   if (strcmp(s, &quot;*t&quot;) == 0) {</span>
+<span class="lineNum">     298 </span><span class="lineCov">          1 :     lua_createtable(L, 0, 9);  /* 9 = number of fields */</span>
+<span class="lineNum">     299 </span><span class="lineCov">          1 :     setallfields(L, stm);</span>
+<span class="lineNum">     300 </span>            :   }
+<span class="lineNum">     301 </span>            :   else {
+<span class="lineNum">     302 </span>            :     char cc[4];  /* buffer for individual conversion specifiers */
+<span class="lineNum">     303 </span>            :     luaL_Buffer b;
+<span class="lineNum">     304 </span><span class="lineCov">          4 :     cc[0] = '%';</span>
+<span class="lineNum">     305 </span><span class="lineCov">          4 :     luaL_buffinit(L, &amp;b);</span>
+<span class="lineNum">     306 </span><span class="lineCov">         21 :     while (s &lt; se) {</span>
+<span class="lineNum">     307 </span><span class="lineCov">         18 :       if (*s != '%')  /* not a conversion specifier? */</span>
+<span class="lineNum">     308 </span><span class="lineCov">          7 :         luaL_addchar(&amp;b, *s++);</span>
+<span class="lineNum">     309 </span>            :       else {
+<span class="lineNum">     310 </span>            :         size_t reslen;
+<span class="lineNum">     311 </span><span class="lineCov">         11 :         char *buff = luaL_prepbuffsize(&amp;b, SIZETIMEFMT);</span>
+<span class="lineNum">     312 </span><span class="lineCov">         11 :         s++;  /* skip '%' */</span>
+<span class="lineNum">     313 </span><span class="lineCov">         11 :         s = checkoption(L, s, se - s, cc + 1);  /* copy specifier to 'cc' */</span>
+<span class="lineNum">     314 </span><span class="lineCov">         10 :         reslen = strftime(buff, SIZETIMEFMT, cc, stm);</span>
+<span class="lineNum">     315 </span><span class="lineCov">         10 :         luaL_addsize(&amp;b, reslen);</span>
+<span class="lineNum">     316 </span>            :       }
+<span class="lineNum">     317 </span>            :     }
+<span class="lineNum">     318 </span><span class="lineCov">          3 :     luaL_pushresult(&amp;b);</span>
+<span class="lineNum">     319 </span>            :   }
+<span class="lineNum">     320 </span><span class="lineCov">          4 :   return 1;</span>
+<span class="lineNum">     321 </span>            : }
+<span class="lineNum">     322 </span>            : 
 <span class="lineNum">     323 </span>            : 
-<span class="lineNum">     324 </span>            : 
-<span class="lineNum">     325 </span><span class="lineCov">          6 : static int os_time (lua_State *L) {</span>
-<span class="lineNum">     326 </span>            :   time_t t;
-<span class="lineNum">     327 </span><span class="lineCov">          6 :   if (lua_isnoneornil(L, 1))  /* called without args? */</span>
-<span class="lineNum">     328 </span><span class="lineCov">          2 :     t = time(NULL);  /* get current time */</span>
-<span class="lineNum">     329 </span>            :   else {
-<span class="lineNum">     330 </span>            :     struct tm ts;
-<span class="lineNum">     331 </span><span class="lineCov">          4 :     luaL_checktype(L, 1, LUA_TTABLE);</span>
-<span class="lineNum">     332 </span><span class="lineCov">          4 :     lua_settop(L, 1);  /* make sure table is at the top */</span>
-<span class="lineNum">     333 </span><span class="lineCov">          4 :     ts.tm_sec = getfield(L, &quot;sec&quot;, 0, 0);</span>
-<span class="lineNum">     334 </span><span class="lineCov">          4 :     ts.tm_min = getfield(L, &quot;min&quot;, 0, 0);</span>
-<span class="lineNum">     335 </span><span class="lineCov">          4 :     ts.tm_hour = getfield(L, &quot;hour&quot;, 12, 0);</span>
-<span class="lineNum">     336 </span><span class="lineCov">          4 :     ts.tm_mday = getfield(L, &quot;day&quot;, -1, 0);</span>
-<span class="lineNum">     337 </span><span class="lineCov">          1 :     ts.tm_mon = getfield(L, &quot;month&quot;, -1, 1);</span>
-<span class="lineNum">     338 </span><span class="lineCov">          1 :     ts.tm_year = getfield(L, &quot;year&quot;, -1, 1900);</span>
-<span class="lineNum">     339 </span><span class="lineCov">          1 :     ts.tm_isdst = getboolfield(L, &quot;isdst&quot;);</span>
-<span class="lineNum">     340 </span><span class="lineCov">          1 :     t = mktime(&amp;ts);</span>
-<span class="lineNum">     341 </span><span class="lineCov">          1 :     setallfields(L, &amp;ts);  /* update fields with normalized values */</span>
-<span class="lineNum">     342 </span>            :   }
-<span class="lineNum">     343 </span><span class="lineCov">          3 :   if (t != (time_t)(l_timet)t || t == (time_t)(-1))</span>
-<span class="lineNum">     344 </span><span class="lineNoCov">          0 :     return luaL_error(L,</span>
-<span class="lineNum">     345 </span>            :                   &quot;time result cannot be represented in this installation&quot;);
-<span class="lineNum">     346 </span><span class="lineCov">          3 :   l_pushtime(L, t);</span>
-<span class="lineNum">     347 </span><span class="lineCov">          3 :   return 1;</span>
-<span class="lineNum">     348 </span>            : }
+<span class="lineNum">     324 </span><span class="lineCov">          6 : static int os_time (lua_State *L) {</span>
+<span class="lineNum">     325 </span>            :   time_t t;
+<span class="lineNum">     326 </span><span class="lineCov">          6 :   if (lua_isnoneornil(L, 1))  /* called without args? */</span>
+<span class="lineNum">     327 </span><span class="lineCov">          2 :     t = time(NULL);  /* get current time */</span>
+<span class="lineNum">     328 </span>            :   else {
+<span class="lineNum">     329 </span>            :     struct tm ts;
+<span class="lineNum">     330 </span><span class="lineCov">          4 :     luaL_checktype(L, 1, LUA_TTABLE);</span>
+<span class="lineNum">     331 </span><span class="lineCov">          4 :     lua_settop(L, 1);  /* make sure table is at the top */</span>
+<span class="lineNum">     332 </span><span class="lineCov">          4 :     ts.tm_sec = getfield(L, &quot;sec&quot;, 0, 0);</span>
+<span class="lineNum">     333 </span><span class="lineCov">          4 :     ts.tm_min = getfield(L, &quot;min&quot;, 0, 0);</span>
+<span class="lineNum">     334 </span><span class="lineCov">          4 :     ts.tm_hour = getfield(L, &quot;hour&quot;, 12, 0);</span>
+<span class="lineNum">     335 </span><span class="lineCov">          4 :     ts.tm_mday = getfield(L, &quot;day&quot;, -1, 0);</span>
+<span class="lineNum">     336 </span><span class="lineCov">          1 :     ts.tm_mon = getfield(L, &quot;month&quot;, -1, 1);</span>
+<span class="lineNum">     337 </span><span class="lineCov">          1 :     ts.tm_year = getfield(L, &quot;year&quot;, -1, 1900);</span>
+<span class="lineNum">     338 </span><span class="lineCov">          1 :     ts.tm_isdst = getboolfield(L, &quot;isdst&quot;);</span>
+<span class="lineNum">     339 </span><span class="lineCov">          1 :     t = mktime(&amp;ts);</span>
+<span class="lineNum">     340 </span><span class="lineCov">          1 :     setallfields(L, &amp;ts);  /* update fields with normalized values */</span>
+<span class="lineNum">     341 </span>            :   }
+<span class="lineNum">     342 </span><span class="lineCov">          3 :   if (t != (time_t)(l_timet)t || t == (time_t)(-1))</span>
+<span class="lineNum">     343 </span><span class="lineNoCov">          0 :     return luaL_error(L,</span>
+<span class="lineNum">     344 </span>            :                   &quot;time result cannot be represented in this installation&quot;);
+<span class="lineNum">     345 </span><span class="lineCov">          3 :   l_pushtime(L, t);</span>
+<span class="lineNum">     346 </span><span class="lineCov">          3 :   return 1;</span>
+<span class="lineNum">     347 </span>            : }
+<span class="lineNum">     348 </span>            : 
 <span class="lineNum">     349 </span>            : 
-<span class="lineNum">     350 </span>            : 
-<span class="lineNum">     351 </span><span class="lineCov">          1 : static int os_difftime (lua_State *L) {</span>
-<span class="lineNum">     352 </span>            :   time_t t1 = l_checktime(L, 1);
-<span class="lineNum">     353 </span>            :   time_t t2 = l_checktime(L, 2);
-<span class="lineNum">     354 </span><span class="lineCov">          1 :   lua_pushnumber(L, (lua_Number)difftime(t1, t2));</span>
-<span class="lineNum">     355 </span><span class="lineCov">          1 :   return 1;</span>
-<span class="lineNum">     356 </span>            : }
-<span class="lineNum">     357 </span>            : 
-<span class="lineNum">     358 </span>            : /* }====================================================== */
+<span class="lineNum">     350 </span><span class="lineCov">          1 : static int os_difftime (lua_State *L) {</span>
+<span class="lineNum">     351 </span><span class="lineCov">          1 :   time_t t1 = l_checktime(L, 1);</span>
+<span class="lineNum">     352 </span><span class="lineCov">          1 :   time_t t2 = l_checktime(L, 2);</span>
+<span class="lineNum">     353 </span><span class="lineCov">          1 :   lua_pushnumber(L, (lua_Number)difftime(t1, t2));</span>
+<span class="lineNum">     354 </span><span class="lineCov">          1 :   return 1;</span>
+<span class="lineNum">     355 </span>            : }
+<span class="lineNum">     356 </span>            : 
+<span class="lineNum">     357 </span>            : /* }====================================================== */
+<span class="lineNum">     358 </span>            : 
 <span class="lineNum">     359 </span>            : 
-<span class="lineNum">     360 </span>            : 
-<span class="lineNum">     361 </span><span class="lineCov">          3 : static int os_setlocale (lua_State *L) {</span>
-<span class="lineNum">     362 </span>            :   static const int cat[] = {LC_ALL, LC_COLLATE, LC_CTYPE, LC_MONETARY,
-<span class="lineNum">     363 </span>            :                       LC_NUMERIC, LC_TIME};
-<span class="lineNum">     364 </span>            :   static const char *const catnames[] = {&quot;all&quot;, &quot;collate&quot;, &quot;ctype&quot;, &quot;monetary&quot;,
-<span class="lineNum">     365 </span>            :      &quot;numeric&quot;, &quot;time&quot;, NULL};
-<span class="lineNum">     366 </span><span class="lineCov">          3 :   const char *l = luaL_optstring(L, 1, NULL);</span>
-<span class="lineNum">     367 </span><span class="lineCov">          3 :   int op = luaL_checkoption(L, 2, &quot;all&quot;, catnames);</span>
-<span class="lineNum">     368 </span><span class="lineCov">          3 :   lua_pushstring(L, setlocale(cat[op], l));</span>
-<span class="lineNum">     369 </span><span class="lineCov">          3 :   return 1;</span>
-<span class="lineNum">     370 </span>            : }
+<span class="lineNum">     360 </span><span class="lineCov">          3 : static int os_setlocale (lua_State *L) {</span>
+<span class="lineNum">     361 </span>            :   static const int cat[] = {LC_ALL, LC_COLLATE, LC_CTYPE, LC_MONETARY,
+<span class="lineNum">     362 </span>            :                       LC_NUMERIC, LC_TIME};
+<span class="lineNum">     363 </span>            :   static const char *const catnames[] = {&quot;all&quot;, &quot;collate&quot;, &quot;ctype&quot;, &quot;monetary&quot;,
+<span class="lineNum">     364 </span>            :      &quot;numeric&quot;, &quot;time&quot;, NULL};
+<span class="lineNum">     365 </span><span class="lineCov">          3 :   const char *l = luaL_optstring(L, 1, NULL);</span>
+<span class="lineNum">     366 </span><span class="lineCov">          3 :   int op = luaL_checkoption(L, 2, &quot;all&quot;, catnames);</span>
+<span class="lineNum">     367 </span><span class="lineCov">          3 :   lua_pushstring(L, setlocale(cat[op], l));</span>
+<span class="lineNum">     368 </span><span class="lineCov">          3 :   return 1;</span>
+<span class="lineNum">     369 </span>            : }
+<span class="lineNum">     370 </span>            : 
 <span class="lineNum">     371 </span>            : 
-<span class="lineNum">     372 </span>            : 
-<span class="lineNum">     373 </span><span class="lineCov">          6 : static int os_exit (lua_State *L) {</span>
-<span class="lineNum">     374 </span>            :   int status;
-<span class="lineNum">     375 </span><span class="lineCov">          6 :   if (lua_isboolean(L, 1))</span>
-<span class="lineNum">     376 </span><span class="lineCov">          2 :     status = (lua_toboolean(L, 1) ? EXIT_SUCCESS : EXIT_FAILURE);</span>
-<span class="lineNum">     377 </span>            :   else
-<span class="lineNum">     378 </span><span class="lineCov">          4 :     status = (int)luaL_optinteger(L, 1, EXIT_SUCCESS);</span>
-<span class="lineNum">     379 </span><span class="lineCov">          6 :   if (lua_toboolean(L, 2))</span>
-<span class="lineNum">     380 </span><span class="lineCov">          1 :     lua_close(L);</span>
-<span class="lineNum">     381 </span><span class="lineCov">          6 :   if (L) exit(status);  /* 'if' to avoid warnings for unreachable 'return' */</span>
-<span class="lineNum">     382 </span><span class="lineNoCov">          0 :   return 0;</span>
-<span class="lineNum">     383 </span>            : }
+<span class="lineNum">     372 </span><span class="lineCov">         10 : static int os_exit (lua_State *L) {</span>
+<span class="lineNum">     373 </span>            :   int status;
+<span class="lineNum">     374 </span><span class="lineCov">         10 :   if (lua_isboolean(L, 1))</span>
+<span class="lineNum">     375 </span><span class="lineCov">          2 :     status = (lua_toboolean(L, 1) ? EXIT_SUCCESS : EXIT_FAILURE);</span>
+<span class="lineNum">     376 </span>            :   else
+<span class="lineNum">     377 </span><span class="lineCov">          8 :     status = (int)luaL_optinteger(L, 1, EXIT_SUCCESS);</span>
+<span class="lineNum">     378 </span><span class="lineCov">         10 :   if (lua_toboolean(L, 2))</span>
+<span class="lineNum">     379 </span><span class="lineCov">          1 :     lua_close(L);</span>
+<span class="lineNum">     380 </span><span class="lineCov">         10 :   if (L) exit(status);  /* 'if' to avoid warnings for unreachable 'return' */</span>
+<span class="lineNum">     381 </span><span class="lineNoCov">          0 :   return 0;</span>
+<span class="lineNum">     382 </span>            : }
+<span class="lineNum">     383 </span>            : 
 <span class="lineNum">     384 </span>            : 
-<span class="lineNum">     385 </span>            : 
-<span class="lineNum">     386 </span>            : static const luaL_Reg syslib[] = {
-<span class="lineNum">     387 </span>            :   {&quot;clock&quot;,     os_clock},
-<span class="lineNum">     388 </span>            :   {&quot;date&quot;,      os_date},
-<span class="lineNum">     389 </span>            :   {&quot;difftime&quot;,  os_difftime},
-<span class="lineNum">     390 </span>            :   {&quot;execute&quot;,   os_execute},
-<span class="lineNum">     391 </span>            :   {&quot;exit&quot;,      os_exit},
-<span class="lineNum">     392 </span>            :   {&quot;getenv&quot;,    os_getenv},
-<span class="lineNum">     393 </span>            :   {&quot;remove&quot;,    os_remove},
-<span class="lineNum">     394 </span>            :   {&quot;rename&quot;,    os_rename},
-<span class="lineNum">     395 </span>            :   {&quot;setlocale&quot;, os_setlocale},
-<span class="lineNum">     396 </span>            :   {&quot;time&quot;,      os_time},
-<span class="lineNum">     397 </span>            :   {&quot;tmpname&quot;,   os_tmpname},
-<span class="lineNum">     398 </span>            :   {NULL, NULL}
-<span class="lineNum">     399 </span>            : };
-<span class="lineNum">     400 </span>            : 
-<span class="lineNum">     401 </span>            : /* }====================================================== */
+<span class="lineNum">     385 </span>            : static const luaL_Reg syslib[] = {
+<span class="lineNum">     386 </span>            :   {&quot;clock&quot;,     os_clock},
+<span class="lineNum">     387 </span>            :   {&quot;date&quot;,      os_date},
+<span class="lineNum">     388 </span>            :   {&quot;difftime&quot;,  os_difftime},
+<span class="lineNum">     389 </span>            :   {&quot;execute&quot;,   os_execute},
+<span class="lineNum">     390 </span>            :   {&quot;exit&quot;,      os_exit},
+<span class="lineNum">     391 </span>            :   {&quot;getenv&quot;,    os_getenv},
+<span class="lineNum">     392 </span>            :   {&quot;remove&quot;,    os_remove},
+<span class="lineNum">     393 </span>            :   {&quot;rename&quot;,    os_rename},
+<span class="lineNum">     394 </span>            :   {&quot;setlocale&quot;, os_setlocale},
+<span class="lineNum">     395 </span>            :   {&quot;time&quot;,      os_time},
+<span class="lineNum">     396 </span>            :   {&quot;tmpname&quot;,   os_tmpname},
+<span class="lineNum">     397 </span>            :   {NULL, NULL}
+<span class="lineNum">     398 </span>            : };
+<span class="lineNum">     399 </span>            : 
+<span class="lineNum">     400 </span>            : /* }====================================================== */
+<span class="lineNum">     401 </span>            : 
 <span class="lineNum">     402 </span>            : 
 <span class="lineNum">     403 </span>            : 
-<span class="lineNum">     404 </span>            : 
-<span class="lineNum">     405 </span><span class="lineCov">         83 : LUAMOD_API int luaopen_os (lua_State *L) {</span>
-<span class="lineNum">     406 </span><span class="lineCov">         83 :   luaL_newlib(L, syslib);</span>
-<span class="lineNum">     407 </span><span class="lineCov">         83 :   return 1;</span>
-<span class="lineNum">     408 </span>            : }
-<span class="lineNum">     409 </span>            : 
+<span class="lineNum">     404 </span><span class="lineCov">         89 : LUAMOD_API int luaopen_os (lua_State *L) {</span>
+<span class="lineNum">     405 </span><span class="lineCov">         89 :   luaL_newlib(L, syslib);</span>
+<span class="lineNum">     406 </span><span class="lineCov">         89 :   return 1;</span>
+<span class="lineNum">     407 </span>            : }
+<span class="lineNum">     408 </span>            : 
 </pre>
       </td>
     </tr>

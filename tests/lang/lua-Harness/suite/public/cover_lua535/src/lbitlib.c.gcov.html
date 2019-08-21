@@ -31,13 +31,13 @@
             <td class="headerValue">Lua 5.3.5</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntry">91</td>
-            <td class="headerCovTableEntry">91</td>
+            <td class="headerCovTableEntry">94</td>
+            <td class="headerCovTableEntry">94</td>
             <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2018-10-07 17:32:53</td>
+            <td class="headerValue">2019-06-13 19:44:17</td>
             <td></td>
           </tr>
           <tr>
@@ -114,7 +114,7 @@
 <span class="lineNum">      48 </span>            : 
 <span class="lineNum">      49 </span><span class="lineCov">          3 : static lua_Unsigned andaux (lua_State *L) {</span>
 <span class="lineNum">      50 </span><span class="lineCov">          3 :   int i, n = lua_gettop(L);</span>
-<span class="lineNum">      51 </span>            :   lua_Unsigned r = ~(lua_Unsigned)0;
+<span class="lineNum">      51 </span><span class="lineCov">          3 :   lua_Unsigned r = ~(lua_Unsigned)0;</span>
 <span class="lineNum">      52 </span><span class="lineCov">          8 :   for (i = 1; i &lt;= n; i++)</span>
 <span class="lineNum">      53 </span><span class="lineCov">          5 :     r &amp;= checkunsigned(L, i);</span>
 <span class="lineNum">      54 </span><span class="lineCov">          3 :   return trim(r);</span>
@@ -137,7 +137,7 @@
 <span class="lineNum">      71 </span>            : 
 <span class="lineNum">      72 </span><span class="lineCov">          1 : static int b_or (lua_State *L) {</span>
 <span class="lineNum">      73 </span><span class="lineCov">          1 :   int i, n = lua_gettop(L);</span>
-<span class="lineNum">      74 </span>            :   lua_Unsigned r = 0;
+<span class="lineNum">      74 </span><span class="lineCov">          1 :   lua_Unsigned r = 0;</span>
 <span class="lineNum">      75 </span><span class="lineCov">          4 :   for (i = 1; i &lt;= n; i++)</span>
 <span class="lineNum">      76 </span><span class="lineCov">          3 :     r |= checkunsigned(L, i);</span>
 <span class="lineNum">      77 </span><span class="lineCov">          1 :   pushunsigned(L, trim(r));</span>
@@ -147,7 +147,7 @@
 <span class="lineNum">      81 </span>            : 
 <span class="lineNum">      82 </span><span class="lineCov">          1 : static int b_xor (lua_State *L) {</span>
 <span class="lineNum">      83 </span><span class="lineCov">          1 :   int i, n = lua_gettop(L);</span>
-<span class="lineNum">      84 </span>            :   lua_Unsigned r = 0;
+<span class="lineNum">      84 </span><span class="lineCov">          1 :   lua_Unsigned r = 0;</span>
 <span class="lineNum">      85 </span><span class="lineCov">          4 :   for (i = 1; i &lt;= n; i++)</span>
 <span class="lineNum">      86 </span><span class="lineCov">          3 :     r ^= checkunsigned(L, i);</span>
 <span class="lineNum">      87 </span><span class="lineCov">          1 :   pushunsigned(L, trim(r));</span>
@@ -283,9 +283,9 @@
 <span class="lineNum">     217 </span>            : 
 <span class="lineNum">     218 </span>            : 
 <span class="lineNum">     219 </span>            : 
-<span class="lineNum">     220 </span><span class="lineCov">         83 : LUAMOD_API int luaopen_bit32 (lua_State *L) {</span>
-<span class="lineNum">     221 </span><span class="lineCov">         83 :   luaL_newlib(L, bitlib);</span>
-<span class="lineNum">     222 </span><span class="lineCov">         83 :   return 1;</span>
+<span class="lineNum">     220 </span><span class="lineCov">         87 : LUAMOD_API int luaopen_bit32 (lua_State *L) {</span>
+<span class="lineNum">     221 </span><span class="lineCov">         87 :   luaL_newlib(L, bitlib);</span>
+<span class="lineNum">     222 </span><span class="lineCov">         87 :   return 1;</span>
 <span class="lineNum">     223 </span>            : }
 <span class="lineNum">     224 </span>            : 
 <span class="lineNum">     225 </span>            : 

@@ -155,7 +155,7 @@ Please note that:
       IRs (especially for loads and stores). Motivation: even
       if ``IR_CALL`` itself cannot be a subject for optimizations,
       accompanied IRs still may be DCEd, CSEd or moved out from
-      the loop. 
+      the loop.
 
 Let's consider ``table.concat`` recording as an example:
 

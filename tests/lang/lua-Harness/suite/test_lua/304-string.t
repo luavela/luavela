@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2009-2018, Perrad Francois
+-- Copyright (C) 2009-2019, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -32,8 +32,11 @@ L<https://www.lua.org/manual/5.3/manual.html#6.4>
 require'tap'
 local profile = require'profile'
 local has_format_a = _VERSION >= 'Lua 5.3' or profile.has_string_format_a or jit
+local has_format_p = _VERSION >= 'Lua 5.4'
 local has_format_q52 = _VERSION >= 'Lua 5.2' or jit
 local has_format_q53 = _VERSION >= 'Lua 5.3'
+local has_format_q54 = _VERSION >= 'Lua 5.4'
+local has_gmatch54 = _VERSION >= 'Lua 5.4'
 local has_pack = _VERSION >= 'Lua 5.3'
 local has_rep52 = _VERSION >= 'Lua 5.2' or profile.luajit_compat52
 local has_class_g = _VERSION >= 'Lua 5.2' or profile.luajit_compat52
@@ -145,6 +148,16 @@ do -- format
                    "function format ('%q', nil)")
     end
 
+    if has_format_q54 then
+        is(string.format('%q', 0/0), '(0/0)', "function format ('%q', NaN)")
+        is(string.format('%q', 1/0), '1e9999', "function format ('%q', +Inf)")
+        is(string.format('%q', -1/0), '-1e9999', "function format ('%q', -Inf)")
+
+        error_like(function () string.format("%-q", 0) end,
+                   "^[^:]+:%d+: specifier '%%q' cannot have modifiers",
+                   "function format '%-q'")
+    end
+
     if jit and jit.version_num >= 20100 then
         like(string.format('%q', {}), [[^"table: ]], "function format ('%q', {})")
     else
@@ -155,6 +168,10 @@ do -- format
 
     if has_format_a then
         is(string.format('%a', 1.5), '0x1.8p+0', "function format %a")
+    end
+
+    if has_format_p then
+        is(string.format('table: %p', string), tostring(string), "function format %p")
     end
 
     is(string.format("%5s", 'foo'), '  foo', "function format (%5s)")
@@ -181,8 +198,8 @@ do -- format
                "function format (bad arg)")
 
     error_like(function () string.format('%k', 'toto') end,
-               "^[^:]+:%d+: invalid option '%%k' to 'format'",
-               "function format (invalid option)")
+               "^[^:]+:%d+: invalid .- '%%k' to 'format'",
+               "function format (invalid conversion)")
 
     if jit and jit.version_num >= 20100 then
         error_like(function () string.format('%111s', 'toto') end,
@@ -214,6 +231,13 @@ do -- gmatch
         table.insert(output, c)
     end
     eq_array(output, {'he', 'll'}, "function gmatch")
+    if has_gmatch54 then
+        output = {}
+        for c in string.gmatch(s, '..', 2) do
+            table.insert(output, c)
+        end
+        eq_array(output, {'el', 'lo'})
+    end
     output = {}
     for c1, c2 in string.gmatch(s, '(.)(.)') do
         table.insert(output, c1)
@@ -295,7 +319,7 @@ do -- gsub
                "function gsub (invalid index)")
 
     error_like(function () string.gsub("hello world", '(%w+)', true) end,
-               "^[^:]+:%d+: bad argument #3 to 'gsub' %(string/function/table expected%)",
+               "^[^:]+:%d+: bad argument #3 to 'gsub' %(string/function/table expected",
                "function gsub (bad type)")
 
     error_like(function ()

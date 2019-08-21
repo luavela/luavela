@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2018-10-07 17:32:51</td>
+            <td class="headerValue">2019-06-13 19:44:15</td>
             <td></td>
           </tr>
           <tr>
@@ -279,8 +279,8 @@
 <span class="lineNum">     213 </span>            : }
 <span class="lineNum">     214 </span>            : 
 <span class="lineNum">     215 </span>            : 
-<span class="lineNum">     216 </span><span class="lineCov">          4 : static int os_exit (lua_State *L) {</span>
-<span class="lineNum">     217 </span><span class="lineCov">          4 :   exit(luaL_optint(L, 1, EXIT_SUCCESS));</span>
+<span class="lineNum">     216 </span><span class="lineCov">          8 : static int os_exit (lua_State *L) {</span>
+<span class="lineNum">     217 </span><span class="lineCov">          8 :   exit(luaL_optint(L, 1, EXIT_SUCCESS));</span>
 <span class="lineNum">     218 </span>            : }
 <span class="lineNum">     219 </span>            : 
 <span class="lineNum">     220 </span>            : static const luaL_Reg syslib[] = {
@@ -302,9 +302,9 @@
 <span class="lineNum">     236 </span>            : 
 <span class="lineNum">     237 </span>            : 
 <span class="lineNum">     238 </span>            : 
-<span class="lineNum">     239 </span><span class="lineCov">         83 : LUALIB_API int luaopen_os (lua_State *L) {</span>
-<span class="lineNum">     240 </span><span class="lineCov">         83 :   luaL_register(L, LUA_OSLIBNAME, syslib);</span>
-<span class="lineNum">     241 </span><span class="lineCov">         83 :   return 1;</span>
+<span class="lineNum">     239 </span><span class="lineCov">         87 : LUALIB_API int luaopen_os (lua_State *L) {</span>
+<span class="lineNum">     240 </span><span class="lineCov">         87 :   luaL_register(L, LUA_OSLIBNAME, syslib);</span>
+<span class="lineNum">     241 </span><span class="lineCov">         87 :   return 1;</span>
 <span class="lineNum">     242 </span>            : }
 <span class="lineNum">     243 </span>            : 
 </pre>

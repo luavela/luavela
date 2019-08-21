@@ -31,13 +31,13 @@
             <td class="headerValue">Lua 5.3.5</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntry">111</td>
-            <td class="headerCovTableEntry">112</td>
-            <td class="headerCovTableEntryHi">99.1 %</td>
+            <td class="headerCovTableEntry">124</td>
+            <td class="headerCovTableEntry">126</td>
+            <td class="headerCovTableEntryHi">98.4 %</td>
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2018-10-07 17:32:53</td>
+            <td class="headerValue">2019-06-13 19:44:17</td>
             <td></td>
           </tr>
           <tr>
@@ -93,8 +93,8 @@
 <span class="lineNum">      27 </span>            : 
 <span class="lineNum">      28 </span>            : /* from strlib */
 <span class="lineNum">      29 </span>            : /* translate a relative string position: negative means back from end */
-<span class="lineNum">      30 </span>            : static lua_Integer u_posrelat (lua_Integer pos, size_t len) {
-<span class="lineNum">      31 </span><span class="lineCov">         75 :   if (pos &gt;= 0) return pos;</span>
+<span class="lineNum">      30 </span><span class="lineCov">         79 : static lua_Integer u_posrelat (lua_Integer pos, size_t len) {</span>
+<span class="lineNum">      31 </span><span class="lineCov">         79 :   if (pos &gt;= 0) return pos;</span>
 <span class="lineNum">      32 </span><span class="lineCov">         21 :   else if (0u - (size_t)pos &gt; len) return 0;</span>
 <span class="lineNum">      33 </span><span class="lineCov">         20 :   else return (lua_Integer)len + pos + 1;</span>
 <span class="lineNum">      34 </span>            : }
@@ -103,29 +103,29 @@
 <span class="lineNum">      37 </span>            : /*
 <span class="lineNum">      38 </span>            : ** Decode one UTF-8 sequence, returning NULL if byte sequence is invalid.
 <span class="lineNum">      39 </span>            : */
-<span class="lineNum">      40 </span><span class="lineCov">         40 : static const char *utf8_decode (const char *o, int *val) {</span>
+<span class="lineNum">      40 </span><span class="lineCov">         42 : static const char *utf8_decode (const char *o, int *val) {</span>
 <span class="lineNum">      41 </span>            :   static const unsigned int limits[] = {0xFF, 0x7F, 0x7FF, 0xFFFF};
-<span class="lineNum">      42 </span>            :   const unsigned char *s = (const unsigned char *)o;
-<span class="lineNum">      43 </span><span class="lineCov">         40 :   unsigned int c = s[0];</span>
-<span class="lineNum">      44 </span>            :   unsigned int res = 0;  /* final result */
-<span class="lineNum">      45 </span><span class="lineCov">         40 :   if (c &lt; 0x80)  /* ascii? */</span>
-<span class="lineNum">      46 </span>            :     res = c;
+<span class="lineNum">      42 </span><span class="lineCov">         42 :   const unsigned char *s = (const unsigned char *)o;</span>
+<span class="lineNum">      43 </span><span class="lineCov">         42 :   unsigned int c = s[0];</span>
+<span class="lineNum">      44 </span><span class="lineCov">         42 :   unsigned int res = 0;  /* final result */</span>
+<span class="lineNum">      45 </span><span class="lineCov">         42 :   if (c &lt; 0x80)  /* ascii? */</span>
+<span class="lineNum">      46 </span><span class="lineCov">         34 :     res = c;</span>
 <span class="lineNum">      47 </span>            :   else {
-<span class="lineNum">      48 </span>            :     int count = 0;  /* to count number of continuation bytes */
+<span class="lineNum">      48 </span><span class="lineCov">          8 :     int count = 0;  /* to count number of continuation bytes */</span>
 <span class="lineNum">      49 </span><span class="lineCov">         18 :     while (c &amp; 0x40) {  /* still have continuation bytes? */</span>
 <span class="lineNum">      50 </span><span class="lineCov">         13 :       int cc = s[++count];  /* read next byte */</span>
 <span class="lineNum">      51 </span><span class="lineCov">         13 :       if ((cc &amp; 0xC0) != 0x80)  /* not a continuation byte? */</span>
-<span class="lineNum">      52 </span>            :         return NULL;  /* invalid byte sequence */
+<span class="lineNum">      52 </span><span class="lineCov">          3 :         return NULL;  /* invalid byte sequence */</span>
 <span class="lineNum">      53 </span><span class="lineCov">         10 :       res = (res &lt;&lt; 6) | (cc &amp; 0x3F);  /* add lower 6 bits from cont. byte */</span>
 <span class="lineNum">      54 </span><span class="lineCov">         10 :       c &lt;&lt;= 1;  /* to test next bit */</span>
 <span class="lineNum">      55 </span>            :     }
 <span class="lineNum">      56 </span><span class="lineCov">          5 :     res |= ((c &amp; 0x7F) &lt;&lt; (count * 5));  /* add first byte */</span>
 <span class="lineNum">      57 </span><span class="lineCov">          5 :     if (count &gt; 3 || res &gt; MAXUNICODE || res &lt;= limits[count])</span>
-<span class="lineNum">      58 </span>            :       return NULL;  /* invalid byte sequence */
+<span class="lineNum">      58 </span><span class="lineNoCov">          0 :       return NULL;  /* invalid byte sequence */</span>
 <span class="lineNum">      59 </span><span class="lineCov">          5 :     s += count;  /* skip continuation bytes read */</span>
 <span class="lineNum">      60 </span>            :   }
-<span class="lineNum">      61 </span><span class="lineCov">         37 :   if (val) *val = res;</span>
-<span class="lineNum">      62 </span><span class="lineCov">         37 :   return (const char *)s + 1;  /* +1 to include first byte */</span>
+<span class="lineNum">      61 </span><span class="lineCov">         39 :   if (val) *val = res;</span>
+<span class="lineNum">      62 </span><span class="lineCov">         39 :   return (const char *)s + 1;  /* +1 to include first byte */</span>
 <span class="lineNum">      63 </span>            : }
 <span class="lineNum">      64 </span>            : 
 <span class="lineNum">      65 </span>            : 
@@ -134,28 +134,28 @@
 <span class="lineNum">      68 </span>            : ** range [i,j], or nil + current position if 's' is not well formed in
 <span class="lineNum">      69 </span>            : ** that interval
 <span class="lineNum">      70 </span>            : */
-<span class="lineNum">      71 </span><span class="lineCov">         10 : static int utflen (lua_State *L) {</span>
-<span class="lineNum">      72 </span>            :   int n = 0;
+<span class="lineNum">      71 </span><span class="lineCov">         12 : static int utflen (lua_State *L) {</span>
+<span class="lineNum">      72 </span><span class="lineCov">         12 :   int n = 0;</span>
 <span class="lineNum">      73 </span>            :   size_t len;
-<span class="lineNum">      74 </span><span class="lineCov">         10 :   const char *s = luaL_checklstring(L, 1, &amp;len);</span>
-<span class="lineNum">      75 </span><span class="lineCov">         10 :   lua_Integer posi = u_posrelat(luaL_optinteger(L, 2, 1), len);</span>
-<span class="lineNum">      76 </span><span class="lineCov">         10 :   lua_Integer posj = u_posrelat(luaL_optinteger(L, 3, -1), len);</span>
-<span class="lineNum">      77 </span><span class="lineCov">         10 :   luaL_argcheck(L, 1 &lt;= posi &amp;&amp; --posi &lt;= (lua_Integer)len, 2,</span>
+<span class="lineNum">      74 </span><span class="lineCov">         12 :   const char *s = luaL_checklstring(L, 1, &amp;len);</span>
+<span class="lineNum">      75 </span><span class="lineCov">         12 :   lua_Integer posi = u_posrelat(luaL_optinteger(L, 2, 1), len);</span>
+<span class="lineNum">      76 </span><span class="lineCov">         12 :   lua_Integer posj = u_posrelat(luaL_optinteger(L, 3, -1), len);</span>
+<span class="lineNum">      77 </span><span class="lineCov">         12 :   luaL_argcheck(L, 1 &lt;= posi &amp;&amp; --posi &lt;= (lua_Integer)len, 2,</span>
 <span class="lineNum">      78 </span>            :                    &quot;initial position out of string&quot;);
-<span class="lineNum">      79 </span><span class="lineCov">          9 :   luaL_argcheck(L, --posj &lt; (lua_Integer)len, 3,</span>
+<span class="lineNum">      79 </span><span class="lineCov">         11 :   luaL_argcheck(L, --posj &lt; (lua_Integer)len, 3,</span>
 <span class="lineNum">      80 </span>            :                    &quot;final position out of string&quot;);
-<span class="lineNum">      81 </span><span class="lineCov">         27 :   while (posi &lt;= posj) {</span>
-<span class="lineNum">      82 </span><span class="lineCov">         19 :     const char *s1 = utf8_decode(s + posi, NULL);</span>
-<span class="lineNum">      83 </span><span class="lineCov">         19 :     if (s1 == NULL) {  /* conversion error? */</span>
+<span class="lineNum">      81 </span><span class="lineCov">         31 :   while (posi &lt;= posj) {</span>
+<span class="lineNum">      82 </span><span class="lineCov">         21 :     const char *s1 = utf8_decode(s + posi, NULL);</span>
+<span class="lineNum">      83 </span><span class="lineCov">         21 :     if (s1 == NULL) {  /* conversion error? */</span>
 <span class="lineNum">      84 </span><span class="lineCov">          1 :       lua_pushnil(L);  /* return nil ... */</span>
 <span class="lineNum">      85 </span><span class="lineCov">          1 :       lua_pushinteger(L, posi + 1);  /* ... and current position */</span>
 <span class="lineNum">      86 </span><span class="lineCov">          1 :       return 2;</span>
 <span class="lineNum">      87 </span>            :     }
-<span class="lineNum">      88 </span><span class="lineCov">         18 :     posi = s1 - s;</span>
-<span class="lineNum">      89 </span><span class="lineCov">         18 :     n++;</span>
+<span class="lineNum">      88 </span><span class="lineCov">         20 :     posi = s1 - s;</span>
+<span class="lineNum">      89 </span><span class="lineCov">         20 :     n++;</span>
 <span class="lineNum">      90 </span>            :   }
-<span class="lineNum">      91 </span><span class="lineCov">          8 :   lua_pushinteger(L, n);</span>
-<span class="lineNum">      92 </span><span class="lineCov">          8 :   return 1;</span>
+<span class="lineNum">      91 </span><span class="lineCov">         10 :   lua_pushinteger(L, n);</span>
+<span class="lineNum">      92 </span><span class="lineCov">         10 :   return 1;</span>
 <span class="lineNum">      93 </span>            : }
 <span class="lineNum">      94 </span>            : 
 <span class="lineNum">      95 </span>            : 
@@ -177,9 +177,9 @@
 <span class="lineNum">     111 </span><span class="lineNoCov">          0 :     return luaL_error(L, &quot;string slice too long&quot;);</span>
 <span class="lineNum">     112 </span><span class="lineCov">          7 :   n = (int)(pose -  posi) + 1;</span>
 <span class="lineNum">     113 </span><span class="lineCov">          7 :   luaL_checkstack(L, n, &quot;string slice too long&quot;);</span>
-<span class="lineNum">     114 </span>            :   n = 0;
+<span class="lineNum">     114 </span><span class="lineCov">          7 :   n = 0;</span>
 <span class="lineNum">     115 </span><span class="lineCov">          7 :   se = s + pose;</span>
-<span class="lineNum">     116 </span><span class="lineCov">         23 :   for (s += posi - 1; s &lt; se;) {</span>
+<span class="lineNum">     116 </span><span class="lineCov">         16 :   for (s += posi - 1; s &lt; se;) {</span>
 <span class="lineNum">     117 </span>            :     int code;
 <span class="lineNum">     118 </span><span class="lineCov">         10 :     s = utf8_decode(s, &amp;code);</span>
 <span class="lineNum">     119 </span><span class="lineCov">         10 :     if (s == NULL)</span>
@@ -187,7 +187,7 @@
 <span class="lineNum">     121 </span><span class="lineCov">          9 :     lua_pushinteger(L, code);</span>
 <span class="lineNum">     122 </span><span class="lineCov">          9 :     n++;</span>
 <span class="lineNum">     123 </span>            :   }
-<span class="lineNum">     124 </span>            :   return n;
+<span class="lineNum">     124 </span><span class="lineCov">          6 :   return n;</span>
 <span class="lineNum">     125 </span>            : }
 <span class="lineNum">     126 </span>            : 
 <span class="lineNum">     127 </span>            : 
@@ -233,7 +233,7 @@
 <span class="lineNum">     167 </span>            :                    &quot;position out of range&quot;);
 <span class="lineNum">     168 </span><span class="lineCov">         36 :   if (n == 0) {</span>
 <span class="lineNum">     169 </span>            :     /* find beginning of current byte sequence */
-<span class="lineNum">     170 </span><span class="lineCov">          3 :     while (posi &gt; 0 &amp;&amp; iscont(s + posi)) posi--;</span>
+<span class="lineNum">     170 </span><span class="lineCov">          9 :     while (posi &gt; 0 &amp;&amp; iscont(s + posi)) posi--;</span>
 <span class="lineNum">     171 </span>            :   }
 <span class="lineNum">     172 </span>            :   else {
 <span class="lineNum">     173 </span><span class="lineCov">         30 :     if (iscont(s + posi))</span>
@@ -248,7 +248,7 @@
 <span class="lineNum">     182 </span>            :      }
 <span class="lineNum">     183 </span>            :      else {
 <span class="lineNum">     184 </span><span class="lineCov">         18 :        n--;  /* do not move for 1st character */</span>
-<span class="lineNum">     185 </span><span class="lineCov">         56 :        while (n &gt; 0 &amp;&amp; posi &lt; (lua_Integer)len) {</span>
+<span class="lineNum">     185 </span><span class="lineCov">         38 :        while (n &gt; 0 &amp;&amp; posi &lt; (lua_Integer)len) {</span>
 <span class="lineNum">     186 </span>            :          do {  /* find beginning of next character */
 <span class="lineNum">     187 </span><span class="lineCov">         36 :            posi++;</span>
 <span class="lineNum">     188 </span><span class="lineCov">         36 :          } while (iscont(s + posi));  /* (cannot pass final '\0') */</span>
@@ -260,7 +260,7 @@
 <span class="lineNum">     194 </span><span class="lineCov">         26 :     lua_pushinteger(L, posi + 1);</span>
 <span class="lineNum">     195 </span>            :   else  /* no such character */
 <span class="lineNum">     196 </span><span class="lineCov">          9 :     lua_pushnil(L);</span>
-<span class="lineNum">     197 </span>            :   return 1;
+<span class="lineNum">     197 </span><span class="lineCov">         35 :   return 1;</span>
 <span class="lineNum">     198 </span>            : }
 <span class="lineNum">     199 </span>            : 
 <span class="lineNum">     200 </span>            : 
@@ -269,13 +269,13 @@
 <span class="lineNum">     203 </span><span class="lineCov">         13 :   const char *s = luaL_checklstring(L, 1, &amp;len);</span>
 <span class="lineNum">     204 </span><span class="lineCov">         13 :   lua_Integer n = lua_tointeger(L, 2) - 1;</span>
 <span class="lineNum">     205 </span><span class="lineCov">         13 :   if (n &lt; 0)  /* first iteration? */</span>
-<span class="lineNum">     206 </span>            :     n = 0;  /* start from here */
+<span class="lineNum">     206 </span><span class="lineCov">          3 :     n = 0;  /* start from here */</span>
 <span class="lineNum">     207 </span><span class="lineCov">         10 :   else if (n &lt; (lua_Integer)len) {</span>
-<span class="lineNum">     208 </span>            :     n++;  /* skip current byte */
-<span class="lineNum">     209 </span><span class="lineCov">          2 :     while (iscont(s + n)) n++;  /* and its continuations */</span>
+<span class="lineNum">     208 </span><span class="lineCov">         10 :     n++;  /* skip current byte */</span>
+<span class="lineNum">     209 </span><span class="lineCov">         12 :     while (iscont(s + n)) n++;  /* and its continuations */</span>
 <span class="lineNum">     210 </span>            :   }
 <span class="lineNum">     211 </span><span class="lineCov">         13 :   if (n &gt;= (lua_Integer)len)</span>
-<span class="lineNum">     212 </span>            :     return 0;  /* no more codepoints */
+<span class="lineNum">     212 </span><span class="lineCov">          2 :     return 0;  /* no more codepoints */</span>
 <span class="lineNum">     213 </span>            :   else {
 <span class="lineNum">     214 </span>            :     int code;
 <span class="lineNum">     215 </span><span class="lineCov">         11 :     const char *next = utf8_decode(s + n, &amp;code);</span>
@@ -313,11 +313,11 @@
 <span class="lineNum">     247 </span>            : };
 <span class="lineNum">     248 </span>            : 
 <span class="lineNum">     249 </span>            : 
-<span class="lineNum">     250 </span><span class="lineCov">         83 : LUAMOD_API int luaopen_utf8 (lua_State *L) {</span>
-<span class="lineNum">     251 </span><span class="lineCov">         83 :   luaL_newlib(L, funcs);</span>
-<span class="lineNum">     252 </span><span class="lineCov">         83 :   lua_pushlstring(L, UTF8PATT, sizeof(UTF8PATT)/sizeof(char) - 1);</span>
-<span class="lineNum">     253 </span><span class="lineCov">         83 :   lua_setfield(L, -2, &quot;charpattern&quot;);</span>
-<span class="lineNum">     254 </span><span class="lineCov">         83 :   return 1;</span>
+<span class="lineNum">     250 </span><span class="lineCov">         87 : LUAMOD_API int luaopen_utf8 (lua_State *L) {</span>
+<span class="lineNum">     251 </span><span class="lineCov">         87 :   luaL_newlib(L, funcs);</span>
+<span class="lineNum">     252 </span><span class="lineCov">         87 :   lua_pushlstring(L, UTF8PATT, sizeof(UTF8PATT)/sizeof(char) - 1);</span>
+<span class="lineNum">     253 </span><span class="lineCov">         87 :   lua_setfield(L, -2, &quot;charpattern&quot;);</span>
+<span class="lineNum">     254 </span><span class="lineCov">         87 :   return 1;</span>
 <span class="lineNum">     255 </span>            : }
 <span class="lineNum">     256 </span>            : 
 </pre>

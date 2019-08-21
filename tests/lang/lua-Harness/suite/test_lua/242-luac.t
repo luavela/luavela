@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2010-2018, Perrad Francois
+-- Copyright (C) 2010-2019, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -170,7 +170,11 @@ if _VERSION ~= 'Lua 5.1' then
     f:close()
     local cmd = luac .. [[ luac.out 2>&1]]
     f = io.popen(cmd)
-    like(f:read'*l', "truncated precompiled chunk")
+    if _VERSION <= 'Lua 5.3' then
+        like(f:read'*l', "truncated precompiled chunk")
+    else
+        like(f:read'*l', "bad binary format %(truncated chunk%)")
+    end
     f:close()
 end
 
@@ -180,7 +184,11 @@ if _VERSION ~= 'Lua 5.1' then -- bad signature
     f:close()
     local cmd = luac .. [[ luac.out 2>&1]]
     f = io.popen(cmd)
-    like(f:read'*l', "not a precompiled chunk", "bad signature")
+    if _VERSION <= 'Lua 5.3' then
+        like(f:read'*l', "not a precompiled chunk", "bad signature")
+    else
+        like(f:read'*l', "bad binary format %(not a binary chunk%)", "bad signature")
+    end
     f:close()
 end
 
@@ -190,7 +198,11 @@ if _VERSION ~= 'Lua 5.1' then -- bad version
     f:close()
     local cmd = luac .. [[ luac.out 2>&1]]
     f = io.popen(cmd)
-    like(f:read'*l', "version mismatch in precompiled chunk", "bad version")
+    if _VERSION <= 'Lua 5.3' then
+        like(f:read'*l', "version mismatch in precompiled chunk", "bad version")
+    else
+        like(f:read'*l', "bad binary format %(version mismatch%)", "bad version")
+    end
     f:close()
 end
 
@@ -200,10 +212,12 @@ if _VERSION ~= 'Lua 5.1' then -- bad format
     f:close()
     local cmd = luac .. [[ luac.out 2>&1]]
     f = io.popen(cmd)
-    if _VERSION >= 'Lua 5.3' then
+    if _VERSION == 'Lua 5.2' then
+        like(f:read'*l', "version mismatch in precompiled chunk", "bad format")
+    elseif _VERSION == 'Lua 5.3' then
         like(f:read'*l', "format mismatch in precompiled chunk", "bad format")
     else
-        like(f:read'*l', "version mismatch in precompiled chunk")
+        like(f:read'*l', "bad binary format %(version mismatch%)", "bad format")
     end
     f:close()
 end
@@ -229,7 +243,7 @@ if _VERSION == 'Lua 5.2' then -- bad data / tail
     f:close()
 end
 
-if _VERSION >= 'Lua 5.3' then -- bad data
+if _VERSION == 'Lua 5.3' then -- bad data
     local f = io.open('luac.out', 'w')
     f:write(signature .. bin_version .. format .. "\x19\x99\r\n\x1a\n" .. sizes)
     f:close()
@@ -239,7 +253,7 @@ if _VERSION >= 'Lua 5.3' then -- bad data
     f:close()
 end
 
-if _VERSION >= 'Lua 5.3' then -- bad sizes
+if _VERSION == 'Lua 5.3' then -- bad sizes
     local f = io.open('luac.out', 'w')
     f:write(signature .. bin_version .. format .. data .. "\xde\xad\xbe\xef\x00")
     f:close()
@@ -249,7 +263,7 @@ if _VERSION >= 'Lua 5.3' then -- bad sizes
     f:close()
 end
 
-if _VERSION >= 'Lua 5.3' then -- bad endianess
+if _VERSION == 'Lua 5.3' then -- bad endianess
     local f = io.open('luac.out', 'w')
     f:write(signature .. bin_version .. format .. data .. sizes .. "\0\0\0\0\0\0\0\0")
     f:close()
@@ -259,7 +273,7 @@ if _VERSION >= 'Lua 5.3' then -- bad endianess
     f:close()
 end
 
-if _VERSION >= 'Lua 5.3' then -- bad float format
+if _VERSION == 'Lua 5.3' then -- bad float format
     local endian = string.dump(load "a = 1"):sub(18, 18 + string.packsize'n')
     local f = io.open('luac.out', 'w')
     f:write(signature .. bin_version .. format .. data .. sizes .. endian .. "\0\0\0\0\0\0\0\0")

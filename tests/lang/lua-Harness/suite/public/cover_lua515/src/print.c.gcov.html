@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2018-10-07 17:32:51</td>
+            <td class="headerValue">2019-06-13 19:44:15</td>
             <td></td>
           </tr>
           <tr>
@@ -233,13 +233,13 @@
 <span class="lineNum">     167 </span><span class="lineNoCov">          0 :   s=&quot;(bstring)&quot;;</span>
 <span class="lineNum">     168 </span>            :  else
 <span class="lineNum">     169 </span><span class="lineNoCov">          0 :   s=&quot;(string)&quot;;</span>
-<span class="lineNum">     170 </span><span class="lineCov">         24 :  printf(&quot;\n%s &lt;%s:%d,%d&gt; (%d instruction%s, %d bytes at %p)\n&quot;,</span>
+<span class="lineNum">     170 </span><span class="lineCov">         16 :  printf(&quot;\n%s &lt;%s:%d,%d&gt; (%d instruction%s, %d bytes at %p)\n&quot;,</span>
 <span class="lineNum">     171 </span><span class="lineCov">          8 :         (f-&gt;linedefined==0)?&quot;main&quot;:&quot;function&quot;,s,</span>
 <span class="lineNum">     172 </span>            :         f-&gt;linedefined,f-&gt;lastlinedefined,
-<span class="lineNum">     173 </span><span class="lineCov">         16 :         S(f-&gt;sizecode),f-&gt;sizecode*Sizeof(Instruction),VOID(f));</span>
-<span class="lineNum">     174 </span><span class="lineCov">         56 :  printf(&quot;%d%s param%s, %d slot%s, %d upvalue%s, &quot;,</span>
-<span class="lineNum">     175 </span><span class="lineCov">         24 :         f-&gt;numparams,f-&gt;is_vararg?&quot;+&quot;:&quot;&quot;,SS(f-&gt;numparams),</span>
-<span class="lineNum">     176 </span><span class="lineCov">         32 :         S(f-&gt;maxstacksize),S(f-&gt;nups));</span>
+<span class="lineNum">     173 </span><span class="lineCov">          8 :         S(f-&gt;sizecode),f-&gt;sizecode*Sizeof(Instruction),VOID(f));</span>
+<span class="lineNum">     174 </span><span class="lineCov">         32 :  printf(&quot;%d%s param%s, %d slot%s, %d upvalue%s, &quot;,</span>
+<span class="lineNum">     175 </span><span class="lineCov">         16 :         f-&gt;numparams,f-&gt;is_vararg?&quot;+&quot;:&quot;&quot;,SS(f-&gt;numparams),</span>
+<span class="lineNum">     176 </span><span class="lineCov">         24 :         S(f-&gt;maxstacksize),S(f-&gt;nups));</span>
 <span class="lineNum">     177 </span><span class="lineCov">         24 :  printf(&quot;%d local%s, %d constant%s, %d function%s\n&quot;,</span>
 <span class="lineNum">     178 </span><span class="lineCov">         24 :         S(f-&gt;sizelocvars),S(f-&gt;sizek),S(f-&gt;sizep));</span>
 <span class="lineNum">     179 </span><span class="lineCov">          8 : }</span>
@@ -263,7 +263,7 @@
 <span class="lineNum">     197 </span><span class="lineCov">          7 :  for (i=0; i&lt;n; i++)</span>
 <span class="lineNum">     198 </span>            :  {
 <span class="lineNum">     199 </span><span class="lineCov">         12 :   printf(&quot;\t%d\t%s\t%d\t%d\n&quot;,</span>
-<span class="lineNum">     200 </span><span class="lineCov">         12 :   i,getstr(f-&gt;locvars[i].varname),f-&gt;locvars[i].startpc+1,f-&gt;locvars[i].endpc+1);</span>
+<span class="lineNum">     200 </span><span class="lineCov">          4 :   i,getstr(f-&gt;locvars[i].varname),f-&gt;locvars[i].startpc+1,f-&gt;locvars[i].endpc+1);</span>
 <span class="lineNum">     201 </span>            :  }
 <span class="lineNum">     202 </span><span class="lineCov">          3 : }</span>
 <span class="lineNum">     203 </span>            : 
@@ -289,7 +289,7 @@
 <span class="lineNum">     223 </span><span class="lineCov">          3 :   PrintLocals(f);</span>
 <span class="lineNum">     224 </span><span class="lineCov">          3 :   PrintUpvalues(f);</span>
 <span class="lineNum">     225 </span>            :  }
-<span class="lineNum">     226 </span><span class="lineCov">          8 :  for (i=0; i&lt;n; i++) PrintFunction(f-&gt;p[i],full);</span>
+<span class="lineNum">     226 </span><span class="lineCov">         10 :  for (i=0; i&lt;n; i++) PrintFunction(f-&gt;p[i],full);</span>
 <span class="lineNum">     227 </span><span class="lineCov">          8 : }</span>
 </pre>
       </td>

@@ -13,9 +13,9 @@ list(APPEND SUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.3.5
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.3.5/src
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.3.5/src/Makefile
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.4.0-work2
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.4.0-work2/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.4.0-work2/src/Makefile
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.4.0-alpha
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.4.0-alpha/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.4.0-alpha/src/Makefile
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/Makefile
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/docs
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/docs/index.md
@@ -112,17 +112,6 @@ list(APPEND SUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/src/lvm.c.gcov.html
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/src/lzio.c.gcov.html
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/updown.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/usr
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/usr/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/usr/include/ctype.h.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/usr/include/index.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/usr/include/index-sort-l.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/usr/include/x86_64-linux-gnu
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/usr/include/x86_64-linux-gnu/bits
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/usr/include/x86_64-linux-gnu/bits/index.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/usr/include/x86_64-linux-gnu/bits/index-sort-l.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/usr/include/x86_64-linux-gnu/bits/stdio2.h.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/usr/include/x86_64-linux-gnu/bits/string_fortified.h.gcov.html
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/amber.png
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/emerald.png
@@ -169,18 +158,6 @@ list(APPEND SUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lvm.c.gcov.html
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lzio.c.gcov.html
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/updown.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/usr
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/usr/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/usr/include/ctype.h.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/usr/include/index.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/usr/include/index-sort-l.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/usr/include/x86_64-linux-gnu
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/usr/include/x86_64-linux-gnu/bits
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/usr/include/x86_64-linux-gnu/bits/index.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/usr/include/x86_64-linux-gnu/bits/index-sort-l.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/usr/include/x86_64-linux-gnu/bits/stdio2.h.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/usr/include/x86_64-linux-gnu/bits/stdio.h.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/usr/include/x86_64-linux-gnu/bits/string_fortified.h.gcov.html
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/amber.png
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/emerald.png
@@ -226,18 +203,6 @@ list(APPEND SUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lvm.c.gcov.html
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lzio.c.gcov.html
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/updown.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/usr
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/usr/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/usr/include/ctype.h.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/usr/include/index.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/usr/include/index-sort-l.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/usr/include/x86_64-linux-gnu
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/usr/include/x86_64-linux-gnu/bits
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/usr/include/x86_64-linux-gnu/bits/index.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/usr/include/x86_64-linux-gnu/bits/index-sort-l.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/usr/include/x86_64-linux-gnu/bits/stdio2.h.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/usr/include/x86_64-linux-gnu/bits/stdio.h.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/usr/include/x86_64-linux-gnu/bits/string_fortified.h.gcov.html
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/README.md
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/000-sanity.t
@@ -302,6 +267,7 @@ list(APPEND SUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexico53/thread.t
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexico53/userdata.t
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexico53/utf8.t
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexico54/metatable.t
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexicojit
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexicojit/basic.t
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexicojit/lexico.t

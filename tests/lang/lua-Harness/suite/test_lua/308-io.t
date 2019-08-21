@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2009-2018, Perrad Francois
+-- Copyright (C) 2009-2019, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -31,7 +31,7 @@ L<https://www.lua.org/manual/5.3/manual.html#6.8>
 
 require'tap'
 local profile = require'profile'
-local has_write51 = true -- UJIT: currently we have f:write behaving like in 5.1 (returns true on success)
+local has_write51 = _VERSION == 'Lua 5.1' and (not profile.luajit_compat52 or ujit)
 local has_lines52 = _VERSION >= 'Lua 5.2' or profile.luajit_compat52
 local has_read52 = _VERSION >= 'Lua 5.2' or profile.luajit_compat52
 local has_read53 = _VERSION >= 'Lua 5.3' or  (jit and jit.version_num >= 20100)

@@ -1,0 +1,117 @@
+# Travis CI configuration file for LuaVela.
+# Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+
+dist: bionic
+language: c
+
+addons:
+  apt:
+    sources:
+      - sourceline: ppa:ubuntu-toolchain-r/test
+
+install:
+  - sudo xargs -a scripts/depends-build-18-04 apt install -y
+  - sudo xargs -a scripts/depends-test-18-04 apt install -y
+  - pip3 install --user -r scripts/requirements-tests.txt
+
+env:
+  global:
+    - BUILD_DIR=../build/
+
+matrix:
+  include:
+    - name: GCC Debug Static
+      env: TARGET=tests_full
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Debug
+          -DUJIT_TEST_LIB_TYPE=static
+
+    - name: GCC Debug Shared
+      env: TARGET=tests
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Debug
+          -DUJIT_TEST_LIB_TYPE=shared
+
+    - name: GCC Release Static
+      env: TARGET=tests_full
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Release
+          -DUJIT_TEST_LIB_TYPE=static
+
+    - name: GCC Release Shared
+      env: TARGET=tests
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Release
+          -DUJIT_TEST_LIB_TYPE=shared
+
+    - name: GCC Minimal Feature Set
+      env: TARGET=tests_full
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Debug
+          -DUJIT_HAS_JIT=OFF
+          -DUJIT_HAS_FFI=OFF
+          -DUJIT_LUA52COMPAT=OFF
+          -DUJIT_ENABLE_GDBJIT=OFF
+          -DUJIT_ENABLE_PROFILER=OFF
+          -DUJIT_ENABLE_IPROF=OFF
+          -DUJIT_ENABLE_COVERAGE=OFF
+          -DUJIT_ENABLE_CO_TIMEOUT=OFF
+          -DUJIT_ENABLE_MEMPROF=OFF
+          -DUJIT_ENABLE_THREAD_SAFETY=OFF
+
+    - name: Clang Debug Static
+      env: TARGET=tests_full
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
+          -DUJIT_TEST_LIB_TYPE=static
+
+    - name: Clang Debug Shared
+      env: TARGET=tests
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
+          -DUJIT_TEST_LIB_TYPE=shared
+
+    - name: Clang Release Static
+      env: TARGET=tests_full
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
+          -DUJIT_TEST_LIB_TYPE=static
+
+    - name: Clang Release Shared
+      env: TARGET=tests
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
+          -DUJIT_TEST_LIB_TYPE=shared
+
+    - name: Clang Minimal Feature Set
+      env: TARGET=tests_full
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
+          -DUJIT_HAS_JIT=OFF
+          -DUJIT_HAS_FFI=OFF
+          -DUJIT_LUA52COMPAT=OFF
+          -DUJIT_ENABLE_GDBJIT=OFF
+          -DUJIT_ENABLE_PROFILER=OFF
+          -DUJIT_ENABLE_IPROF=OFF
+          -DUJIT_ENABLE_COVERAGE=OFF
+          -DUJIT_ENABLE_CO_TIMEOUT=OFF
+          -DUJIT_ENABLE_MEMPROF=OFF
+          -DUJIT_ENABLE_THREAD_SAFETY=OFF
+
+script:
+  - cmake --build ${BUILD_DIR} --target ${TARGET}
