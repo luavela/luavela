@@ -108,7 +108,7 @@ For the regular state ``L``, pushes data state's data root on top of ``L``'s s
 
     void luaE_immutable(lua_State *L, int idx);
 
-Makes an object at ``idx`` immutable. See :ref:`here <sealing-public>` for details.
+Makes an object at ``idx`` immutable. See :ref:`here <spec-sealing>` for details.
 
 ``luaE_intinit``
 ^^^^^^^^^^^^^^^^

@@ -15,3 +15,4 @@ This section is dedicated for those who are planning to use |PROJECT| in your pr
    pub-compiler-support
    pub-testing-ujit
    pub-pkg-config
+   pub-faq

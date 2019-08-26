@@ -1,7 +1,7 @@
 .. _pub-compiler-support:
 
 |PROJECT| Compiler Support
-===========================
+==========================
 
 .. contents:: :local:
 

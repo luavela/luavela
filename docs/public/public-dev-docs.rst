@@ -10,5 +10,6 @@ This section is dedicated for those who are planning to contribute into the |PRO
 
    dev-style
    dev-tuts
+   vm-layout
    bytecode
    modules

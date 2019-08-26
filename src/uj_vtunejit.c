@@ -12,7 +12,6 @@
 
 #include "jit/lj_jit.h"
 
-/* This is not compiled in by default. See INSTALL for more details. */
 #ifdef VTUNEJIT
 
 #include "jitprofiling.h"

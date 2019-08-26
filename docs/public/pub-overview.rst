@@ -10,9 +10,9 @@ Overview and Features
 Project Overview
 ----------------
 
-.. include:: ../../README
+.. include:: ../../README.rst
      :start-line: 3
-     :end-line: 6
+     :end-line: 24
 
 Major Features
 --------------
@@ -20,7 +20,8 @@ Major Features
 .. toctree::
    :maxdepth: 1
 
-   sealing-public
-   spec-interruptible-coroutines
+   spec-sealing
+   spec-immutable-objects
+   spec-coroutine-timeouts
    spec-deterministic-hotcounting
    spec-unified-layout

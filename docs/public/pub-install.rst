@@ -1,3 +1,3 @@
 .. _pub-install:
 
-.. include:: ../../INSTALL
+.. include:: ../../INSTALL.rst
