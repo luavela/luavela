@@ -150,6 +150,7 @@ static void print_jit_status(lua_State *L) {
     fputs(s, stderr);
   }
   putc('\n', stderr);
+  lua_settop(L, 0);  /* clear stack */
 }
 
 /* Collects *script* arguments (placed after script name on the command line). */

@@ -14,6 +14,7 @@
 #if LJ_HASFFI
 
 int lj_carith_op(lua_State *L, enum MMS mm);
+int lj_carith_len(lua_State *L);
 
 uint64_t lj_carith_divu64(uint64_t a, uint64_t b);
 int64_t lj_carith_divi64(int64_t a, int64_t b);

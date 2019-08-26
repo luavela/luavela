@@ -195,7 +195,7 @@ LJLIB_CF(ffi_meta___eq)         LJLIB_REC(.)
 
 LJLIB_CF(ffi_meta___len)        LJLIB_REC(.)
 {
-  return ffi_arith(L);
+  return lj_carith_len(L);
 }
 
 LJLIB_CF(ffi_meta___lt)         LJLIB_REC(.)
