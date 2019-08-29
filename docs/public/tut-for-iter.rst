@@ -10,7 +10,7 @@ Generic for-iterator
 
 Consider the following piece of lua code:
 
-.. code-block:: lua 
+.. code-block:: lua
 
   -- test.lua
   local tbl = {'a', 'b'}
@@ -56,13 +56,13 @@ As a result, the following stack layout is maintained during the loop:
      variables, parameters and return values of the callee
      functions etc.).
 
-.. note:: 
+.. note::
 
     In order to get better understanding of for-iterators, let's write a code that uses custom for-iterator to only query elements from the array until some particular element is encountered:
 
-.. code-block:: lua 
+.. code-block:: lua
 
-    -- test-hates-seven.lua 
+    -- test-hates-seven.lua
     function ipairs_hates_seven_aux(table, index)
     new_index = index + 1
     if (new_index > #table or table[new_index] == 7) then
@@ -89,7 +89,7 @@ As a result, the following stack layout is maintained during the loop:
 
 There are no restrictions on how the induction variable is incremented:
 
-.. code-block:: lua 
+.. code-block:: lua
 
   -- test-even-index.lua
   function ipairs_even_index_aux(table, index)
@@ -148,10 +148,10 @@ As long as there is a common mechanism that allows to convert the table contents
 
 With this being said, ``pairs(tbl)`` might be written in Lua `as follows <http://www.lua.org/pil/7.3.html>`__:
 
-.. code-block:: lua 
+.. code-block:: lua
 
   function pairs(table)
-      return next, table, nil 
+      return next, table, nil
       -- here 'next' is the reference to the library function
   end
 

@@ -16,7 +16,6 @@
 
 #include "utils/leb128.h"
 
-/* This is not compiled in by default. See INSTALL for more details. */
 #ifdef GDBJIT
 
 #include <elf.h>

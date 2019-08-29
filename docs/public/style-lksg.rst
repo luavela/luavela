@@ -1,4 +1,4 @@
-.. _linux-code-style:
+.. _style-lksg:
 
 Linux Kernel Coding Style
 =========================

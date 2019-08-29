@@ -134,12 +134,12 @@ static void snapshot_stack(jit_State *J, SnapShot *snap, size_t nsnapmap)
   p = &J->cur.snapmap[nsnapmap];
   nent = snapshot_slots(J, p, nslots);
   snap->topslot = (uint8_t)snapshot_framelinks(J, p + nent);
-  snap->mapofs = (uint16_t)nsnapmap;
+  snap->mapofs = (uint32_t)nsnapmap;
   snap->ref = (IRRef1)J->cur.nins;
   snap->nent = (uint8_t)nent;
   snap->nslots = (uint8_t)nslots;
   snap->count = 0;
-  J->cur.nsnapmap = (uint16_t)(nsnapmap + nent + 2*(1 + J->framedepth));
+  J->cur.nsnapmap = (uint32_t)(nsnapmap + nent + 2*(1 + J->framedepth));
 }
 
 /* Add or merge a snapshot. */
@@ -341,7 +341,7 @@ void lj_snap_shrink(jit_State *J)
   nlim = J->cur.nsnapmap - snap->mapofs - 1;
   /* TODO: ??? */
   while (n <= nlim) map[m++] = map[n++];  /* Move PC + frame links down. */
-  J->cur.nsnapmap = (uint16_t)(snap->mapofs + m);  /* Free up space in map. */
+  J->cur.nsnapmap = (uint32_t)(snap->mapofs + m);  /* Free up space in map. */
 }
 
 /* -- Snapshot access ----------------------------------------------------- */

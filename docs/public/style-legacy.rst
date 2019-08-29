@@ -1,4 +1,4 @@
-.. _legacy-c:
+.. _style-legacy:
 
 Legacy C Coding Style and Guidelines
 ====================================

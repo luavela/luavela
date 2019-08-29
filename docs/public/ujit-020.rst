@@ -148,7 +148,7 @@ Returns a table with the current values of |PROJECT|-specific metrics. The table
 
     local value = ujit.immutable(value)
 
-Makes an object immutable and returns a reference to it for convenience. See :ref:`here <sealing-public>` for details. 
+Makes an object immutable and returns a reference to it for convenience. See :ref:`here <spec-sealing>` for details. 
 
 ``ujit.memprof.start``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -228,7 +228,7 @@ Returns ``true`` if |PROJECT|-level profiler was successful terminated, and `
 
     ujit.seal(obj)
 
-Recursively seals ``obj``. Throws a run-time error if sealing could not be finalized. In case of any errors, the state of ``obj`` is guaranteed to be the same as it was prior to the call to this interface. See :ref:`here <sealing-public>` for details. 
+Recursively seals ``obj``. Throws a run-time error if sealing could not be finalized. In case of any errors, the state of ``obj`` is guaranteed to be the same as it was prior to the call to this interface. See :ref:`here <spec-sealing>` for details. 
 
 ``ujit.table.keys``
 ^^^^^^^^^^^^^^^^^^^

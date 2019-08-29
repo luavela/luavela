@@ -2,8 +2,8 @@
 # This is the main entry point for building, testing and packaging the project.
 # If you need more details:
 #  * See ChangeLog for the detailed list of changes;
-#  * See INSTALL for extra guidance on configuring, building and installation;
-#  * See README otherwise.
+#  * See INSTALL.rst for guidance on configuring, building and installation;
+#  * See README.rst otherwise.
 # Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 # --- Initial setup ------------------------------------------------------------

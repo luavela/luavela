@@ -1,4 +1,4 @@
-.. _writing-benchmarks:
+.. _test-benchmark:
 
 Case Study: Writing Benchmarks for |PROJECT|
 ============================================
@@ -182,7 +182,7 @@ Benchmarking with Compiler On
 As demonstrated above, running the benchmark with compiler on immediately exposes your code to various transformations done by the compiler. On other hand, this is much more fun!  Just be careful:
 
     - No loop-invariants, remember?
-    - You may want to read :ref:`Reduce test cases <reduce-test-cases>` to gain more inspiration and knowledge about interacting with the compiler.
+    - You may want to read :ref:`Reduce test cases <test-reduce-cases>` to gain more inspiration and knowledge about interacting with the compiler.
     - You may ultimately want to learn the dump format, at least to estimate that you benchmark what you intended to. This one may be really tricky, |PROJECT| team understands that it is too cruel to MAKE you do so and always welcomes you to ask any questions of you feel you are stuck with benchmarking with the compiler turned on.
 
 And despite these pitfalls, you definitely gain following:
@@ -257,7 +257,7 @@ And run it:
             ...
 
 Conclusion
------------
+----------
 
 - Be careful when benchmarking with the compiler turned on: In particular, do not allow loop hoisting to spoil you benchmark and make it totally non-representative.
 -  Do two-fold benchmarking:

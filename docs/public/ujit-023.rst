@@ -45,7 +45,7 @@ Returns a table with the current values of |PROJECT|-specific metrics. The table
 
    local value = ujit.immutable(value)
 
-Makes an object immutable and returns a reference to it for convenience. See :ref:`here <sealing-public>` for more details.
+Makes an object immutable and returns a reference to it for convenience. See :ref:`here <spec-sealing>` for more details.
 
 ``ujit.seal``
 ^^^^^^^^^^^^^
@@ -54,7 +54,7 @@ Makes an object immutable and returns a reference to it for convenience. See :r
 
    ujit.seal(obj)
 
-Recursively seals ``obj``. Throws a run-time error if sealing could not be finalized. In case of any errors, the state of ``obj`` is guaranteed to be the same as it was prior to the call to this interface. See :ref:`here <sealing-public>` for more details.
+Recursively seals ``obj``. Throws a run-time error if sealing could not be finalized. In case of any errors, the state of ``obj`` is guaranteed to be the same as it was prior to the call to this interface. See :ref:`here <spec-sealing>` for more details.
 
 ``ujit.usesfenv``
 ^^^^^^^^^^^^^^^^^

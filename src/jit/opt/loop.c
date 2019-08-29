@@ -226,7 +226,7 @@ static void loop_subst_snap(jit_State *J, SnapShot *osnap,
   }
   J->guardemit.irt = 0;
   /* Setup new snapshot. */
-  snap->mapofs = (uint16_t)nmapofs;
+  snap->mapofs = (uint32_t)nmapofs;
   snap->ref = (IRRef1)J->cur.nins;
   snap->nslots = nslots;
   snap->topslot = osnap->topslot;
@@ -254,7 +254,7 @@ static void loop_subst_snap(jit_State *J, SnapShot *osnap,
   nmap += nn;
   while (omap < nextmap)  /* Copy PC + frame links. */
     *nmap++ = *omap++;
-  J->cur.nsnapmap = (uint16_t)(nmap - J->cur.snapmap);
+  J->cur.nsnapmap = (uint32_t)(nmap - J->cur.snapmap);
 }
 
 /* Unroll loop. */
@@ -365,7 +365,7 @@ static void loop_unroll(jit_State *J)
     }
   }
   if (!irt_isguard(J->guardemit))  /* Drop redundant snapshot. */
-    J->cur.nsnapmap = (uint16_t)J->cur.snap[--J->cur.nsnap].mapofs;
+    J->cur.nsnapmap = (uint32_t)J->cur.snap[--J->cur.nsnap].mapofs;
   lua_assert(J->cur.nsnapmap <= J->sizesnapmap);
   snap_store_pc(psentinel, snap_pc(&J->cur.snapmap[J->cur.snap[0].nent])); /* Restore PC. */
   loop_emit_phi(J, subst, phi, nphi, onsnap);
@@ -378,7 +378,7 @@ static void loop_undo(jit_State *J, IRRef ins, SnapNo nsnap, size_t nsnapmap)
   SnapShot *snap = &J->cur.snap[nsnap-1];
   SnapEntry *map = J->cur.snapmap;
   map[snap->mapofs + snap->nent] = map[J->cur.snap[0].nent];  /* Restore PC. */
-  J->cur.nsnapmap = (uint16_t)nsnapmap;
+  J->cur.nsnapmap = (uint32_t)nsnapmap;
   J->cur.nsnap = nsnap;
   J->guardemit.irt = 0;
   lj_ir_rollback(J, ins);

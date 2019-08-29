@@ -8,8 +8,8 @@ This section is dedicated for those who are planning to contribute into the |PRO
 .. toctree::
    :maxdepth: 1
 
-   coding-guidelines
+   dev-style
    dev-tuts
+   vm-layout
    bytecode
-   testing-ujit
    modules

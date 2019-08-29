@@ -1,4 +1,4 @@
-.. _code-base:
+.. _style-templates:
 
 Code Base Templates
 ===================
@@ -8,7 +8,7 @@ Code Base Templates
 Introduction
 -------------
 
-This document extends and provides examples to the :ref:`code-style`.
+This document extends and provides examples to the :ref:`style-main`.
 
 Template for a Translation Unit (aka Module)
 --------------------------------------------
