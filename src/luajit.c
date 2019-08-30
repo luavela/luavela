@@ -68,6 +68,15 @@ int luaJIT_setmode(struct lua_State *L, int idx, int mode)
 		} else {
 			if (!(mode & LUAJIT_MODE_ON))
 				G2J(g)->flags &= ~(uint32_t)JIT_F_ON;
+#if UJIT_IPROF_ENABLED
+			/*
+			 * This check is necessary until trace profiling is not
+			 * introduced
+			 */
+			else if (L->iprof)
+				/* Don't turn on JIT while profiling */
+				return 0;
+#endif /* UJIT_IPROF_ENABLED */
 			else if (G2J(g)->flags & JIT_F_SSE2)
 				G2J(g)->flags |= (uint32_t)JIT_F_ON;
 			else /* Don't turn on JIT without SSE2 support. */

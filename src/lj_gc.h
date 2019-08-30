@@ -32,6 +32,7 @@
 #define flipwhite(x)    ((x)->gch.marked ^= LJ_GC_WHITES)
 #define black2gray(x)   ((x)->gch.marked &= (uint8_t)~LJ_GC_BLACK)
 #define fixstring(s)    ((s)->marked |= LJ_GC_FIXED)
+#define unfixstring(s)  ((s)->marked &= ~LJ_GC_FIXED)
 #define markfinalized(x)        ((x)->gch.marked |= LJ_GC_FINALIZED)
 
 static LJ_AINLINE void lj_gc_push(GCobj* o, GCobj** list) {

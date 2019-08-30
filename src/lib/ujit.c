@@ -12,6 +12,7 @@
 
 #include "uj_lib.h"
 #include "uj_err.h"
+#include "uj_errmsg.h"
 #include "lj_tab.h"
 #include "uj_str.h"
 #include "uj_sbuf.h"
@@ -22,7 +23,6 @@
 #include "profile/uj_profile_iface.h"
 #include "profile/uj_memprof_iface.h"
 #include "profile/uj_iprof_iface.h"
-#include "lj_debug.h"
 #include "uj_ff.h"
 #include "lj_gc.h"
 #include "uj_state.h"
@@ -705,41 +705,53 @@ LJLIB_CF(ujit_coverage_unpause)
 
 #define LJLIB_MODULE_ujit_iprof
 
-static enum iprof_mode iprof_optmode(struct lua_State *L, unsigned int narg)
+static enum iprof_mode iprof_optmode(struct lua_State *L, unsigned narg)
 {
 	GCstr *arg = uj_lib_optstr(L, narg);
 	const char *mode = arg ? strdata(arg) : "plain";
 
 	if (strcmp(mode, "plain") == 0)
 		return IPROF_PLAIN;
+	if (strcmp(mode, "inclusive") == 0)
+		return IPROF_INCLUSIVE;
+	if (strcmp(mode, "exclusive") == 0)
+		return IPROF_EXCLUSIVE;
 	uj_err_caller(L, UJ_ERR_IPROF_START_BADMODE);
 }
 
-static const char *iprof_optname(struct lua_State *L, unsigned int narg)
+static const unsigned iprof_optlimit(struct lua_State *L, unsigned narg)
 {
-	int size;
-	TValue *frame;
-	const char *name, *what;
-	GCstr *arg = uj_lib_optstr(L, narg);
+	unsigned climit = uj_lib_optint(L, narg, LJ_MAX_XLEVEL);
 
-	if (arg)
-		return strdata(arg);
+	if (0 <= climit && climit <= LJ_MAX_XLEVEL)
+		return climit;
 
-	frame = (TValue *)lj_debug_frame(L, 1, &size);
-	what = frame ? lj_debug_funcname(L, frame, &name) : NULL;
-	return what ? name : "main";
+	uj_err_callerv(L, UJ_ERR_IPROF_START_BADLIMIT, LJ_MAX_XLEVEL);
 }
 
 LJLIB_CF(ujit_iprof_start)
 {
-	switch (uj_iprof_start(L, iprof_optname(L, 1), iprof_optmode(L, 2))) {
+	const char *name = strdata(uj_lib_checkstr(L, 1));
+	enum iprof_mode mode = iprof_optmode(L, 2);
+	unsigned climit = mode == IPROF_PLAIN ? 0 : iprof_optlimit(L, 3);
+
+#if LJ_HASJIT
+	/* This check is necessary until trace profiling is not introduced */
+	if (L2J(L)->flags & JIT_F_ON) {
+		lua_pushboolean(L, 0);
+		lua_pushstring(L, uj_errmsg(UJ_ERR_IPROF_ENABLED_JIT));
+		return 2;
+	}
+#endif
+
+	switch (uj_iprof_start(L, name, mode, climit)) {
 	case IPROF_SUCCESS: {
 		lua_pushboolean(L, 1);
 		return 1;
 	}
-	case IPROF_ERRMEM: {
+	case IPROF_ERRERR: {
 		lua_pushboolean(L, 0);
-		lua_pushliteral(L, "Not enough memory for profiling");
+		lua_pushliteral(L, "Error occured while profiling");
 		return 2;
 	}
 	case IPROF_ERRNYI: {
@@ -768,9 +780,9 @@ LJLIB_CF(ujit_iprof_stop)
 		uj_state_stack_incr_top(L);
 		return 1;
 	}
-	case IPROF_ERRMEM: {
+	case IPROF_ERRERR: {
 		lua_pushnil(L);
-		lua_pushliteral(L, "Not enough memory for profiling");
+		lua_pushliteral(L, "Error occured while profiling");
 		return 2;
 	}
 	case IPROF_ERRNYI: {
@@ -789,6 +801,12 @@ LJLIB_CF(ujit_iprof_stop)
 
 LJLIB_PUSH("plain")
 LJLIB_SET(PLAIN)
+
+LJLIB_PUSH("inclusive")
+LJLIB_SET(INCLUSIVE)
+
+LJLIB_PUSH("exclusive")
+LJLIB_SET(EXCLUSIVE)
 
 #include "lj_libdef.h"
 
