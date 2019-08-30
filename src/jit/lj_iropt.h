@@ -175,6 +175,7 @@ TRef lj_opt_narrow_pow(jit_State *J, TRef rb, TRef rc, TValue *vb, TValue *vc);
 IRType lj_opt_narrow_forl(jit_State *J, const TValue *forbase);
 
 /* Recording-time fixups for some optimizations. */
+int lj_opt_movtv_defer_canon(const jit_State *J);
 TRef lj_opt_movtv_rec_hint(jit_State *J, TRef tr);
 
 /* Optimization passes. */

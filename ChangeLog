@@ -9,6 +9,7 @@ version 0.24-dev0
   * Upgraded lua-Harness to 93b550fc
   * Numerous fixes in documentation
   * Added configuration file for Travis CI
+  * Added MOVTVPRI optimization, which extends MOVTV for recording-time nil, false and true values
   * Extended information about contributors
 
 version 0.23-dev0

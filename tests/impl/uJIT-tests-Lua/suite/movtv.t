@@ -178,3 +178,24 @@ $tester->run('gset.lua', args => '-p-')
     ->stdout_has(qr/\s+GSET\s+/)
     ->stdout_has('MOVTV', 'optimization applied')
 ;
+
+$tester->run('pri-non-nil.lua', args => '-p-')
+    ->exit_ok()
+    ->stdout_has('TRACE 1 mcode')
+    ->stdout_has_no('TRACE 2 mcode', 'single trace formed')
+    ->stdout_has(qr/\d+\s+tru HLOAD.+MOVTV\b/, 'primitive with MOVTV applied')
+;
+
+$tester->run('pri-nil-non-empty.lua', args => '-p-')
+    ->exit_ok()
+    ->stdout_has('TRACE 1 mcode')
+    ->stdout_has_no('TRACE 2 mcode', 'single trace formed')
+    ->stdout_has(qr/\d+\s+nil HLOAD.+MOVTV\b/, 'LOAD of nil with MOVTV applied')
+;
+
+$tester->run('pri-nil-empty.lua', args => '-p-')
+    ->exit_ok()
+    ->stdout_has('TRACE 1 mcode')
+    ->stdout_has_no('TRACE 2 mcode', 'single trace formed')
+    ->stdout_has(qr/\d+\s+nil HLOAD.+MOVTV\b/, 'LOAD of nil with MOVTV applied')
+;

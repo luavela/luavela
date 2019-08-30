@@ -155,6 +155,9 @@ list(APPEND SUITE_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/movtv/load-used-by-bc-not.lua
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/movtv/no-fuse-meta-src.lua
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/movtv/no-fuse-meta-dst.lua
+  ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/movtv/pri-nil-empty.lua
+  ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/movtv/pri-nil-non-empty.lua
+  ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/movtv/pri-non-nil.lua
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/movtv/same-table-diff-keys.lua
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/movtv/same-table-same-key.lua
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/movtv/sload-meta-guard.lua
