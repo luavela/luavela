@@ -1,5 +1,6 @@
 version 0.24-dev0
   * Removed unnecessary conversions from numbers to temporary strings on concatenations
+  * Enabled stability testing with -O4 in CI, where applicable
   * Applied missing commits from LuaJIT above 2.0.5: 1c89933 630ff31 0c0e7b1 9f0caad b03a56f 03cd5aa 02b5219 fb5e522 380e440
   * Added missing documentation page
   * Added a separate LICENSE file and unified copyright notices across the code base
