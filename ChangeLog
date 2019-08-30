@@ -1,4 +1,5 @@
 version 0.24-dev0
+  * Updated bytecode reference
   * Removed unnecessary conversions from numbers to temporary strings on concatenations
   * Enabled stability testing with -O4 in CI, where applicable
   * Enhancements in the instrumenting profiler:
