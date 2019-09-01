@@ -46,7 +46,6 @@ struct GG_State {
 #define GG_G2DISP (GG_OFS(dispatch) - GG_OFS(g))
 #define GG_DISP2G (GG_OFS(g) - GG_OFS(dispatch))
 #define GG_DISP2J (GG_OFS(J) - GG_OFS(dispatch))
-#define GG_DISP2HOT (GG_OFS(hotcount) - GG_OFS(dispatch))
 #define GG_DISP2STATIC (GG_LEN_DDISP * (int)sizeof(ASMFunction))
 
 #if LJ_HASJIT

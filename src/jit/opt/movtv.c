@@ -21,6 +21,14 @@ static LJ_AINLINE int movtv_is_store(const IRIns *ir)
 	return ir->o == IR_ASTORE || ir->o == IR_HSTORE;
 }
 
+static LJ_AINLINE int movtv_is_tget(const BCIns *ins)
+{
+	BCOp op = bc_op(*ins);
+
+	return op == BC_TGETV || op == BC_TGETS || op == BC_TGETB ||
+	       op == BC_GGET;
+}
+
 static LJ_AINLINE int movtv_is_tset(const BCIns *ins)
 {
 	BCOp op = bc_op(*ins);
@@ -275,6 +283,13 @@ static void movtv_finalize(jit_State *J)
 	}
 }
 
+static LJ_AINLINE int movtv_applicable(const jit_State *J)
+{
+	const uint32_t need = JIT_F_OPT_DCE | JIT_F_OPT_MOVTV;
+
+	return (J->flags & need) == need;
+}
+
 /*
  * Give the compiler a hint whether an IR referenced by tr can be a subject
  * to the MOVTV optimization. If IR is a load and if recording of any bytecode
@@ -293,7 +308,7 @@ TRef lj_opt_movtv_rec_hint(jit_State *J, TRef tr)
 {
 	IRIns *ir;
 
-	if (!(J->flags & JIT_F_OPT_MOVTV))
+	if (!movtv_applicable(J))
 		return tr;
 
 	if (tref_isk(tr))
@@ -304,17 +319,62 @@ TRef lj_opt_movtv_rec_hint(jit_State *J, TRef tr)
 	if (!movtv_is_load(ir))
 		return tr;
 
-	if (!movtv_is_tset(J->pc))
+	if (!movtv_is_tset(J->pc)) {
 		ir_sethint(ir, IRH_LOAD_KEEPGUARD);
+		if (tref_ispri(tr)) {
+			int is_canon = tr == TREF_NIL || tr == TREF_FALSE ||
+				       tr == TREF_TRUE;
+
+			if (!is_canon)
+				tr = TREF_PRI(tr);
+		}
+	}
 
 	return tr;
 }
 
+/*
+ * By default recorder does its best to intern primitive values (nil, false,
+ * true) and canonicalize corresponding IR references, which results in such
+ * chains as:
+ *
+ * > tru LOAD ref
+ * <...>
+ *   tru STORE ref tru
+ *
+ * > EQ ref [nilnode]
+ *   nil STORE ref nil
+ *
+ * Such chains are obviously cannot be detected by MOVTV. We use a simple
+ * heuristics to detect cases when canonicalization can possibly be deferred:
+ * There should be a BC_TGET* adjacent to BC_TSET* with a common RA operand.
+ * Later, if this RA is referenced by a non-BC_TSET*, references are
+ * canonicalized during lj_opt_movtv_rec_hint (and guarded loads preserve
+ * their guards anyway).
+ */
+int lj_opt_movtv_defer_canon(const jit_State *J)
+{
+	if (!movtv_applicable(J))
+		return 0;
+
+	if (!(J->flags & JIT_F_OPT_MOVTVPRI))
+		return 0;
+
+	if (!movtv_is_tget(J->pc))
+		return 0;
+
+	if (!movtv_is_tset(J->pc + 1))
+		return 0;
+
+	if (bc_a(*(J->pc)) != bc_a(*(J->pc + 1)))
+		return 0;
+
+	return 1;
+}
+
 void lj_opt_movtv(jit_State *J)
 {
-	const uint32_t need = JIT_F_OPT_DCE | JIT_F_OPT_MOVTV;
-
-	if ((J->flags & need) != need)
+	if (!movtv_applicable(J))
 		return;
 
 	movtv_init(J);

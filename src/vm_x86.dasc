@@ -351,6 +351,25 @@
 |.macro ins_call
 |  // BASE = new base, RB = LFUNC, RD = nargs+1
 |  mov qword [BASE-1*TVS+8], PC
+|| #ifdef UJIT_IPROF_ENABLED
+|  mov L:CARG1, SAVE_L
+|  // call uj_iprof_tick if subroutine is being profiled
+|  cmp qword L:CARG1->iprof, 0
+|  jz >1
+|  // Saving RBa (rbp alias) to store lua_State there
+|  mov TMPa, RBa
+|  // Saving RDa (rax alias) due to external C call below
+|  mov TMPa2, RDa
+|  // Base sync is necessary for curr_func(L)
+|  mov L:RBa, CARG1
+|  mov L:RBa->base, BASE
+|  mov CARG2, IPROF_CALL
+|  call extern uj_iprof_tick          // (lua_State *L, enum iprof_node_type type)
+|  mov BASE, L:RBa->base
+|  mov RBa, TMPa
+|  mov RDa, TMPa2
+|1:
+|| #endif
 |  ins_callt
 |.endmacro
 |
@@ -690,6 +709,17 @@ static void build_subroutines(BuildCtx *ctx)
   |2:
   |  mov L:RBa, SAVE_L
   |  mov L:RBa->base, PC
+#ifdef UJIT_IPROF_ENABLED
+  |  // call uj_iprof_tick if subroutine is being profiled
+  |  cmp qword L:RBa->iprof, 0
+  |  jz >3
+  |  // Saving BASE (r10 alias) due to external C call below
+  |  mov TMPa, BASE
+  |  mov CARG1, L:RBa
+  |  mov CARG2, IPROF_RETURN
+  |  call extern uj_iprof_tick          // (lua_State *L, enum iprof_node_type type)
+  |  mov BASE, TMPa
+#endif
   |3:
   |  mov RD, MULTRES
   |  mov RAa, SAVE_NRES                 // RA = wanted nresults+1
@@ -845,7 +875,7 @@ static void build_subroutines(BuildCtx *ctx)
   |  mov byte L:RBa->status, RDL
 #ifdef UJIT_IPROF_ENABLED
   |  // call uj_iprof_tick if subroutine is being profiled
-  |  cmp dword L:RBa->iprof.profiling, 0
+  |  cmp qword L:RBa->iprof, 0
   |  jz >1
   |  // Saving RAa (rcx alias) due to external C call below
   |  mov TMPa, RAa
@@ -943,6 +973,25 @@ static void build_subroutines(BuildCtx *ctx)
   |
   |->cont_dispatch:
   |  // BASE = meta base, RA = resultofs, RD = nresults+1 (also in MULTRES)
+#ifdef UJIT_IPROF_ENABLED
+  |  mov L:RBa, SAVE_L
+  |  // call uj_iprof_tick if subroutine is being profiled
+  |  cmp qword L:RBa->iprof, 0
+  |  jz >1
+  |  // Saving RAa (rcx alias) due to external C call below
+  |  mov TMPa, RAa
+  |  // Saving RDa (rax alias) due to external C call below
+  |  mov TMPa2, RDa
+  |  // Base sync is necessary for curr_func(L)
+  |  mov L:RBa->base, BASE
+  |  mov CARG1, L:RBa
+  |  mov CARG2, IPROF_RETURN
+  |  call extern uj_iprof_tick          // (lua_State *L, enum iprof_node_type type)
+  |  mov BASE, L:RBa->base
+  |  mov RAa, TMPa
+  |  mov RDa, TMPa2
+  |1:
+#endif
   |  add RAa, BASE
   |  ftsz2offs PC
   |  mov RBa, BASE
@@ -1590,7 +1639,7 @@ static void build_subroutines(BuildCtx *ctx)
   |.endif
   |  restore_PC
   |  save_PC
-  |  mov TMPa, L:RBa
+  |  mov TMPTV, L:RBa
   |.if resume
   |  cmp dword [BASE+8], LJ_TTHREAD; jne ->fff_fallback
   |.endif
@@ -1614,6 +1663,22 @@ static void build_subroutines(BuildCtx *ctx)
   |
   |  mov L:RBa, SAVE_L
   |  mov L:RBa->base, BASE
+  || #ifdef UJIT_IPROF_ENABLED
+  |  // call uj_iprof_tick if subroutine is being profiled
+  |  cmp qword L:RBa->iprof, 0
+  |  jz >1
+  |  // Saving RAa (rcx alias) due to external C call below
+  |  mov TMPa, RAa
+  |  // Saving RDa (rax alias) due to external C call below
+  |  mov TMPa2, RDa
+  |  mov CARG1, L:RBa
+  |  mov CARG2, IPROF_YIELD
+  |  call extern uj_iprof_tick          // (lua_State *L, enum iprof_node_type type)
+  |  mov RAa, TMPa
+  |  mov RDa, TMPa2
+  |  mov BASE, L:RBa->base
+  |1:
+  || #endif
   |.if resume
   |  add BASE, 1*TVS                    // Keep resumed thread in stack for GC.
   |.endif
@@ -1634,12 +1699,24 @@ static void build_subroutines(BuildCtx *ctx)
   |  jne <2
   |3:
   |  mov CARG2, RAa
-  |  mov CARG1, TMPa
+  |  mov CARG1, TMPTV
   |  call ->vm_resume                   // (lua_State *L, TValue *base, 0, 0)
   |  set_vmstate INTERP // coroutine.{resume,wrap}: Resumed coroutine returned, INTERP until jump to BC_RET* or vm_return
   |
   |  mov L:RBa, SAVE_L
-  |  mov L:PC, TMPa
+  || #ifdef UJIT_IPROF_ENABLED
+  |  // call uj_iprof_tick if subroutine is being profiled
+  |  cmp qword L:RBa->iprof, 0
+  |  jz >1
+  |  // Saving CRET (rax alias) due to external C call below
+  |  mov TMPa, CRET
+  |  mov CARG1, L:RBa
+  |  mov CARG2, IPROF_RESUME
+  |  call extern uj_iprof_tick          // (lua_State *L, enum iprof_node_type type)
+  |  mov CRET, TMPa
+  |1:
+  || #endif
+  |  mov L:PC, TMPTV
   |  mov BASE, L:RBa->base
   |  cmp CRETd, LUA_YIELD
   |  ja >8
@@ -1699,12 +1776,12 @@ static void build_subroutines(BuildCtx *ctx)
   |.endif
   |
   |9:  // Handle stack expansion on return from yield.
-  |  mov L:RAa, TMPa
+  |  mov L:RAa, TMPTV
   |  mov L:RAa->top, KBASE      // Undo coroutine stack clearing.
   |  mov CARG2, PC
   |  mov CARG1, L:RBa
   |  call extern uj_state_stack_grow     // (lua_State *L, int n)
-  |  mov L:PC, TMPa
+  |  mov L:PC, TMPTV
   |  mov BASE, L:RBa->base
   |  jmp <4                             // Retry the stack move.
   |.endmacro
@@ -1723,7 +1800,7 @@ static void build_subroutines(BuildCtx *ctx)
   |  mov qword L:RBa->cframe, 0
 #ifdef UJIT_IPROF_ENABLED
   |  // call uj_iprof_tick if subroutine is being profiled
-  |  cmp dword L:RBa->iprof.profiling, 0
+  |  cmp qword L:RBa->iprof, 0
   |  jz >1
   |  mov CARG1, L:RBa
   |  mov CARG2, IPROF_YIELD
@@ -1763,9 +1840,28 @@ static void build_subroutines(BuildCtx *ctx)
   |->fff_res_:
   |  test PC, FRAME_TYPE
   |  jnz >7
-  |5:
+  |4:
   |  cmp PC_RB, RDL                     // More results expected?
   |  ja >6
+#ifdef UJIT_IPROF_ENABLED
+  |  mov L:CARG1, SAVE_L
+  |  // call uj_iprof_tick if subroutine is being profiled
+  |  cmp qword L:CARG1->iprof, 0
+  |  jz >5
+  |  // Saving RBa (rbp alias) to store lua_State there
+  |  mov TMPa, RBa
+  |  // Saving RDa (rax alias) due to external C call below
+  |  mov TMPa2, RDa
+  |  // Base sync is necessary for curr_func(L)
+  |  mov L:RBa, CARG1
+  |  mov L:RBa->base, BASE
+  |  mov CARG2, IPROF_RETURN
+  |  call extern uj_iprof_tick          // (lua_State *L, enum iprof_node_type type)
+  |  mov BASE, L:RBa->base
+  |  mov RBa, TMPa
+  |  mov RDa, TMPa2
+  |5:
+#endif
   |  // Adjust BASE. KBASE is assumed to be set for the calling frame.
   |  restore_base BASE
   |  set_vmstate_lfunc
@@ -1774,7 +1870,7 @@ static void build_subroutines(BuildCtx *ctx)
   |6:  // Fill up results with nil.
   |  setnil BASE, RDa, -2
   |  add RD, 1
-  |  jmp <5
+  |  jmp <4
   |
   |7:  // Non-standard return case.
   |  mov RAa, -TVS                      // Results start at BASE+RA = BASE-8.
@@ -3382,12 +3478,31 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
     |3:
     |  mov NARGS:RD, MULTRES
     |  cmp byte LFUNC:RBa->ffid, FF_C // Calling a fast function?
-    |  ja >5
+    |  ja >6
     |4:
     |  mov qword [BASE-1*TVS], LFUNC:RBa // Copy function down
+#ifdef UJIT_IPROF_ENABLED
+    |  mov L:CARG1, SAVE_L
+    |  // call uj_iprof_tick if subroutine is being profiled
+    |  cmp qword L:CARG1->iprof, 0
+    |  jz >5
+    |  // Saving RBa (rbp alias) to store lua_State there
+    |  mov TMPa, RBa
+    |  // Saving RDa (rax alias) due to external C call below
+    |  mov TMPa2, RDa
+    |  // Base sync is necessary for curr_func(L)
+    |  mov L:RBa, CARG1
+    |  mov L:RBa->base, BASE
+    |  mov CARG2, IPROF_CALLT
+    |  call extern uj_iprof_tick          // (lua_State *L, enum iprof_node_type type)
+    |  mov BASE, L:RBa->base
+    |  mov RBa, TMPa
+    |  mov RDa, TMPa2
+    |5:
+#endif
     |  ins_callt
     |
-    |5:  // Tailcall to a fast function.
+    |6:  // Tailcall to a fast function.
     |  test PC, FRAME_TYPE         // Lua frame below?
     |  jnz <4
     |  restore_base RAa
@@ -3616,7 +3731,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
       |3:
       |  mov RD, MULTRES                // Note: MULTRES may be >255.
       |  restore_RB
-      |5:
+      |4:
       |  cmp RB, RD                     // More results expected?
       |  ja >6
       break;
@@ -3627,12 +3742,31 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
       if (op == BC_RET0) {
         |  setnil BASE, -1
       }
-      |5:
+      |4:
       |  cmp PC_RB, RDL                 // More results expected?
       |  ja >6
     default:
       break;
     }
+#ifdef UJIT_IPROF_ENABLED
+    |  mov L:CARG1, SAVE_L
+    |  // call uj_iprof_tick if subroutine is being profiled
+    |  cmp qword L:CARG1->iprof, 0
+    |  jz >5
+    |  // Saving RBa (rbp alias) to store lua_State there
+    |  mov TMPa, RBa
+    |  // Saving RDa (rax alias) due to external C call below
+    |  mov TMPa2, RDa
+    |  // Base sync is necessary for curr_func(L)
+    |  mov L:RBa, CARG1
+    |  mov L:RBa->base, BASE
+    |  mov CARG2, IPROF_RETURN
+    |  call extern uj_iprof_tick          // (lua_State *L, enum iprof_node_type type)
+    |  mov BASE, L:RBa->base
+    |  mov RBa, TMPa
+    |  mov RDa, TMPa2
+    |5:
+#endif
     |  restore_base BASE
     |  setup_kbase BASE
     |  set_vmstate_lfunc
@@ -3647,7 +3781,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
       |  setnil BASE, RDa, -2
     }
     |  add RD, 1
-    |  jmp <5
+    |  jmp <4
     |
     |7:  // Non-standard return case.
     |  lea RBa, [PC-FRAME_VARG]

@@ -173,7 +173,11 @@ ERRDEF(PROF_START_BADMODE,
        "wrong profiling mode, use \"default\", \"leaf\" or \"callgraph\"")
 
 /* iprof errors. */
-ERRDEF(IPROF_START_BADMODE, "wrong profiling mode, use ujit.iprof.PLAIN")
+ERRDEF(IPROF_START_BADMODE,
+       "wrong profiling mode, use ujit.iprof.{PLAIN,INCLUSIVE,EXLCUSIVE}")
+ERRDEF(IPROF_START_BADLIMIT,
+       "wrong profiling limit, use non-negative number less than %d")
+ERRDEF(IPROF_ENABLED_JIT, "profiling cannot be proceeded with enabled JIT")
 
 /* ujit.string errors. */
 ERRDEF(SPLIT_EMPTY_SEPARATOR, "empty separator")

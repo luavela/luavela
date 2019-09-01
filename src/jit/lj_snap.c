@@ -626,8 +626,13 @@ static void snap_restoreval(jit_State *J, GCtrace *T, ExitState *ex,
       /* 64 bit lightuserdata which may escape already has the tag bits. */
       o->u64 = *(uint64_t *)sps; /* TODO: this is to be fixed when lightud is refactored. */
     } else {
-      lua_assert(!irt_ispri(t));  /* PRI refs never have a spill slot. */
-      setgcV(J->L, o, *(GCobj **)(void *)sps, irt_toitype(t));
+      if (!irt_ispri(t)) {
+        setgcV(J->L, o, *(GCobj **)(void *)sps, irt_toitype(t));
+      } else {
+        /* PRI refs can have a spill slot in case of mispredicted MOVTVPRI. */
+        lua_assert((J->flags & JIT_F_OPT_MOVTVPRI));
+        settag(o, irt_toitype(t));
+      }
     }
   } else {  /* Restore from register. */
     Reg r = regsp_reg(rs);

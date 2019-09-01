@@ -589,6 +589,9 @@ typedef struct global_State {
 #ifdef UJIT_COVERAGE
   struct coverage *coverage;
 #endif /* UJIT_COVERAGE */
+#ifdef UJIT_IPROF_ENABLED
+  GCstr *iprof_keys[IPROF_KEY_MAX];
+#endif /* UJIT_IPROF_ENABLED */
   int enable_itern;     /* Enables ISNEXT/ITERN generation in frontend */
 } global_State;
 
@@ -651,7 +654,7 @@ struct lua_State {
   size_t stacksize;        /* True stack size (incl. LJ_STACK_EXTRA). */
   struct coro_timeout timeout;
 #ifdef UJIT_IPROF_ENABLED
-  struct iprof iprof;
+  struct iprof *iprof;
 #endif /* UJIT_IPROF_ENABLED */
 };
 

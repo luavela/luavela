@@ -103,13 +103,28 @@ static TRef record_next_mm(struct jit_State *J, struct RecordIndex *ix)
 	return 0;
 }
 
+static int record_defer_canon(const struct jit_State *J,
+			      const struct RecordIndex *ix)
+{
+	IRType t = itype2irt(ix->oldv);
+
+	if (!irtype_ispri(t))
+		return 0;
+
+	if (IRT_NIL == t && ir_hashint(IR(tref_ref(ix->tab)), IRH_TAB_METAIDX))
+		return 0;
+
+	return lj_opt_movtv_defer_canon(J);
+}
+
 static TRef record_indexed_load(struct jit_State *J, struct RecordIndex *ix)
 {
 	const TValue *niltv = niltvg(J2G(J));
 	IRType t = itype2irt(ix->oldv);
+	int defer_canon = record_defer_canon(J, ix);
 	TRef res;
 
-	if (ix->oldv == niltv) {
+	if (ix->oldv == niltv && !defer_canon) {
 		emitir(IRTG(IR_EQ, IRT_P32), ix->xref,
 		       lj_ir_kkptr(J, (TValue *)niltv));
 		res = TREF_NIL;
@@ -122,7 +137,7 @@ static TRef record_indexed_load(struct jit_State *J, struct RecordIndex *ix)
 		return record_next_mm(J, ix);
 
 	/* Canonicalize primitives. */
-	if (irtype_ispri(t))
+	if (irtype_ispri(t) && !defer_canon)
 		res = TREF_PRI(t);
 	return res;
 }
@@ -375,8 +390,11 @@ static TRef record_idx_key(jit_State *J, RecordIndex *ix)
 	}
 
 	/* Otherwise the key is located in the hash part. */
-	if (t->hmask == 0) { /* Shortcut for empty hash part. */
-		/* Guard that the hash part stays empty. */
+	if (t->hmask == 0 && !record_defer_canon(J, ix)) {
+		/*
+		 * Shortcut for empty hash part.
+		 * Need a guard that the hash part stays empty.
+		 */
 		TRef tmp = emitir(IRTI(IR_FLOAD), ix->tab, IRFL_TAB_HMASK);
 
 		emitir(IRTGI(IR_EQ), tmp, lj_ir_kint(J, 0));
@@ -418,6 +436,8 @@ static TRef record_idx(struct jit_State *J, struct RecordIndex *ix)
 		}
 	}
 
+	record_hint_metaidx(J, ix);
+
 	/* Record the key lookup. */
 	ix->xref = record_idx_key(J, ix);
 	ix->xrefop = IR(tref_ref(ix->xref))->o;
@@ -426,8 +446,6 @@ static TRef record_idx(struct jit_State *J, struct RecordIndex *ix)
 	ix->oldval = ix->xrefop == IR_KKPTR ?
 			     (const TValue *)ir_kptr(IR(tref_ref(ix->xref))) :
 			     ix->oldv;
-
-	record_hint_metaidx(J, ix);
 
 	if (record_is_store(ix))
 		return record_indexed_store(J, ix);

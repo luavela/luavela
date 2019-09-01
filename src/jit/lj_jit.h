@@ -18,7 +18,7 @@
 /*
  * Layout of JIT engine flags (0 - free, 1 - used):
  * +MSB---------------------------------LSB+
- * |0001-1111-1111-1111-1111-0000-1111-0001|
+ * |0011-1111-1111-1111-1111-0000-1111-0001|
  * +---------------------------------------+
  */
 
@@ -55,6 +55,7 @@
 #define JIT_F_OPT_JITSTR        0x04000000
 #define JIT_F_OPT_JITPAIRS      0x08000000
 #define JIT_F_OPT_MOVTV         0x10000000
+#define JIT_F_OPT_MOVTVPRI      0x20000000
 
 /*
  * JIT_F_OPT_FUSE is a no-op under x86-64, and the flag is preserved for
@@ -67,7 +68,7 @@
 /* \nnn escape sequences are OCTAL: */
 #define JIT_F_OPTSTRING \
   "\4fold\3cse\3dce\3fwd\3dse\6narrow\4loop\3abc\4sink\4fuse" \
-  "\7nohrefk\6noretl\6jitcat\11jittabcat\6jitstr\10jitpairs\5movtv"
+  "\7nohrefk\6noretl\6jitcat\11jittabcat\6jitstr\10jitpairs\5movtv\10movtvpri"
 
 /* Optimization levels set a fixed combination of flags. */
 #define JIT_F_OPT_0     0
@@ -90,7 +91,8 @@
                           JIT_F_OPT_JITCAT    | \
                           JIT_F_OPT_JITTABCAT | \
                           JIT_F_OPT_JITSTR    | \
-                          JIT_F_OPT_MOVTV)
+                          JIT_F_OPT_MOVTV     | \
+                          JIT_F_OPT_MOVTVPRI)
 
 #define JIT_F_OPT_DEFAULT  JIT_F_OPT_3
 

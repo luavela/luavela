@@ -59,6 +59,11 @@ static int setjitmode(lua_State *L, int mode)
 
 LJLIB_CF(jit_on)
 {
+#if UJIT_IPROF_ENABLED
+  /* This check is necessary until trace profiling is not introduced */
+  if (L->iprof)
+    uj_err_caller(L, UJ_ERR_IPROF_ENABLED_JIT);
+#endif /* UJIT_IPROF_ENABLED */
   return setjitmode(L, LUAJIT_MODE_ON);
 }
 

@@ -26,6 +26,7 @@ matrix:
         - cmake -H. -B${BUILD_DIR}
           -DCMAKE_BUILD_TYPE=Debug
           -DUJIT_TEST_LIB_TYPE=static
+          -DUJIT_TEST_OPTIONS="-O4"
 
     - name: GCC Debug Shared
       env: TARGET=tests
@@ -33,6 +34,7 @@ matrix:
         - cmake -H. -B${BUILD_DIR}
           -DCMAKE_BUILD_TYPE=Debug
           -DUJIT_TEST_LIB_TYPE=shared
+          -DUJIT_TEST_OPTIONS="-O4"
 
     - name: GCC Release Static
       env: TARGET=tests_full
@@ -40,6 +42,7 @@ matrix:
         - cmake -H. -B${BUILD_DIR}
           -DCMAKE_BUILD_TYPE=Release
           -DUJIT_TEST_LIB_TYPE=static
+          -DUJIT_TEST_OPTIONS="-O4"
 
     - name: GCC Release Shared
       env: TARGET=tests
@@ -47,6 +50,7 @@ matrix:
         - cmake -H. -B${BUILD_DIR}
           -DCMAKE_BUILD_TYPE=Release
           -DUJIT_TEST_LIB_TYPE=shared
+          -DUJIT_TEST_OPTIONS="-O4"
 
     - name: GCC Minimal Feature Set
       env: TARGET=tests_full
@@ -71,6 +75,7 @@ matrix:
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
           -DUJIT_TEST_LIB_TYPE=static
+          -DUJIT_TEST_OPTIONS="-O4"
 
     - name: Clang Debug Shared
       env: TARGET=tests
@@ -79,6 +84,7 @@ matrix:
           -DCMAKE_BUILD_TYPE=Debug
           -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
           -DUJIT_TEST_LIB_TYPE=shared
+          -DUJIT_TEST_OPTIONS="-O4"
 
     - name: Clang Release Static
       env: TARGET=tests_full
@@ -87,6 +93,7 @@ matrix:
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
           -DUJIT_TEST_LIB_TYPE=static
+          -DUJIT_TEST_OPTIONS="-O4"
 
     - name: Clang Release Shared
       env: TARGET=tests
@@ -95,6 +102,7 @@ matrix:
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
           -DUJIT_TEST_LIB_TYPE=shared
+          -DUJIT_TEST_OPTIONS="-O4"
 
     - name: Clang Minimal Feature Set
       env: TARGET=tests_full

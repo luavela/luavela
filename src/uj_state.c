@@ -262,6 +262,11 @@ static TValue *state_cpluaopen(lua_State *L, lua_CFunction dummy, void *ud)
 #if LJ_HASJIT
 	lj_trace_initstate(g);
 #endif
+
+#ifdef UJIT_IPROF_ENABLED
+	uj_iprof_keys(L);
+#endif /* UJIT_IPROF_ENABLED */
+
 	return NULL;
 }
 
@@ -273,7 +278,8 @@ static void state_close_state(lua_State *L)
 	uj_profile_stop_vm(g);
 	uj_memprof_stop_vm(g);
 #ifdef UJIT_IPROF_ENABLED
-	uj_iprof_tfree(L);
+	uj_iprof_release(L);
+	uj_iprof_unkeys(L);
 #endif /* UJIT_IPROF_ENABLED */
 #ifdef UJIT_COVERAGE
 	uj_coverage_stop(L);
@@ -532,7 +538,7 @@ lua_State *uj_state_new(lua_State *L)
 	lua_State *L1 = (lua_State *)uj_obj_new(L, sizeof(lua_State));
 
 #ifdef UJIT_IPROF_ENABLED
-	memset(&L1->iprof, 0, sizeof(L1->iprof));
+	L1->iprof = NULL;
 #endif /* UJIT_IPROF_ENABLED */
 	L1->gct = ~LJ_TTHREAD;
 	L1->dummy_ffid = FF_C;
@@ -639,7 +645,7 @@ void uj_state_free(global_State *g, lua_State *L)
 		 * it was allocated within GG_State.
 		 */
 #ifdef UJIT_IPROF_ENABLED
-		uj_iprof_tfree(L);
+		uj_iprof_release(L);
 #endif /* UJIT_IPROF_ENABLED */
 		uj_mem_free(MEM_G(g), L, sizeof(*L));
 	}

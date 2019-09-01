@@ -34,9 +34,11 @@ assert(type(ujit.dump.stop) == "function")
 assert(type(ujit.dump.trace) == "function")
 
 -- ujit.iprof
-assert(table_size(ujit.iprof) == 3)
+assert(table_size(ujit.iprof) == 5)
 
 assert(type(ujit.iprof.PLAIN) == "string")
+assert(type(ujit.iprof.INCLUSIVE) == "string")
+assert(type(ujit.iprof.EXCLUSIVE) == "string")
 assert(type(ujit.iprof.start) == "function")
 assert(type(ujit.iprof.stop) == "function")
 

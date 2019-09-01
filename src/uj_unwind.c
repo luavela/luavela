@@ -8,6 +8,7 @@
 #include "lj_frame.h"
 #include "uj_cframe.h"
 #include "uj_upval.h"
+#include "profile/uj_iprof_iface.h"
 
 #include "lextlib.h"
 
@@ -156,8 +157,13 @@ typedef void (*cleanup_callback)(lua_State *L,
 LJ_NOINLINE static void unwind_cleanup_default(lua_State *L,
 					       const struct unwind_context *ctx)
 {
-	UNUSED(L);
 	UNUSED(ctx);
+
+#ifdef UJIT_IPROF_ENABLED
+	uj_iprof_unwind(L);
+#else
+	UNUSED(L);
+#endif
 }
 
 /* FRAME_C */
@@ -165,6 +171,10 @@ LJ_NOINLINE static void unwind_cleanup_frame_c(lua_State *L,
 					       const struct unwind_context *ctx)
 {
 	unwind_cleanup_across_c(L, ctx, 0);
+
+#ifdef UJIT_IPROF_ENABLED
+	uj_iprof_unwind(L);
+#endif
 }
 
 /* FRAME_CP (including vm_resume) */
@@ -187,6 +197,10 @@ unwind_cleanup_frame_cp(lua_State *L, const struct unwind_context *ctx)
 		   (ctx->ex == LUAE_TIMEOUT && is_resume));
 
 	unwind_cleanup_across_c(L, ctx, is_resume);
+
+#ifdef UJIT_IPROF_ENABLED
+	uj_iprof_unwind(L);
+#endif
 }
 
 /* FRAME_PCALL, FRAME_CALLH */
@@ -209,6 +223,10 @@ unwind_cleanup_frame_pcall(lua_State *L, const struct unwind_context *ctx)
 	L->cframe = ctx->cframe;
 	L->base = frame_prev(ctx->frame) + 1;
 	unwind_cleanup_stack(L, L->base, ctx->nres);
+
+#ifdef UJIT_IPROF_ENABLED
+	uj_iprof_unwind(L);
+#endif
 }
 
 /* vm_cpcall */
@@ -226,6 +244,10 @@ unwind_cleanup_frame_cpcall(lua_State *L, const struct unwind_context *ctx)
 	L->cframe = uj_cframe_prev(ctx->cframe);
 	L->base = ctx->frame + 1;
 	unwind_cleanup_stack(L, top, ctx->nres);
+
+#ifdef UJIT_IPROF_ENABLED
+	uj_iprof_unwind(L);
+#endif
 }
 
 /* ORDER FRAME_ */

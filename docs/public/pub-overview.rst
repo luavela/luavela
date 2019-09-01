@@ -24,4 +24,5 @@ Major Features
    spec-immutable-objects
    spec-coroutine-timeouts
    spec-deterministic-hotcounting
+   spec-ujit-iprof
    spec-unified-layout
