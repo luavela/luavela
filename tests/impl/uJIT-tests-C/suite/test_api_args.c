@@ -28,6 +28,21 @@ static int test_api_usesfenv(lua_State *L, int idx)
 	return usesfenv;
 }
 
+static void test_push_large_integer(void **state)
+{
+	UNUSED_STATE(state);
+
+	lua_State *L = test_lua_open();
+	const lua_Integer large_int = 0xdeaddeadbeefll;
+
+	lua_pushinteger(L, large_int);
+	assert_stack_size(L, 1);
+	assert_true(lua_isnumber(L, -1));
+	assert_int_equal(lua_tointeger(L, -1), large_int);
+
+	lua_close(L);
+}
+
 static void test_api_args(void **state)
 {
 	UNUSED_STATE(state);
@@ -97,6 +112,7 @@ int main(void)
 {
 	const struct CMUnitTest tests[] = {
 		cmocka_unit_test(test_api_args),
+		cmocka_unit_test(test_push_large_integer),
 	};
 	cmocka_set_message_output(CM_OUTPUT_TAP);
 	return cmocka_run_group_tests(tests, NULL, NULL);
