@@ -883,7 +883,7 @@ static LJ_AINLINE void setrawV(TValue *o, uint64_t x)
 #define setpinfV(o) setrawV(o, LJ_PINFINITY)
 #define setminfV(o) setrawV(o, LJ_MINFINITY)
 
-static LJ_AINLINE void setintV(TValue *o, int32_t i)
+static LJ_AINLINE void setintV(TValue *o, lua_Integer i)
 {
   setnumV(o, (lua_Number)i);
 }
