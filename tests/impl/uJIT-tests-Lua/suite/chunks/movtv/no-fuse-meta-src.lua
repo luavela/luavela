@@ -16,7 +16,7 @@ for i = 1, N do
 	dst[i] = false
 end
 
-jit.opt.start(4, "hotloop=1", "hotexit=2")
+jit.opt.start(4, "movtv", "movtvpri", "hotloop=1", "hotexit=2")
 jit.on()
 
 for i = 1, N do
