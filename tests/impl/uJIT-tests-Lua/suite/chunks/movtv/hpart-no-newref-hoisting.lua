@@ -4,7 +4,7 @@
 local setmetatable = setmetatable
 local modules = {{}, {}, {}, {}, {}}
 
-jit.opt.start(4, "hotloop=1")
+jit.opt.start(4, "movtv", "movtvpri", "hotloop=1")
 jit.on()
 
 local function seeall(mod)

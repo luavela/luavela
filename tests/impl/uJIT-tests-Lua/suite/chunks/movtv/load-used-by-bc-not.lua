@@ -5,7 +5,7 @@ local src = {"x", "y", false, false, false}
 local dst = {}
 local n = 0
 
-jit.opt.start(4, "hotloop=1")
+jit.opt.start(4, "movtv", "movtvpri", "hotloop=1")
 
 for i = 1, #src do
     local flag = not src[i] -- BC_NOT

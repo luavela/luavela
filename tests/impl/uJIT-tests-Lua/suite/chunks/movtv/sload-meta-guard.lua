@@ -1,7 +1,7 @@
 -- This is a part of uJIT's testing suite.
 -- Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
-jit.opt.start(4, "hotloop=1")
+jit.opt.start(4, "movtv", "movtvpri", "hotloop=1")
 jit.on()
 
 local function mov_arr(src)
@@ -20,7 +20,7 @@ local src2 = ujit.immutable(setmetatable({
 	6, 5, 4, 3, 2, 1,
 }})))
 
-jit.opt.start(4, "hotloop=2")
+jit.opt.start(4, "movtv", "movtvpri", "hotloop=2")
 jit.on()
 
 local dst1 = mov_arr(src1)

@@ -4,7 +4,7 @@
 local src = {{x=1}, {x=2}, {x=3}, {x=4}, {x=5}, {x=6}, {x=7}, {x=8}}
 local ref = {{x=1}, {x=2}, {x=3}, {x=4}, {x=5}, {x=6}, {x=7}, {x=8}}
 
-jit.opt.start(4, "hotloop=1")
+jit.opt.start(4, "movtv", "movtvpri", "hotloop=1")
 jit.on()
 
 for i = 1, #src do

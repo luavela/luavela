@@ -90,9 +90,7 @@
                           JIT_F_OPT_NORETL    | \
                           JIT_F_OPT_JITCAT    | \
                           JIT_F_OPT_JITTABCAT | \
-                          JIT_F_OPT_JITSTR    | \
-                          JIT_F_OPT_MOVTV     | \
-                          JIT_F_OPT_MOVTVPRI)
+                          JIT_F_OPT_JITSTR)
 
 #define JIT_F_OPT_DEFAULT  JIT_F_OPT_3
 
