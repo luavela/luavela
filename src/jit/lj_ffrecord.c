@@ -1073,8 +1073,12 @@ static void recff_string_find(jit_State *J, RecordFFData *rd)
                      str->len - (size_t)start, pat->len)) {
       TRef pos;
       emitir(IRTG(IR_NE, IRT_PTR), trfindptr, trnullptr);
-      pos = emitir(IRTI(IR_SUB), trfindptr,
-                   emitir(IRT(IR_STRREF, IRT_PTR), trstr, tr0));
+      /*
+       * Caveat: can't use STRREF trstr 0 here because that might be pointing
+       * into a wrong string due to folding.
+       */
+      pos = emitir(IRTI(IR_ADD), trstart,
+                   emitir(IRTI(IR_SUB), trfindptr, trsptr));
       J->base[0] = emitir(IRTI(IR_ADD), pos, lj_ir_kint(J, 1));
       J->base[1] = emitir(IRTI(IR_ADD), pos, trplen);
       rd->nres = 2;
