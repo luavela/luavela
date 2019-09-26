@@ -17,6 +17,7 @@ version 0.24-dev0
   * Added MOVTVPRI optimization, which extends MOVTV for recording-time nil, false and true values
   * Extended information about contributors
   * Excluded movtv and movtvpri from -O4
+  * Backported fix for string.find recording from tarantool/luajit repo
 
 version 0.23-dev0
   * Added an ability to copy values between tables on-trace without guarded loads:

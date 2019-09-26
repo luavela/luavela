@@ -107,3 +107,8 @@ $tester->run('bufstr-const-fold.lua', args => '-p-')
     ->stdout_has_no(qr/TRACE.+?abort.+?/)
     ->stdout_has_no(q/BUFSTR/)  # all BUFSTRs were folded away
 ;
+
+$tester->run('find-fold-bug.lua', args => '-p-')
+    ->exit_ok
+    ->stdout_has_no(qr/TRACE.+?abort.?/)
+;
