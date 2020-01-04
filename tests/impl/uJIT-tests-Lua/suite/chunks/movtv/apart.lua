@@ -49,7 +49,7 @@ src[70] = function () end
 src[70 + 1] = function () end
 src[70 + 2] = function () end
 
-jit.opt.start(4, "hotloop=2", "hotexit=2")
+jit.opt.start(4, "movtv", "movtvpri", "hotloop=2", "hotexit=2")
 jit.on()
 
 for i = 1, N do

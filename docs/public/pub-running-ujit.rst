@@ -139,14 +139,14 @@ Here are the available flags and at what optimization levels they are enabled: 
    ``dse``                      ✅    ✅         Dead-Store Elimination
    ``abc``                      ✅    ✅         Array Bounds Check Elimination
    ``sink``                     ✅    ✅         `Allocation Sinking Optimization <http://wiki.luajit.org/Allocation-Sinking-Optimization>`__
-   ``fuse``                                  ❗  Fusion of operands into instructions. This optimization is currently a no-op in |PROJECT| at the moment.
+   ``fuse``                                 ❗   Fusion of operands into instructions. This optimization is currently a no-op in |PROJECT| at the moment.
    ``nohrefk``                         ✅        Disables emission of the ``HREFK`` IR instruction. Available since |PROJECT| 0.10.
    ``noretl``                          ✅        Disables recording of returns to lower Lua frames. Available since |PROJECT| 0.10.
    ``jitcat``                          ✅        Enables compilation of concatenation. Available since |PROJECT| 0.11.
    ``jittabcat``                       ✅        Enables compilation of table.concat. Available since |PROJECT| 0.20.
    ``jitstr``                          ✅        Enables compilation of string.find, string.lower, string.upper. Available since |PROJECT| 0.20.
-   ``movtv``                           ✅        Optimizes copying data between tables. Available since |PROJECT| 0.23.
-   ``movtvpri``                        ✅        Same as ``movtv``, but for recording-time ``nil``, ``false`` and ``true`` values. Available since |PROJECT| 0.24.
+   ``movtv``                                ❗   Optimizes copying data between tables. Available since |PROJECT| 0.23.
+   ``movtvpri``                             ❗   Same as ``movtv``, but for recording-time ``nil``, ``false`` and ``true`` values. Available since |PROJECT| 0.24.
    ``jitpairs``                             ❗   Enables compilation of 'pairs' and 'next'. Available since |PROJECT| 0.22, but is known to produce incorrect results sometimes. Work on fix in progress.
    ============= ====== ====== ===== ===== ===== =======================================================
 

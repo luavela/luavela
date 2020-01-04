@@ -3,7 +3,7 @@
 
 local src = {"a", "b", "c", "d", "e", "f", "g", "h"}
 
-jit.opt.start(4, "hotloop=1")
+jit.opt.start(4, "movtv", "movtvpri", "hotloop=1")
 
 -- If you want to change the name of the variable, tune .luacheckrc as well :-)
 FOO = nil

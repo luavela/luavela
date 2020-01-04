@@ -10,7 +10,7 @@ end
 local src = {"val1", 2, "val3", 4, "val5", 6}
 local dst = {}
 
-jit.opt.start(4, "hotloop=1", "hotexit=3")
+jit.opt.start(4, "movtv", "movtvpri", "hotloop=1", "hotexit=3")
 jit.on()
 
 mov(dst, src, 1)

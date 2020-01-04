@@ -6,7 +6,7 @@ local Q = {8, 7, 6, 5, 4, 3, 2, 1}
 local i = 1
 local j = #q
 
-jit.opt.start(4, "hotloop=1")
+jit.opt.start(4, "movtv", "movtvpri", "hotloop=1")
 jit.on()
 
 repeat

@@ -4,7 +4,7 @@
 local src = {"a", "b", "c", "d", "e", "f", false, "h"}
 local dst = {}
 
-jit.opt.start(4, "hotloop=1")
+jit.opt.start(4, "movtv", "movtvpri", "hotloop=1")
 
 for i = 1, #src do
     -- We do not record assert explicitly relying on the guarded load.

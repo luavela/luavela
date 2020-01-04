@@ -6,7 +6,7 @@ jit.off()
 local src = {key1 = 1, key2 = 2, key3 = 3}
 local dst = {}
 
-jit.opt.start(4, "hotloop=1")
+jit.opt.start(4, "movtv", "movtvpri", "hotloop=1")
 jit.on()
 
 for _ = 1, 5 do
