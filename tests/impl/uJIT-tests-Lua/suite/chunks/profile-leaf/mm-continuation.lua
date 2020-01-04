@@ -4,7 +4,7 @@
 --
 -- Ensure VM state is switched correctly with continuations
 --
-local aux = require('aux')
+local aux = require('profile_aux')
 
 local o = setmetatable({}, {__index = function (_, key)
     return #key > 10 and 'long' or 'short'

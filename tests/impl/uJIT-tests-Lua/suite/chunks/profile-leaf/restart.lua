@@ -1,7 +1,7 @@
 -- This is a part of uJIT's testing suite.
 -- Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
-local aux = require('aux')
+local aux = require('profile_aux')
 
 local function foo()
     local sum = 0
