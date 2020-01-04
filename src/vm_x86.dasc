@@ -167,15 +167,16 @@
 |.endmacro
 |
 |// Same as n2tvp, but all n2tvp_r macros restore the original value of off_1.
+|// NB! Always use arithmetic shift to restore off_1 because it may be negative.
 |// Mnemo: Nargs to TValue Pointer, off_1 Restored
 |.macro n2tvp_r, acc, base, off_1, off_2
 |  n2tvp acc, base, off_1, off_2
-|  shr off_1, 1
+|  sar off_1, 1
 |.endmacro
 |
 |.macro n2tvp_r, acc, base, off_1
 |  n2tvp acc, base, off_1
-|  shr off_1, 1
+|  sar off_1, 1
 |.endmacro
 |
 |// -- New TValue tag getters/setters ---------------------------------------------------------------

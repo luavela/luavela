@@ -18,6 +18,7 @@ version 0.24-dev0
   * Extended information about contributors
   * Excluded movtv and movtvpri from -O4
   * Backported fix for string.find recording from tarantool/luajit repo
+  * Arithmetic right shift must be used in n2tvp_r
 
 version 0.23-dev0
   * Added an ability to copy values between tables on-trace without guarded loads:
