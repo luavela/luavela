@@ -42,6 +42,7 @@ list(APPEND SUITE_SOURCES
  ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua_setfield.c
  ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua_settable.c
  ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua_timeout.c
+ ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua_yield.c
  ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_luae_createstate.c
  ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_luae_deepcopy.c
  ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_luae_immutable.c
