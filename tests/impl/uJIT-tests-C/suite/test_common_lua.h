@@ -68,6 +68,14 @@ static UJ_UNIT_AINLINE void test_string(lua_State *L, int idx, const char *str)
 	assert_int_equal(len, strlen(str));
 }
 
+static UJ_UNIT_AINLINE void test_global_string(lua_State *L, const char *name,
+					       const char *value)
+{
+	lua_getglobal(L, name);
+	test_string(L, -1, value);
+	lua_pop(L, 1);
+}
+
 static UJ_UNIT_AINLINE void test_substring(lua_State *L,
 					   int idx, const char *expected)
 {

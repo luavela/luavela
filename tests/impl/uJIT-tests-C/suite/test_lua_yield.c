@@ -26,13 +26,6 @@ static void assert_yielded(lua_State *L, const char *status)
 	lua_pop(L, 1);
 }
 
-static void assert_global(lua_State *L, const char *name, const char *value)
-{
-	lua_getglobal(L, name);
-	test_string(L, -1, value);
-	lua_pop(L, 1);
-}
-
 static void test_lua_yield(void **state)
 {
 	UNUSED_STATE(state);
@@ -52,11 +45,11 @@ static void test_lua_yield(void **state)
 
 	lua_resume(T, 0); /* ENTER #1 */
 	assert_yielded(T, YIELD_STATUS);
-	assert_global(T, "canary", "ENTER #1");
+	test_global_string(T, "canary", "ENTER #1");
 
 	lua_resume(T, 0); /* LEAVE #1 */
 	assert_stack_size(T, 0);
-	assert_global(T, "canary", "LEAVE #1");
+	test_global_string(T, "canary", "LEAVE #1");
 
 	/*
 	 * Normally finished thread can be reused:
@@ -66,11 +59,11 @@ static void test_lua_yield(void **state)
 
 	lua_resume(T, 0); /* ENTER #2 */
 	assert_yielded(T, YIELD_STATUS);
-	assert_global(T, "canary", "ENTER #2");
+	test_global_string(T, "canary", "ENTER #2");
 
 	lua_resume(T, 0); /* LEAVE #2 */
 	assert_stack_size(T, 0);
-	assert_global(T, "canary", "LEAVE #2");
+	test_global_string(T, "canary", "LEAVE #2");
 
 	lua_close(L);
 }
