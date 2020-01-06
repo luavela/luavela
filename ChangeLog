@@ -18,6 +18,7 @@ version 0.24-dev0
   * Extended information about contributors
   * Excluded movtv and movtvpri from -O4
   * Backported fix for string.find recording from tarantool/luajit repo
+  * For shared library, fixed missing dependency on libdl
   * Renamed aux.lua to profile_aux.lua to avoid possible weird build errors
   * Arithmetic right shift must be used in n2tvp_r
   * Changed hardcoded prefix in ujit.pc.in to a configurable one
