@@ -181,12 +181,12 @@ list(APPEND SUITE_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/pairs/self_modify_2.lua
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/profile
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/profile-leaf
-  ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/profile-leaf/aux.lua
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/profile-leaf/callgraph.lua
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/profile-leaf/coro-vm-state.lua
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/profile-leaf/coro-yield-resume.lua
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/profile-leaf/ff-vm-state.lua
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/profile-leaf/mm-continuation.lua
+  ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/profile-leaf/profile_aux.lua
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/profile-leaf/restart.lua
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/profile-leaf/simple.lua
   ${CMAKE_CURRENT_SOURCE_DIR}/suite/chunks/profile-leaf/tail-call-ff.lua

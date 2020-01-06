@@ -4,7 +4,7 @@
 --
 -- Profiling a tail call
 --
-local aux = require('aux')
+local aux = require('profile_aux')
 
 local fname_real = aux.init_and_start_profiling(100)
 

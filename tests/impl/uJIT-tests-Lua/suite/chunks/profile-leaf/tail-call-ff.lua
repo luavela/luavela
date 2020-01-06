@@ -7,7 +7,7 @@
 -- but parameters are picked to guarantee ~100% crashes
 -- in case of an error.
 --
-local aux = require('aux')
+local aux = require('profile_aux')
 
 local fname_real = aux.init_and_start_profiling(10)
 

@@ -4,7 +4,7 @@
 --
 -- Ensure VM state is switched correctly with fast functions
 --
-local aux = require('aux')
+local aux = require('profile_aux')
 
 assert(ujit.profile.init() == true)
 
