@@ -4,7 +4,7 @@
 --
 -- Profiling coroutines: ensure VM state is switched correctly
 --
-local aux = require('aux')
+local aux = require('profile_aux')
 
 local co = coroutine.create(function (x, y)
     -- Almost no payload before yield:

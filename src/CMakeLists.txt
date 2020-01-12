@@ -390,7 +390,8 @@ set_target_properties (libujit_shared PROPERTIES
 ##
 
 target_link_libraries (libujit_static m)
-target_link_libraries (libujit_shared m)
+# NB! For the shared lib, please retain dependency on libdl for correct linking.
+target_link_libraries (libujit_shared m dl)
 
 if (UJIT_ENABLE_THREAD_SAFETY)
   target_link_libraries (libujit_static pthread)

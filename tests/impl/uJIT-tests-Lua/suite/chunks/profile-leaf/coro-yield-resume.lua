@@ -4,7 +4,7 @@
 --
 -- Profiling across several coroutine switches
 --
-local aux = require('aux')
+local aux = require('profile_aux')
 
 local co = coroutine.create(function (x, y)
     local sum1 = x
