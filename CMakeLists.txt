@@ -289,6 +289,7 @@ add_dependencies(tests_full
   clang_format
   luacheck
   clang_tidy
+  tests_smoke
   tests
 )
 

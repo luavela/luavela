@@ -199,3 +199,12 @@ Enables protection of memory pages with enabled machine code, so that none of
 them are writable and executable at the same time. Disable only if the page
 protection twiddling becomes a bottleneck. Protection is "ON" by default.
 Use "OFF" value at your own risk. See src/jit/lj_mcode.c for more details.
+
+Testing
+-------
+
+Please note that more dependencies are need for running the full test suite
+compared to just building the sources, and the process is not documented here.
+However, it is possible to run the very basic sanity tests using
+
+ $ make tests_smoke
