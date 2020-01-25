@@ -33,10 +33,7 @@ ExternalProject_Add(udis86_ext
   URL ${UDIS86_URL} # udis86 source directory, gets copied to binary dir in out-of-source build
   SOURCE_DIR ${UDIS86_SOURCE_DIR}
   BUILD_IN_SOURCE TRUE # in out-of-source build "source" is in binary dir, so it'll be performed there
-  CONFIGURE_COMMAND
-    COMMAND <SOURCE_DIR>/autogen.sh
-    COMMAND <SOURCE_DIR>/configure CC=${CMAKE_C_COMPILER}
-            --without-yasm --without-sphinx-build
+  CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
   INSTALL_COMMAND cmake -E echo "Skipping install step"
 )
 
@@ -44,14 +41,14 @@ ExternalProject_Get_Property(udis86_ext SOURCE_DIR)
 
 # NB! Enlist files explicitly (no globbing) so that cmake generates a valid
 # file list for the linker before udis86 is built
-set(UDIS86_OBJ_DIR ${SOURCE_DIR}/libudis86/.libs)
+set(UDIS86_OBJ_DIR ${SOURCE_DIR}/libudis86/CMakeFiles/libudis86.dir)
 set(UDIS86_OBJ
-  ${UDIS86_OBJ_DIR}/decode.o
-  ${UDIS86_OBJ_DIR}/itab.o
-  ${UDIS86_OBJ_DIR}/udis86.o
-  ${UDIS86_OBJ_DIR}/syn.o
-  ${UDIS86_OBJ_DIR}/syn-att.o
-  ${UDIS86_OBJ_DIR}/syn-intel.o
+  ${UDIS86_OBJ_DIR}/decode.c.o
+  ${UDIS86_OBJ_DIR}/itab.c.o
+  ${UDIS86_OBJ_DIR}/syn.c.o
+  ${UDIS86_OBJ_DIR}/syn-att.c.o
+  ${UDIS86_OBJ_DIR}/syn-intel.c.o
+  ${UDIS86_OBJ_DIR}/udis86.c.o
 )
 list(APPEND THIRD_PARTY_INCLUDE ${SOURCE_DIR})
 
