@@ -8,13 +8,6 @@ include(ExternalProject)
 set(THIRD_PARTY_INCLUDE)
 
 # --- Gather 3rdparty objects for libujit* -------------------------------------
-# 1. When you link a static library to another static library, they do not get
-#    "merged", you still have two libraries, and it is your final executable
-#    which has to link with both.
-# 2. To work this around, let us not *link* libujit* to its dependencies.
-#    Instead, let's take their object files (we have them, right?), append
-#    them to the list of object files of libujit* and assemble final libraries
-#    from all these object files.
 
 #
 # libudis86
@@ -22,43 +15,27 @@ set(THIRD_PARTY_INCLUDE)
 
 set(UDIS86_DIR "${CMAKE_CURRENT_SOURCE_DIR}/udis86")
 
-if(NOT "${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_BINARY_DIR}") # out-of-source build
-  set(UDIS86_URL ${UDIS86_DIR})
-else()
-  set(UDIS86_SOURCE_DIR ${UDIS86_DIR}) # this will make ExternalProject build in-source
-endif()
+list(APPEND THIRD_PARTY_INCLUDE ${UDIS86_DIR})
 
-ExternalProject_Add(udis86_ext
-  PREFIX udis86
-  URL ${UDIS86_URL} # udis86 source directory, gets copied to binary dir in out-of-source build
-  SOURCE_DIR ${UDIS86_SOURCE_DIR}
-  BUILD_IN_SOURCE TRUE # in out-of-source build "source" is in binary dir, so it'll be performed there
-  CONFIGURE_COMMAND
-    COMMAND <SOURCE_DIR>/autogen.sh
-    COMMAND <SOURCE_DIR>/configure CC=${CMAKE_C_COMPILER}
-            --without-yasm --without-sphinx-build
-  INSTALL_COMMAND cmake -E echo "Skipping install step"
-)
+add_library(libudis86 OBJECT
+  ${UDIS86_DIR}/libudis86/decode.c
+  ${UDIS86_DIR}/libudis86/itab.c
+  ${UDIS86_DIR}/libudis86/syn.c
+  ${UDIS86_DIR}/libudis86/syn-att.c
+  ${UDIS86_DIR}/libudis86/syn-intel.c
+  ${UDIS86_DIR}/libudis86/udis86.c)
 
-ExternalProject_Get_Property(udis86_ext SOURCE_DIR)
+# Fix-ups to avoid patching sources while keeping compilers and linkers happy:
 
-# NB! Enlist files explicitly (no globbing) so that cmake generates a valid
-# file list for the linker before udis86 is built
-set(UDIS86_OBJ_DIR ${SOURCE_DIR}/libudis86/.libs)
-set(UDIS86_OBJ
-  ${UDIS86_OBJ_DIR}/decode.o
-  ${UDIS86_OBJ_DIR}/itab.o
-  ${UDIS86_OBJ_DIR}/udis86.o
-  ${UDIS86_OBJ_DIR}/syn.o
-  ${UDIS86_OBJ_DIR}/syn-att.o
-  ${UDIS86_OBJ_DIR}/syn-intel.o
-)
-list(APPEND THIRD_PARTY_INCLUDE ${SOURCE_DIR})
+target_compile_options(libudis86
+ # All fallthrough cases are documented and shouldn't trigger warnings:
+ PRIVATE "-Wno-implicit-fallthrough")
 
-add_library(udis86 OBJECT IMPORTED GLOBAL)
-set_target_properties(udis86 PROPERTIES
-  IMPORTED_OBJECTS "${UDIS86_OBJ}"
-)
+# Pretend we have run autoconf for real:
+target_compile_definitions(libudis86 PRIVATE HAVE_STRING_H)
+
+# Otherwise we have some linking problems:
+set_target_properties(libudis86 PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 #
 # jemalloc
