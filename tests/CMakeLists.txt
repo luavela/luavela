@@ -50,6 +50,14 @@ add_custom_command(OUTPUT gen_benchmark_data.ok
 # Main targets
 #
 
+add_custom_target(tests_smoke
+  COMMENT "Running smoke test suites"
+)
+
+add_dependencies(tests_smoke
+  uJIT-tests-smoke
+)
+
 add_custom_target(tests
   COMMENT "Running test suites"
 )

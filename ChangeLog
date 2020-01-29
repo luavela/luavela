@@ -22,6 +22,8 @@ version 0.24-dev0
   * Renamed aux.lua to profile_aux.lua to avoid possible weird build errors
   * Arithmetic right shift must be used in n2tvp_r
   * Changed hardcoded prefix in ujit.pc.in to a configurable one
+  * Reworked building udis86 to use CMake instead of autoconf and libtool
+  * Added a mini-suite of smoke tests to easily run sanity checks for the platform
 
 version 0.23-dev0
   * Added an ability to copy values between tables on-trace without guarded loads:

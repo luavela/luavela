@@ -344,7 +344,7 @@ endif()
 
 target_include_directories(core PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-add_dependencies (core buildvm_output udis86_ext)
+add_dependencies (core buildvm_output libudis86)
 if(UJIT_ALLOCATOR STREQUAL "jemalloc")
   add_dependencies (core jemalloc_ext)
 endif()
@@ -360,7 +360,7 @@ set (LIB_NAME ujit)
 set (LIB_OBJECTS
   $<TARGET_OBJECTS:vm>
   $<TARGET_OBJECTS:core>
-  $<TARGET_OBJECTS:udis86>
+  $<TARGET_OBJECTS:libudis86>
 )
 
 if(UJIT_ALLOCATOR STREQUAL "jemalloc")
@@ -536,7 +536,4 @@ add_clang_tidy_check (clang_tidy_core
     ${SOURCES_CORE_NO_JIT_FFI}
   DEPENDS
     buildvm_output
-    udis86_ext # when building out-of-source, udis86.h will be copied to binary dir
-               # so we need to do it before running this check, otherwise Clang Tidy
-               # won't find udis86.h
 )
