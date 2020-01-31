@@ -16,6 +16,9 @@ The build was tested with following compilers:
   * Clang 3.8 (Ubuntu 14.04)
   * Clang 3.9 (Ubuntu 14.04)
   * Clang 6.0 (Ubuntu 18.04)
+  * AppleClang 10.0.0 (macOS 10.13)
+  * AppleClang 10.0.1 (macOS 10.14)
+  * AppleClang 11.0.0 (macOS 10.15)
 
 The build of core depends on following libraries:
 
@@ -31,24 +34,27 @@ Additionally, the build of tools depends on following libraries:
 If you are using Ubuntu 18.04 or Ubuntu 14.04, all dependencies
 should be available from scratch.
 
+Given the scarce list of dependencies, building and running on other Ubuntu x64
+versions (or other Linux x64 distributions) should work fine as well, but is not
+officially supported at the moment.
+
+For building on macOS you will need Command Line Tools and cmake.
+
+To get a better grasp of what software you'll need for building and testing,
+please check with the dependency lists for Ubuntu 18.04:
+
+  * scripts/depends-build-18-04
+  * scripts/depends-test-18-04
+
+Note: autoconf and libtool are needed only for building optional 3rd party
+dependencies, which are not built by default.
+
 Target environment
 ------------------
 
 As of current implementation, the only supported target is Ubuntu 18.04 running
 on x64 host machine. Please note, that 32-bit environment is not supported and
 it will not be built correctly.
-
-Given the scarce list of dependencies, building and running on other Ubuntu x64
-versions (or other Linux x64 distributions) should work fine as well, but is not
-officially supported at the moment.
-
-To get a grasp of what software you'll need for building and testing,
-please check with the dependency lists for Ubuntu 18.04:
-
-  * scripts/depends-build-18-04
-  * scripts/depends-test-18-04
-
-Note: autoconf and libtool are needed for building 3rd party dependencies.
 
 Building
 --------
@@ -138,12 +144,14 @@ UJIT_ENABLE_GDBJIT
 
 Enables dynamic emitting of DWARF data for assembled traces. "ON" by default.
 
+Available only on Linux.
+
 UJIT_ENABLE_PROFILER
 ^^^^^^^^^^^^^^^^^^^^
 
 Enables uJIT sampling profiler. "ON" by default.
 
-Requires linking with librt.
+Requires linking with librt. Available only on Linux.
 
 UJIT_ENABLE_IPROF
 ^^^^^^^^^^^^^^^^^
@@ -160,14 +168,14 @@ UJIT_ENABLE_CO_TIMEOUT
 
 Enables support for coroutine timeout. "ON" by default.
 
-Requires linking with librt.
+Requires linking with librt. Available only on Linux.
 
 UJIT_ENABLE_MEMPROF
 ^^^^^^^^^^^^^^^^^^^
 
 Enables support for memory profiler. "ON" by default.
 
-Requires linking with librt.
+Requires linking with librt. Available only on Linux.
 
 UJIT_ENABLE_THREAD_SAFETY
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -185,6 +193,8 @@ UJIT_ENABLE_VTUNEJIT
 
 Enables instrumenting the code with Intel VTune JIT API for correct profiling
 assembled traces. "OFF" by default.
+
+Available only on Linux.
 
 UJIT_USE_VALGRIND
 ^^^^^^^^^^^^^^^^^

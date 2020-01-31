@@ -9,8 +9,22 @@
 #ifndef _UJ_ARCH_H
 #define _UJ_ARCH_H
 
-/* Select native OS if no target OS defined. */
+/* Target OS. Values match LuaJIT's definitions. */
+#define UJIT_OS_LINUX 2
+#define UJIT_OS_OSX 3
+
+#ifndef UJIT_OS
+#error "UJIT_OS is expected to be set by the build system"
+#endif /* !UJIT_OS */
+
+#if UJIT_OS == UJIT_OS_LINUX
 #define UJ_OS_NAME "Linux"
+#elif UJIT_OS == UJIT_OS_OSX
+#define UJ_OS_NAME "OSX"
+#endif
+
+#define UJ_TARGET_LINUX (UJIT_OS == UJIT_OS_LINUX)
+#define UJ_TARGET_OSX (UJIT_OS == UJIT_OS_OSX)
 
 /*
  * Set target architecture properties.

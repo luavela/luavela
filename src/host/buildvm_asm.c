@@ -39,6 +39,34 @@ static void emit_asm_reloc(BuildCtx *ctx, int type, const char *sym) {
   }
 }
 
+static const char *const jccnames[] = {
+  "jo", "jno", "jb", "jnb", "jz", "jnz", "jbe", "ja",
+  "js", "jns", "jpe", "jpo", "jl", "jge", "jle", "jg"
+};
+
+/* Emit relocation for the incredibly stupid OSX assembler. */
+static void emit_asm_reloc_mach(BuildCtx *ctx, uint8_t *cp, int n,
+                                const char *sym)
+{
+  const char *opname = NULL;
+  if (--n < 0) goto err;
+  if (cp[n] == 0xe8) {
+    opname = "call";
+  } else if (cp[n] == 0xe9) {
+    opname = "jmp";
+  } else if (cp[n] >= 0x80 && cp[n] <= 0x8f && n > 0 && cp[n-1] == 0x0f) {
+    opname = jccnames[cp[n]-0x80];
+    n--;
+  } else {
+err:
+    fprintf(stderr, "Error: unsupported opcode for %s symbol relocation.\n",
+      sym);
+    exit(1);
+  }
+  emit_asm_bytes(ctx, cp, n);
+  fprintf(ctx->fp, "\t%s %s\n", opname, sym);
+}
+
 #define ELFASM_PX       "@"
 
 /* Emit an assembler label. */
@@ -52,6 +80,12 @@ static void emit_asm_label(BuildCtx *ctx, const char *name, int size, int isfunc
       "\t.size %s, %d\n"
       "%s:\n",
       name, name, name, isfunc ? "function" : "object", name, size, name);
+    break;
+  case BUILD_machasm:
+    fprintf(ctx->fp,
+      "\n\t.private_extern %s\n"
+      "\t.no_dead_strip %s\n"
+      "%s:\n", name, name, name);
     break;
   default:
     break;
@@ -89,8 +123,12 @@ void emit_asm(BuildCtx *ctx) {
     while (rel < ctx->nreloc && ctx->reloc[rel].ofs <= next) {
       BuildReloc *r = &ctx->reloc[rel];
       int n = r->ofs - ofs;
-      emit_asm_bytes(ctx, ctx->code+ofs, n);
-      emit_asm_reloc(ctx, r->type, ctx->relocsym[r->sym]);
+      if (ctx->mode == BUILD_machasm && r->type != 0) {
+        emit_asm_reloc_mach(ctx, ctx->code+ofs, n, ctx->relocsym[r->sym]);
+      } else {
+        emit_asm_bytes(ctx, ctx->code+ofs, n);
+        emit_asm_reloc(ctx, r->type, ctx->relocsym[r->sym]);
+      }
       ofs += n+4;
       rel++;
     }
@@ -102,6 +140,12 @@ void emit_asm(BuildCtx *ctx) {
   case BUILD_elfasm: {
     fprintf(ctx->fp, "\t.section .note.GNU-stack,\"\"," ELFASM_PX "progbits\n");
     fprintf(ctx->fp, "\t.ident \"%s\"\n", ctx->dasm_ident);
+    break;
+  }
+  case BUILD_machasm: {
+    fprintf(ctx->fp,
+      "\t.cstring\n"
+      "\t.ascii \"%s\\0\"\n", ctx->dasm_ident);
     break;
   }
   default: { break; }

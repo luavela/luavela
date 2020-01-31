@@ -145,28 +145,30 @@ assert(table.concat(a, ",", 2) == "b,c")
 assert(table.concat(a, ",", 3) == "c")
 assert(table.concat(a, ",", 4) == "")
 
-local locales = { "ptb", "ISO-8859-1", "pt_BR" }
-local function trylocale (w)
-  for _, l in ipairs(locales) do
-    if os.setlocale(l, w) then return true end
-  end
-  return false
-end
+-- UJIT: Locales are ignored since a non-std implementation of character classes
+-- UJIT: (with respective APIs) is inherited from LuaJIT
+-- local locales = { "ptb", "ISO-8859-1", "pt_BR" }
+-- local function trylocale (w)
+--   for _, l in ipairs(locales) do
+--     if os.setlocale(l, w) then return true end
+--   end
+--   return false
+-- end
 
-if not trylocale("collate")  then
-  print("locale not supported")
-else
-  assert("alo" < "álo" and "álo" < "amo")
-end
+-- if not trylocale("collate")  then
+--   print("locale not supported")
+-- else
+--   assert("alo" < "álo" and "álo" < "amo")
+-- end
 
-if not trylocale("ctype") then
-  print("locale not supported")
-else
-  assert(string.gsub("áéíóú", "%a", "x") == "xxxxx")
-  assert(string.gsub("áÁéÉ", "%l", "x") == "xÁxÉ")
-  assert(string.gsub("áÁéÉ", "%u", "x") == "áxéx")
-  assert(string.upper"áÁé{xuxu}ção" == "ÁÁÉ{XUXU}ÇÃO")
-end
+-- if not trylocale("ctype") then
+--   print("locale not supported")
+-- else
+--   assert(string.gsub("áéíóú", "%a", "x") == "xxxxx")
+--   assert(string.gsub("áÁéÉ", "%l", "x") == "xÁxÉ")
+--   assert(string.gsub("áÁéÉ", "%u", "x") == "áxéx")
+--   assert(string.upper"áÁé{xuxu}ção" == "ÁÁÉ{XUXU}ÇÃO")
+-- end
 
 os.setlocale("C")
 assert(os.setlocale() == 'C')

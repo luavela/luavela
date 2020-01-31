@@ -122,6 +122,7 @@ static LJ_AINLINE int CALL_MUNMAP(void *ptr, size_t size)
   return ret;
 }
 
+#if UJ_TARGET_LINUX
 /* Need to define _GNU_SOURCE to get the mremap prototype. */
 static LJ_AINLINE void *CALL_MREMAP_(void *ptr, size_t osz, size_t nsz, int flags)
 {
@@ -142,6 +143,11 @@ static LJ_AINLINE void *CALL_MREMAP_(void *ptr, size_t osz, size_t nsz, int flag
 #define CALL_MREMAP_NOMOVE      0
 #define CALL_MREMAP_MAYMOVE     1
 #define CALL_MREMAP_MV          CALL_MREMAP_NOMOVE
+#endif /* UJ_TARGET_LINUX */
+
+#ifndef CALL_MREMAP
+#define CALL_MREMAP(addr, osz, nsz, mv) ((void)(osz), MFAIL)
+#endif
 
 /* -----------------------  Chunk representations ------------------------ */
 

@@ -86,7 +86,8 @@ static void emit_raw(BuildCtx *ctx) {
 static const char *sym_decorate(BuildCtx *ctx, const char *prefix, const char *suffix) {
   char name[256];
   char *p;
-  sprintf(name, "%s%s", prefix, suffix);
+  const char *symprefix = ctx->mode == BUILD_machasm ? "_" : "";
+  sprintf(name, "%s%s%s", symprefix, prefix, suffix);
   p = strchr(name, '@');
   if (p) {
     *p = '\0';
@@ -374,7 +375,8 @@ int main(int argc, char **argv) {
   }
 
   switch (ctx->mode) {
-  case BUILD_elfasm: {
+  case BUILD_elfasm:
+  case BUILD_machasm: {
     emit_asm(ctx);
     emit_asm_debug(ctx);
     break;
