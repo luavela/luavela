@@ -16,7 +16,7 @@ if [ -t 1 ]; then # Produce colored output in terminal only
     NO_COLOR='\033[0m'
 fi
 
-SCRIPT_DIR=$(dirname `readlink -f $0`)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 source "$SCRIPT_DIR/../../run_suite_common.sh"
 
 # This is passed by CMake, if not present - we're launching
@@ -30,8 +30,13 @@ cp -a $SUITE_DIR/suite/. $SUITE_OUT_DIR
 
 # Check that shared libs are built and
 # copy them to $SUITE_OUT_DIR/libs
+if [[ `uname` == "Darwin" ]]; then
+    SHARED_LIB_EXT="dylib"
+else
+    SHARED_LIB_EXT="so"
+fi
 for TEST_LIB in $TEST_LIB_NAMES; do
-    TEST_LIB_PATH=$SUITE_BIN_DIR/$TEST_LIB.so
+    TEST_LIB_PATH=$SUITE_BIN_DIR/$TEST_LIB.$SHARED_LIB_EXT
     if [ -f $TEST_LIB_PATH ]; then
         ln -s $TEST_LIB_PATH $SUITE_OUT_DIR/libs
     else
@@ -48,12 +53,15 @@ PATH_ORIGINAL=$PATH
 LUA_JIT_ON="lua $LUA_IMPL_OPTIONS"
 LUA_JIT_OFF="lua $LUA_IMPL_OPTIONS -j off"
 TESTS_FAILED=
-TEST_LOG=$SUITE_OUT_DIR/test_run.log
+TEST_LOG_PREFIX=$SUITE_OUT_DIR/test_run
 
 function run_test()
 {
-    $ECHO "===Running $2===" >> $TEST_LOG
-    $1 $2 &>> $TEST_LOG
+    local lua_cmd=$1
+    local lua_chunk=$2
+    local log_fname="$TEST_LOG_PREFIX-$lua_chunk.log"
+
+    $lua_cmd $lua_chunk &>$log_fname
     if [[ $? -eq 0 ]]; then
         $ECHO "${COLOR_GREEN}PASS${NO_COLOR} $1 $2"
     else
@@ -112,7 +120,7 @@ if [[ -n "$TESTS_FAILED" ]]; then
     echo "====================================================================="
     echo "Following Lua 5.1 tests failed (full commands):"
     echo $TESTS_FAILED
-    echo "See $TEST_LOG for more details"
+    echo "See logs ($TEST_LOG_PREFIX*.log) for more details"
     echo "====================================================================="
     exit 1
 fi

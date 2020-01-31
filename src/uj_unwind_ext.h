@@ -1,5 +1,5 @@
 /*
- * Interface of system-provided unwind handler (Linux x64).
+ * Interface of system-provided unwind handler.
  * Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  *
  * We have to use our own definitions instead of the mandatory (!) unwind.h,

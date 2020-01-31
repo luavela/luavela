@@ -7,7 +7,8 @@
 # For the copyright info on the suite itself, see suite/*.lua and
 # https://github.com/MethodicalAcceleratorDesign/MAD/blob/dev/README.md.
 
-source "$(dirname `readlink -f $0`)/../../run_suite_common.sh"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
+source "$SCRIPT_DIR/../../run_suite_common.sh"
 
 if [[ -z "$TEST_FILES" ]]; then
     TEST_FILES="luacore.lua luagmath.lua luaobject.lua luaunitext.lua"
@@ -15,5 +16,5 @@ fi
 
 cd $SUITE_DIR/suite
 
-prove -j $(nproc) -e "$LUA_IMPL_BIN $LUA_IMPL_OPTIONS" $TEST_FILES
+$SUITE_PROVE_J -e "$LUA_IMPL_BIN $LUA_IMPL_OPTIONS" $TEST_FILES
 done_testing $?

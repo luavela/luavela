@@ -100,7 +100,7 @@ struct sbuf *uj_sbuf_push_numint(struct sbuf *sb, lua_Number n)
 		return uj_sbuf_push_int(sb, intnum);
 
 	sbuf_fit(sb, LUAI_MAXNUMBER2STR);
-	sb->sz += sprintf(uj_sbuf_back(sb), "%ld", intnum);
+	sb->sz += sprintf(uj_sbuf_back(sb), "%" PRId64, intnum);
 	return sb;
 }
 

@@ -10,6 +10,14 @@
 cmake_minimum_required(VERSION 3.3.2 FATAL_ERROR)
 project(UJIT C)
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  set(UJIT_OS "UJIT_OS_LINUX")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  set(UJIT_OS "UJIT_OS_OSX")
+else()
+  message(FATAL_ERROR "Unsupported target OS ${CMAKE_SYSTEM_NAME}")
+endif()
+
 #
 # Fine-tuning cmake environment:
 #
@@ -93,7 +101,12 @@ if(CMAKE_INSTALL_PREFIX)
   endif()
 endif()
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DUJIT_OS=${UJIT_OS}")
+
 option(UJIT_ENABLE_GDBJIT "Support for DWARF data for assembled traces" ON)
+if(NOT UJIT_OS STREQUAL "UJIT_OS_LINUX")
+  set(UJIT_ENABLE_GDBJIT OFF)
+endif()
 if(UJIT_ENABLE_GDBJIT)
   # NB! This macro needs to be defined in the root C flags because if we define
   # it only in TARGET_C_FLAGS, targets buildvm and core will be built with
@@ -102,6 +115,9 @@ if(UJIT_ENABLE_GDBJIT)
 endif()
 
 option(UJIT_ENABLE_VTUNEJIT "Intel VTune support" OFF)
+if(NOT UJIT_OS STREQUAL "UJIT_OS_LINUX")
+  set(UJIT_ENABLE_VTUNEJIT OFF)
+endif()
 if(UJIT_ENABLE_VTUNEJIT)
   # Configure things to instrument the code base with Intel VTune JIT API.
   # We rely on hardcoded installation directory (VTune's default), change
@@ -155,6 +171,9 @@ if(UJIT_ENABLE_THREAD_SAFETY)
 endif()
 
 option(UJIT_ENABLE_PROFILER "Sampling profiler support" ON)
+if(NOT UJIT_OS STREQUAL "UJIT_OS_LINUX")
+  set(UJIT_ENABLE_PROFILER OFF)
+endif()
 if(UJIT_ENABLE_PROFILER)
   set(TARGET_C_FLAGS "${TARGET_C_FLAGS} -DUJIT_PROFILER")
 endif()
@@ -170,11 +189,17 @@ if(UJIT_ENABLE_COVERAGE)
 endif()
 
 option(UJIT_ENABLE_CO_TIMEOUT "Coroutine timeout support" ON)
+if(NOT UJIT_OS STREQUAL "UJIT_OS_LINUX")
+  set(UJIT_ENABLE_CO_TIMEOUT OFF)
+endif()
 if(UJIT_ENABLE_CO_TIMEOUT)
   set(TARGET_C_FLAGS "${TARGET_C_FLAGS} -DUJIT_CO_TIMEOUT")
 endif()
 
 option(UJIT_ENABLE_MEMPROF "Memory profiler support" ON)
+if(NOT UJIT_OS STREQUAL "UJIT_OS_LINUX")
+  set(UJIT_ENABLE_MEMPROF OFF)
+endif()
 if(UJIT_ENABLE_MEMPROF)
   set(TARGET_C_FLAGS "${TARGET_C_FLAGS} -DUJIT_MEMPROF")
 endif()
