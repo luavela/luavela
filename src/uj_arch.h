@@ -9,22 +9,19 @@
 #ifndef _UJ_ARCH_H
 #define _UJ_ARCH_H
 
-/* Target OS. Values match LuaJIT's definitions. */
-#define UJIT_OS_LINUX 2
-#define UJIT_OS_OSX 3
+/* Target OS. */
 
-#ifndef UJIT_OS
-#error "UJIT_OS is expected to be set by the build system"
-#endif /* !UJIT_OS */
-
-#if UJIT_OS == UJIT_OS_LINUX
+#ifdef UJ_TARGET_LINUX
 #define UJ_OS_NAME "Linux"
-#elif UJIT_OS == UJIT_OS_OSX
-#define UJ_OS_NAME "OSX"
 #endif
 
-#define UJ_TARGET_LINUX (UJIT_OS == UJIT_OS_LINUX)
-#define UJ_TARGET_OSX (UJIT_OS == UJIT_OS_OSX)
+#ifdef UJ_TARGET_MACOS
+#define UJ_OS_NAME "OSX" /* Keep this (and not MACOS e.g.) for compatibility */
+#endif
+
+#ifndef UJ_OS_NAME
+#error "Unable to detect target OS (expected to be set by the build system)"
+#endif
 
 /*
  * Set target architecture properties.
@@ -36,10 +33,7 @@
 #define UJ_TARGET_MASKSHIFT 1
 #define UJ_TARGET_MASKROT 1
 #define UJ_TARGET_UNALIGNED 1
-
-#ifndef UJ_PAGESIZE
 #define UJ_PAGESIZE 4096
-#endif
 
 /*
  * Note: LJ_HASJIT, LJ_HASFFI and LJ_52 didn't get renamed to have UJ_ prefix
@@ -75,4 +69,4 @@
 #define LJ_52 0
 #endif
 
-#endif
+#endif /* !_UJ_ARCH_H */
