@@ -11,9 +11,9 @@ cmake_minimum_required(VERSION 3.3.2 FATAL_ERROR)
 project(UJIT C)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  set(UJIT_OS "UJIT_OS_LINUX")
+  set(UJIT_TARGET_OS "UJ_TARGET_LINUX")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-  set(UJIT_OS "UJIT_OS_OSX")
+  set(UJIT_TARGET_OS "UJ_TARGET_MACOS")
 else()
   message(FATAL_ERROR "Unsupported target OS ${CMAKE_SYSTEM_NAME}")
 endif()
@@ -101,10 +101,11 @@ if(CMAKE_INSTALL_PREFIX)
   endif()
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DUJIT_OS=${UJIT_OS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D${UJIT_TARGET_OS}")
 
-option(UJIT_ENABLE_GDBJIT "Support for DWARF data for assembled traces" ON)
-if(NOT UJIT_OS STREQUAL "UJIT_OS_LINUX")
+if(UJIT_TARGET_OS STREQUAL "UJ_TARGET_LINUX")
+  option(UJIT_ENABLE_GDBJIT "Support for DWARF data for assembled traces" ON)
+else()
   set(UJIT_ENABLE_GDBJIT OFF)
 endif()
 if(UJIT_ENABLE_GDBJIT)
@@ -114,8 +115,9 @@ if(UJIT_ENABLE_GDBJIT)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DGDBJIT")
 endif()
 
-option(UJIT_ENABLE_VTUNEJIT "Intel VTune support" OFF)
-if(NOT UJIT_OS STREQUAL "UJIT_OS_LINUX")
+if(UJIT_TARGET_OS STREQUAL "UJ_TARGET_LINUX")
+  option(UJIT_ENABLE_VTUNEJIT "Intel VTune support" OFF)
+else()
   set(UJIT_ENABLE_VTUNEJIT OFF)
 endif()
 if(UJIT_ENABLE_VTUNEJIT)
@@ -170,8 +172,9 @@ if(UJIT_ENABLE_THREAD_SAFETY)
   set(TARGET_C_FLAGS "${TARGET_C_FLAGS} -DUJIT_IS_THREAD_SAFE")
 endif()
 
-option(UJIT_ENABLE_PROFILER "Sampling profiler support" ON)
-if(NOT UJIT_OS STREQUAL "UJIT_OS_LINUX")
+if(UJIT_TARGET_OS STREQUAL "UJ_TARGET_LINUX")
+  option(UJIT_ENABLE_PROFILER "Sampling profiler support" ON)
+else()
   set(UJIT_ENABLE_PROFILER OFF)
 endif()
 if(UJIT_ENABLE_PROFILER)
@@ -188,16 +191,18 @@ if(UJIT_ENABLE_COVERAGE)
   set(TARGET_C_FLAGS "${TARGET_C_FLAGS} -DUJIT_COVERAGE")
 endif()
 
-option(UJIT_ENABLE_CO_TIMEOUT "Coroutine timeout support" ON)
-if(NOT UJIT_OS STREQUAL "UJIT_OS_LINUX")
+if(UJIT_TARGET_OS STREQUAL "UJ_TARGET_LINUX")
+  option(UJIT_ENABLE_CO_TIMEOUT "Coroutine timeout support" ON)
+else()
   set(UJIT_ENABLE_CO_TIMEOUT OFF)
 endif()
 if(UJIT_ENABLE_CO_TIMEOUT)
   set(TARGET_C_FLAGS "${TARGET_C_FLAGS} -DUJIT_CO_TIMEOUT")
 endif()
 
-option(UJIT_ENABLE_MEMPROF "Memory profiler support" ON)
-if(NOT UJIT_OS STREQUAL "UJIT_OS_LINUX")
+if(UJIT_TARGET_OS STREQUAL "UJ_TARGET_LINUX")
+  option(UJIT_ENABLE_MEMPROF "Memory profiler support" ON)
+else()
   set(UJIT_ENABLE_MEMPROF OFF)
 endif()
 if(UJIT_ENABLE_MEMPROF)
@@ -271,6 +276,19 @@ add_custom_target(clang_format
 
 # --- luacheck -----------------------------------------------------------------
 
+set(LFS_BINARY_DIR "${PROJECT_BINARY_DIR}/3rdparty/lua/luafilesystem")
+
+add_library(lfs SHARED
+  ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/lua/luafilesystem/src/lfs.c
+)
+target_link_libraries(lfs PRIVATE libujit_shared)
+
+set_target_properties (lfs PROPERTIES
+  PREFIX ""
+  COMPILE_FLAGS "${TARGET_C_FLAGS}"
+  LIBRARY_OUTPUT_DIRECTORY "${LFS_BINARY_DIR}"
+)
+
 set(LUACHECKABLE_PATHS
   tests/impl/uJIT-tests-C/suite/chunks
   tests/impl/uJIT-tests-Lua/suite/chunks
@@ -284,7 +302,7 @@ add_custom_target(luacheck
   COMMAND
       prove -v scripts/run-luacheck ::
         --lua-bin $<TARGET_FILE:ujit_static>
-        --lfs-lib "${PROJECT_BINARY_DIR}/3rdparty/lua/luafilesystem/lfs.so"
+        --lfs-lib "${LFS_BINARY_DIR}/lfs.so"
         ${LUACHECKABLE_PATHS}
 )
 add_dependencies(luacheck ujit lfs)

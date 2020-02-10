@@ -103,18 +103,3 @@ if(UJIT_ALLOCATOR STREQUAL "jemalloc")
 endif()
 
 set(THIRD_PARTY_INCLUDE ${THIRD_PARTY_INCLUDE} PARENT_SCOPE)
-
-#
-# LuaFileSystem
-#
-
-add_library(lfs SHARED
-  ${CMAKE_CURRENT_SOURCE_DIR}/lua/luafilesystem/src/lfs.c
-)
-target_link_libraries(lfs PRIVATE libujit_shared)
-
-set_target_properties (lfs PROPERTIES
-  PREFIX ""
-  COMPILE_FLAGS "${TARGET_C_FLAGS}"
-  LIBRARY_OUTPUT_DIRECTORY "lua/luafilesystem"
-)
