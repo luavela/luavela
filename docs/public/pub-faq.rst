@@ -35,9 +35,7 @@ Why have you killed support for ARM?
 
 Because we did not have enough resources to provide an adequate level of testing and support for other OSes and platforms than Linux x86-64.
 
-What about re-enabling support for other OSes and other platforms than Linux x86-64?
-------------------------------------------------------------------------------------
+What about re-enabling support for other OSes and other platforms?
+------------------------------------------------------------------
 
 We doubt that 32-bit platforms will be supported. Regarding other operating systems, we do not have resources to implement it on our own. However, patches are welcome.
-
-**UPD:** Since January 2020 build for macOS 10.13+ is supported.
