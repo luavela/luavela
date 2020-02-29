@@ -114,7 +114,8 @@ void emit_asm(BuildCtx *ctx) {
   emit_asm_align(ctx, 4);
 
   emit_asm_label(ctx, ctx->beginsym, 0, 0);
-  fprintf(ctx->fp, ".Lbegin:\n");
+  if (ctx->mode != BUILD_machasm)
+    fprintf(ctx->fp, ".Lbegin:\n");
 
   for (i = rel = 0; i < ctx->nsym; i++) {
     int32_t ofs = ctx->sym[i].ofs;
