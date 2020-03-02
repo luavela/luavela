@@ -141,9 +141,11 @@ if(UJIT_ENABLE_VTUNEJIT)
     include_directories(${VTUNE_INSTALL_DIR}/include)
     # List of necessary files according to
     # https://software.intel.com/en-us/node/596668
-    set(SOURCES_VTUNE_SDK
+    set(VTUNE_SDK_SOURCES
       ${VTUNE_INSTALL_DIR}/sdk/src/ittnotify/jitprofiling.c
     )
+    # Suppress complaints about the code base we do not control:
+    set_source_files_properties(${VTUNE_SDK_SOURCES} PROPERTIES COMPILE_FLAGS -Wno-pedantic)
   else()
     message(FATAL_ERROR "VTune installation dir '${VTUNE_INSTALL_DIR}' not found.")
   endif()
