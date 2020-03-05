@@ -34,8 +34,8 @@
  *   are converted to the string "C++ exception". Lua errors can be caught
  *   with catch (...) in C++.
  *
- * Currently we support Linux x64 only, but here are a couple of portability
- * considerations adapted from the original implementation in LuaJIT:
+ * Here are a couple of portability considerations adapted from the original
+ * implementation in LuaJIT:
  *
  * - When porting to a POSIX system with GCC and DWARF2 stack, *all* C code must
  *   be compiled with -funwind-tables (or -fexceptions). This includes uJIT

@@ -159,7 +159,9 @@ end
 
 -- testing decimal point locale
 if os.setlocale("pt_BR") or os.setlocale("ptb") then
-  assert(tonumber("3,4") == 3.4 and tonumber"3.4" == nil)
+  -- UJIT: Locales are ignored since a non-std implementation of strscan
+  -- UJIT: is inherited from LuaJIT
+  -- assert(tonumber("3,4") == 3.4 and tonumber"3.4" == nil)
   assert(assert(loadstring("return 3.4"))() == 3.4)
   assert(assert(loadstring("return .4,3"))() == .4)
   assert(assert(loadstring("return 4."))() == 4.)

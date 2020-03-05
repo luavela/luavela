@@ -4233,6 +4233,105 @@ static void emit_asm_debug(BuildCtx *ctx)
         ".LEFDE3:\n\n", (int)ctx->codesz - fcofs);
 #endif
     break;
+  /* Mental note: never let Apple design an assembler.
+  ** Or a linker. Or a plastic case. But I digress.
+  */
+  case BUILD_machasm: {
+#if LJ_HASFFI
+    int fcsize = 0;
+#endif
+    int i;
+    fprintf(ctx->fp, "\t.section __TEXT,__eh_frame,coalesced,no_toc+strip_static_syms+live_support\n");
+    fprintf(ctx->fp,
+        "EH_frame1:\n"
+        "\t.set L$set$x,LECIEX-LSCIEX\n"
+        "\t.long L$set$x\n"
+        "LSCIEX:\n"
+        "\t.long 0\n"
+        "\t.byte 0x1\n"
+        "\t.ascii \"zPR\\0\"\n"
+        "\t.byte 0x1\n"
+        "\t.byte 128-" SZPTR "\n"
+        "\t.byte " REG_RA "\n"
+        "\t.byte 6\n"                                /* augmentation length */
+        "\t.byte 0x9b\n"                             /* indirect|pcrel|sdata4 */
+        "\t.long _uj_dwarf_personality+4@GOTPCREL\n"
+        "\t.byte 0x1b\n"                            /* pcrel|sdata4 */
+        "\t.byte 0xc\n\t.byte " REG_SP "\n\t.byte " SZPTR "\n"
+        "\t.byte 0x80+" REG_RA "\n\t.byte 0x1\n"
+        "\t.align " BSZPTR "\n"
+        "LECIEX:\n\n");
+    for (i = 0; i < ctx->nsym; i++) {
+      const char *name = ctx->sym[i].name;
+      int32_t size = ctx->sym[i+1].ofs - ctx->sym[i].ofs;
+      if (size == 0) continue;
+#if LJ_HASFFI
+      if (!strcmp(name, "_lj_vm_ffi_call")) { fcsize = size; continue; }
+#endif
+      /*
+       * NB! Looks like Apple's assembler did not support .uleb128 some time
+       * ago, but this is no longer an issue, at least for AppleClang 10+.
+       * def_cfa_offset is currently the only datum not fitting into 7 bits.
+       */
+      fprintf(ctx->fp,
+          "%s.eh:\n"
+          "LSFDE%d:\n"
+          "\t.set L$set$%d,LEFDE%d-LASFDE%d\n"
+          "\t.long L$set$%d\n"
+          "LASFDE%d:\n"
+          "\t.long LASFDE%d-EH_frame1\n"
+          "\t.long %s-.\n"
+          "\t.long %d\n"
+          "\t.byte 0\n"                        /* augmentation length */
+          "\t.byte 0xe\n\t.uleb128 %d\n"       /* def_cfa_offset */
+          "\t.byte 0x86\n\t.byte 0x2\n"        /* offset rbp */
+          "\t.byte 0x83\n\t.byte 0x3\n"        /* offset rbx */
+          "\t.byte 0x8f\n\t.byte 0x4\n"        /* offset r15 */
+          "\t.byte 0x8e\n\t.byte 0x5\n"        /* offset r14 */
+          "\t.align " BSZPTR "\n"
+          "LEFDE%d:\n\n",
+          name, i, i, i, i, i, i, i, name, size, (int)CFRAME_SIZE, i);
+    }
+#if LJ_HASFFI
+    if (fcsize) {
+      fprintf(ctx->fp,
+          "EH_frame2:\n"
+          "\t.set L$set$y,LECIEY-LSCIEY\n"
+          "\t.long L$set$y\n"
+          "LSCIEY:\n"
+          "\t.long 0\n"
+          "\t.byte 0x1\n"
+          "\t.ascii \"zR\\0\"\n"
+          "\t.byte 0x1\n"
+          "\t.byte 128-" SZPTR "\n"
+          "\t.byte " REG_RA "\n"
+          "\t.byte 1\n"                        /* augmentation length */
+          "\t.byte 0x1b\n"                     /* pcrel|sdata4 */
+          "\t.byte 0xc\n\t.byte " REG_SP "\n\t.byte " SZPTR "\n"
+          "\t.byte 0x80+" REG_RA "\n\t.byte 0x1\n"
+          "\t.align " BSZPTR "\n"
+          "LECIEY:\n\n");
+      fprintf(ctx->fp,
+          "_lj_vm_ffi_call.eh:\n"
+          "LSFDEY:\n"
+          "\t.set L$set$yy,LEFDEY-LASFDEY\n"
+          "\t.long L$set$yy\n"
+          "LASFDEY:\n"
+          "\t.long LASFDEY-EH_frame2\n"
+          "\t.long _lj_vm_ffi_call-.\n"
+          "\t.long %d\n"
+          "\t.byte 0\n"                        /* augmentation length */
+          "\t.byte 0xe\n\t.byte 16\n"          /* def_cfa_offset */
+          "\t.byte 0x86\n\t.byte 0x2\n"        /* offset rbp */
+          "\t.byte 0xd\n\t.byte 0x6\n"         /* def_cfa_register rbp */
+          "\t.byte 0x83\n\t.byte 0x3\n"        /* offset rbx */
+          "\t.align " BSZPTR "\n"
+          "LEFDEY:\n\n", fcsize);
+    }
+#endif
+    fprintf(ctx->fp, "\t.subsections_via_symbols\n");
+    }
+    break;
   default:  /* Difficult for other modes. */
     break;
   }

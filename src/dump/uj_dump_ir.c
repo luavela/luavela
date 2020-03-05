@@ -170,7 +170,7 @@ static void dump_ir_k(FILE *out, const GCtrace *trace, IRRef ref)
 	case IR_KINT64: {
 		int64_t value = (int64_t)rawV(ir_kint64(ir));
 
-		fprintf(out, "%s%lu", value >= 0 ? "+" : "", value);
+		fprintf(out, "%s%" PRId64, value >= 0 ? "+" : "", value);
 		break;
 	}
 #endif /* LJ_HASFFI */

@@ -36,8 +36,14 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-#include <byteswap.h>
 #include <string.h>
+
+#if defined(__APPLE__)
+#include <libkern/OSByteOrder.h>
+#define bswap_32(x) OSSwapInt32(x)
+#else /* !defined(__APPLE__) */
+#include <byteswap.h>
+#endif /* defined(__APPLE__) */
 
 static uint32_t UNALIGNED_LOAD32(const char *p)
 {

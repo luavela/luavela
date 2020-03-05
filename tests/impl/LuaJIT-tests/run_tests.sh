@@ -5,7 +5,8 @@
 # Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 # For the copyright info on the suite itself, see suite/README.
 
-source "$(dirname `readlink -f $0`)/../../run_suite_common.sh"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
+source "$SCRIPT_DIR/../../run_suite_common.sh"
 
 $LUA_IMPL_BIN $LUA_IMPL_OPTIONS $SUITE_DIR/suite/test/test.lua
 

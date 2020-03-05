@@ -3,13 +3,14 @@
  * Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  */
 
+#include "uj_arch.h"
 #include "uj_sigtimer.h"
 
 #ifdef UJIT_TIMER
 
 #include <time.h>
 
-#ifdef __linux__
+#if UJ_TARGET_LINUX
 #include <unistd.h>
 #include <sys/syscall.h>
 #else

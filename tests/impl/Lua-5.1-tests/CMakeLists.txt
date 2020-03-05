@@ -21,12 +21,21 @@ set(SUITE_TEST_LIB_TARGETS "")
 set(SUITE_TEST_LIB_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 foreach(SUITE_TEST_LIB_NAME ${SUITE_TEST_LIB_NAMES})
-  # e.g. target "lua_51_test_lib1", compiled from "lib1.c", produces "lib1.so"
+  # e.g. target "test_lua_51_lib1", compiled from "lib1.c", produces "lib1.so"
+  set(TEST_LIB_PATH ${SUITE_DIR}/suite/libs)
   set(SUITE_TEST_LIB_TARGET "test_lua_51_${SUITE_TEST_LIB_NAME}")
-  set(SUITE_TEST_LIB_SOURCE ${SUITE_DIR}/suite/libs/${SUITE_TEST_LIB_NAME}.c)
+  set(SUITE_TEST_LIB_SOURCES ${TEST_LIB_PATH}/${SUITE_TEST_LIB_NAME}.c)
 
-  add_library(${SUITE_TEST_LIB_TARGET} SHARED ${SUITE_TEST_LIB_SOURCE})
+  # Fixup for libraries consisting of more than one translation unit:
+  if(SUITE_TEST_LIB_NAME STREQUAL "lib11")
+    list(APPEND SUITE_TEST_LIB_SOURCES ${TEST_LIB_PATH}/lib1.c)
+  elseif(SUITE_TEST_LIB_NAME STREQUAL "lib21")
+    list(APPEND SUITE_TEST_LIB_SOURCES ${TEST_LIB_PATH}/lib2.c)
+  endif()
+
+  add_library(${SUITE_TEST_LIB_TARGET} SHARED ${SUITE_TEST_LIB_SOURCES})
   target_include_directories(${SUITE_TEST_LIB_TARGET} PRIVATE ${UJIT_INCLUDE_DIR})
+  target_link_libraries(${SUITE_TEST_LIB_TARGET} PRIVATE libujit_shared)
   set_target_properties(${SUITE_TEST_LIB_TARGET} PROPERTIES
     PREFIX "" # otherwise we'd get "liblib<name>.so"
     OUTPUT_NAME ${SUITE_TEST_LIB_NAME}

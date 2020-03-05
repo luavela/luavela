@@ -6,7 +6,7 @@
 
 # If running from shell, set some defaults
 if [[ -z "$SUITE_OUT_DIR" ]]; then
-    SUITE_DIR=$(dirname `readlink -f $0`)
+    SUITE_DIR="$(cd "$(dirname "$0")" && pwd -P)"
     SUITE_BIN_DIR=$SUITE_DIR/suite_bin
     SUITE_OUT_DIR=$SUITE_DIR/suite_run
 fi
@@ -44,6 +44,15 @@ mkdir $SUITE_OUT_DIR
 
 # Define the path to the OK file:
 SUITE_OK_FILE=$SUITE_OUT_DIR/run_tests.ok
+
+# Define common variables and functions:
+
+if [[ `uname` == "Darwin" ]]; then
+    num_cpu=$(sysctl -n hw.logicalcpu)
+else
+    num_cpu=$(nproc)
+fi
+SUITE_PROVE_J="prove -j$num_cpu"
 
 function done_testing()
 {
