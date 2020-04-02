@@ -1,7 +1,6 @@
 # Travis CI configuration file for LuaVela.
 # Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
-dist: bionic
 language: c
 
 addons:
@@ -10,9 +9,7 @@ addons:
       - sourceline: ppa:ubuntu-toolchain-r/test
 
 install:
-  - sudo xargs -a scripts/depends-build-18-04 apt install -y
-  - sudo xargs -a scripts/depends-test-18-04 apt install -y
-  - pip3 install --user -r scripts/requirements-tests.txt
+  - ./.travis/install.sh
 
 env:
   global:
@@ -20,7 +17,9 @@ env:
 
 matrix:
   include:
-    - name: GCC Debug Static
+    - name: Ubuntu 18.04 GCC Debug Static
+      os: linux
+      dist: bionic
       env: TARGET=tests_full
       before_script:
         - cmake -H. -B${BUILD_DIR}
@@ -28,7 +27,9 @@ matrix:
           -DUJIT_TEST_LIB_TYPE=static
           -DUJIT_TEST_OPTIONS="-O4"
 
-    - name: GCC Debug Shared
+    - name: Ubuntu 18.04 GCC Debug Shared
+      os: linux
+      dist: bionic
       env: TARGET=tests
       before_script:
         - cmake -H. -B${BUILD_DIR}
@@ -36,7 +37,9 @@ matrix:
           -DUJIT_TEST_LIB_TYPE=shared
           -DUJIT_TEST_OPTIONS="-O4"
 
-    - name: GCC Release Static
+    - name: Ubuntu 18.04 GCC Release Static
+      os: linux
+      dist: bionic
       env: TARGET=tests_full
       before_script:
         - cmake -H. -B${BUILD_DIR}
@@ -44,7 +47,9 @@ matrix:
           -DUJIT_TEST_LIB_TYPE=static
           -DUJIT_TEST_OPTIONS="-O4"
 
-    - name: GCC Release Shared
+    - name: Ubuntu 18.04 GCC Release Shared
+      os: linux
+      dist: bionic
       env: TARGET=tests
       before_script:
         - cmake -H. -B${BUILD_DIR}
@@ -52,7 +57,9 @@ matrix:
           -DUJIT_TEST_LIB_TYPE=shared
           -DUJIT_TEST_OPTIONS="-O4"
 
-    - name: GCC Minimal Feature Set
+    - name: Ubuntu 18.04 GCC Minimal Feature Set
+      os: linux
+      dist: bionic
       env: TARGET=tests_full
       before_script:
         - cmake -H. -B${BUILD_DIR}
@@ -68,7 +75,9 @@ matrix:
           -DUJIT_ENABLE_MEMPROF=OFF
           -DUJIT_ENABLE_THREAD_SAFETY=OFF
 
-    - name: Clang Debug Static
+    - name: Ubuntu 18.04 Clang Debug Static
+      os: linux
+      dist: bionic
       env: TARGET=tests_full
       before_script:
         - cmake -H. -B${BUILD_DIR}
@@ -77,7 +86,9 @@ matrix:
           -DUJIT_TEST_LIB_TYPE=static
           -DUJIT_TEST_OPTIONS="-O4"
 
-    - name: Clang Debug Shared
+    - name: Ubuntu 18.04 Clang Debug Shared
+      os: linux
+      dist: bionic
       env: TARGET=tests
       before_script:
         - cmake -H. -B${BUILD_DIR}
@@ -86,7 +97,9 @@ matrix:
           -DUJIT_TEST_LIB_TYPE=shared
           -DUJIT_TEST_OPTIONS="-O4"
 
-    - name: Clang Release Static
+    - name: Ubuntu 18.04 Clang Release Static
+      os: linux
+      dist: bionic
       env: TARGET=tests_full
       before_script:
         - cmake -H. -B${BUILD_DIR}
@@ -95,7 +108,9 @@ matrix:
           -DUJIT_TEST_LIB_TYPE=static
           -DUJIT_TEST_OPTIONS="-O4"
 
-    - name: Clang Release Shared
+    - name: Ubuntu 18.04 Clang Release Shared
+      os: linux
+      dist: bionic
       env: TARGET=tests
       before_script:
         - cmake -H. -B${BUILD_DIR}
@@ -104,7 +119,9 @@ matrix:
           -DUJIT_TEST_LIB_TYPE=shared
           -DUJIT_TEST_OPTIONS="-O4"
 
-    - name: Clang Minimal Feature Set
+    - name: Ubuntu 18.04 Clang Minimal Feature Set
+      os: linux
+      dist: bionic
       env: TARGET=tests_full
       before_script:
         - cmake -H. -B${BUILD_DIR}
@@ -120,6 +137,55 @@ matrix:
           -DUJIT_ENABLE_CO_TIMEOUT=OFF
           -DUJIT_ENABLE_MEMPROF=OFF
           -DUJIT_ENABLE_THREAD_SAFETY=OFF
+
+    - name: macOS 10.13 AppleClang 10.0.0 Debug
+      os: osx
+      osx_image: xcode10.1
+      env: TARGET=tests
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Debug
+
+    - name: macOS 10.14 AppleClang 10.0.1 Debug
+      os: osx
+      osx_image: xcode10.3
+      env: TARGET=tests
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Debug
+
+    - name: macOS 10.14 AppleClang 11.0.0 Debug
+      os: osx
+      osx_image: xcode11.3
+      env: TARGET=tests
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Debug
+
+    - name: macOS 10.13 AppleClang 10.0.0 Release
+      os: osx
+      osx_image: xcode10.1
+      env: TARGET=tests
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Release
+
+    - name: macOS 10.14 AppleClang 10.0.1 Release
+      os: osx
+      osx_image: xcode10.3
+      env: TARGET=tests
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Release
+
+    - name: macOS 10.14 AppleClang 11.0.0 Release
+      os: osx
+      osx_image: xcode11.3
+      env: TARGET=tests
+      before_script:
+        - cmake -H. -B${BUILD_DIR}
+          -DCMAKE_BUILD_TYPE=Release
 
 script:
+  - cmake --build ${BUILD_DIR} --target tests_smoke
   - cmake --build ${BUILD_DIR} --target ${TARGET}
