@@ -54,24 +54,32 @@ dependencies, which are not built by default.
 Building
 --------
 
-To trigger the build with default configuration, enter
+Both in source and out of source builds are supported, the latter is
+recommended. To trigger build with default configuration, please run:
 
- $ cmake . [...configuration flags...]
- $ make
+ $ mkdir luavela-build
+ $ cd luavela-build
+ $ cmake /path/to/luavela
+ $ make -j
 
-You can add VERBOSE=1 to the make command in order to get verbose Make output.
-Both a static and a shared library are built. Two CLIs are built too,
-respectively, but it is recommended to use the statically linked version.
-Libraries and binaries will be created in-source, i.e. 'src/ujit',
-'src/libujit.a', 'src/libujit.so', etc.
+You can add `VERBOSE=1` to the `make` command in order to get a verbose output.
+The build produces a static and a shared library in one go, so CMake's
+BUILD_SHARED_LIBS flag will probably be useless.
 
-All configuration flags should be passed in -DKEY=VALUE form. If KEY is a
-boolean flag, any cmake-compatible boolean value can be used as VALUE (i.e.
+Two CLIs are built too (one that links to the static library, and the other one
+with dynamic linking), it is recommended to use the statically linked version.
+
+Libraries and binaries are created in `luavela-build/src`.
+
+All CMake configuration flags should be passed in -DKEY=VALUE form. If KEY is a
+boolean flag, any CMake-compatible boolean value can be used as VALUE (i.e.
 1/0, ON/OFF, TRUE/FALSE). "ON" or "OFF" are used throughout this documentation
 for consistency. Example of triggering build with some flags defined:
 
- $ cmake . -DCMAKE_BUILD_TYPE=Debug
- $ make VERBOSE=1
+ $ mkdir luavela-build
+ $ cd luavela-build
+ $ cmake /path/to/luavela -DCMAKE_BUILD_TYPE=Debug
+ $ make -j VERBOSE=1
 
 Following configuration flags are supported:
 
@@ -92,11 +100,13 @@ CMAKE_INSTALL_PREFIX
 ^^^^^^^^^^^^^^^^^^^^
 
 Prefix for installing uJIT into your system. We do not set any explicit default
-resorting to the value provided by cmake. However, you almost definitely
-want something like this for packaging and production installs:
+resorting to the value provided by CMake. However, you almost definitely
+want something like this for production installs:
 
- $ cmake . -DCMAKE_INSTALL_PREFIX=/usr
- $ make package
+ $ cmake /path/to/luavela -DCMAKE_INSTALL_PREFIX=/usr
+ $ sudo make install
+
+If you have a CPack module, `make package` should be used for creating a package.
 
 UJIT_TEST_LIB_TYPE
 ^^^^^^^^^^^^^^^^^^
@@ -117,7 +127,7 @@ UJIT_TEST_OPTIONS
 
 A raw string of options to be passed to the uJIT binary during testing, e.g.:
 
- $ cmake . -DCMAKE_BUILD_TYPE=Debug -DUJIT_TEST_OPTIONS="-Xhashf=city"
+ $ cmake /path/to/luavela -DCMAKE_BUILD_TYPE=Debug -DUJIT_TEST_OPTIONS="-Xhashf=city"
 
 UJIT_HAS_JIT
 ^^^^^^^^^^^^

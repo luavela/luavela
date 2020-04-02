@@ -26,6 +26,7 @@ version 0.24-dev0
   * Added a mini-suite of smoke tests to easily run sanity checks for the platform
   * Added support for macOS, tested with AppleClang 10 and 11 under macOS 10.13, 10.14, 10.15
   * Extended Travis CI build with the tests under macOS 10.13 and 10.14
+  * Enabled separate build of static and shared libraries
 
 version 0.23-dev0
   * Added an ability to copy values between tables on-trace without guarded loads:

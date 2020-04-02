@@ -225,7 +225,7 @@ make_source_list(SOURCES_CORE_NO_JIT_FFI # Everything except FFI and JIT:
 set(SOURCES_CORE
   ${SOURCES_CORE_NO_JIT_FFI}
   # misc:
-  ${SOURCES_VTUNE_SDK}
+  ${VTUNE_SDK_SOURCES}
 )
 
 if(UJIT_HAS_JIT)
@@ -338,26 +338,27 @@ add_custom_target (
 # --- Generate core and VM object files ---------------------------------------
 
 ## Virtual machine
-add_library (vm OBJECT lj_vm.s)
-set_target_properties (vm PROPERTIES
-  POSITION_INDEPENDENT_CODE 1
-  COMPILE_FLAGS "${TARGET_VM_FLAGS}")
+add_library (vm_static OBJECT lj_vm.s)
+add_library (vm_shared OBJECT lj_vm.s)
+
+set_property (TARGET vm_shared APPEND PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property (TARGET vm_static vm_shared APPEND PROPERTY COMPILE_FLAGS "${TARGET_VM_FLAGS}")
+
 ## Platform core
-add_library (core OBJECT ${SOURCES_CORE})
-set_target_properties (core PROPERTIES
-  POSITION_INDEPENDENT_CODE 1
-  COMPILE_FLAGS "${TARGET_C_FLAGS}")
+add_library (core_static OBJECT ${SOURCES_CORE})
+add_library (core_shared OBJECT ${SOURCES_CORE})
 
-if (UJIT_ENABLE_VTUNEJIT)
-  # Suppress complaints about the code base we do not control:
-  set_source_files_properties(${SOURCES_VTUNE_SDK} PROPERTIES COMPILE_FLAGS -Wno-pedantic)
-endif()
+set_property (TARGET core_shared APPEND PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property (TARGET core_static core_shared APPEND PROPERTY COMPILE_FLAGS "${TARGET_C_FLAGS}")
 
-target_include_directories(core PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(core_static PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(core_shared PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-add_dependencies (core buildvm_output libudis86)
+add_dependencies (core_static buildvm_output libudis86_static)
+add_dependencies (core_shared buildvm_output libudis86_shared)
 if(UJIT_ALLOCATOR STREQUAL "jemalloc")
-  add_dependencies (core jemalloc_ext)
+  add_dependencies (core_static jemalloc_static)
+  add_dependencies (core_shared jemalloc_shared)
 endif()
 
 # --- Generate output ----------------------------------------------------------
@@ -368,18 +369,24 @@ endif()
 
 set (LIB_NAME ujit)
 
-set (LIB_OBJECTS
-  $<TARGET_OBJECTS:vm>
-  $<TARGET_OBJECTS:core>
-  $<TARGET_OBJECTS:libudis86>
+set (LIB_OBJECTS_STATIC
+  $<TARGET_OBJECTS:vm_static>
+  $<TARGET_OBJECTS:core_static>
+  $<TARGET_OBJECTS:libudis86_static>
+)
+
+set (LIB_OBJECTS_SHARED
+  $<TARGET_OBJECTS:vm_shared>
+  $<TARGET_OBJECTS:core_shared>
+  $<TARGET_OBJECTS:libudis86_shared>
 )
 
 if(UJIT_ALLOCATOR STREQUAL "jemalloc")
-  list(APPEND LIB_OBJECTS $<TARGET_OBJECTS:jemalloc>)
+  list(APPEND LIB_OBJECTS_STATIC $<TARGET_OBJECTS:jemalloc_static>)
+  list(APPEND LIB_OBJECTS_SHARED $<TARGET_OBJECTS:jemalloc_shared>)
 endif()
 
-# NB! Static library is built from PIC object files, too.
-add_library (libujit_static STATIC ${LIB_OBJECTS})
+add_library (libujit_static STATIC ${LIB_OBJECTS_STATIC})
 set_target_properties (libujit_static PROPERTIES
   OUTPUT_NAME ${LIB_NAME}
   COMPILE_FLAGS "${TARGET_C_FLAGS}"
@@ -392,7 +399,7 @@ if(NOT UJIT_TARGET_OS STREQUAL "UJ_TARGET_MACOS")
   # Otherwise assume they are supported.
   set(LIBUJIT_SHARED_LINK_FLAGS "${LIBUJIT_SHARED_LINK_FLAGS} -Wl,--version-script,${UJIT_SRC_DIR}/libujit.map")
 endif()
-add_library (libujit_shared SHARED ${LIB_OBJECTS})
+add_library (libujit_shared SHARED ${LIB_OBJECTS_SHARED})
 set_target_properties (libujit_shared PROPERTIES
   OUTPUT_NAME ${LIB_NAME}
   COMPILE_FLAGS "${TARGET_C_FLAGS}"
