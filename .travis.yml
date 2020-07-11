@@ -15,176 +15,163 @@ env:
   global:
     - BUILD_DIR=../build/
 
-matrix:
+jobs:
   include:
     - name: Ubuntu 18.04 GCC Debug Static
       os: linux
       dist: bionic
       env: TARGET=tests_full
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Debug
-          -DUJIT_TEST_LIB_TYPE=static
-          -DUJIT_TEST_OPTIONS="-O4"
+      before_script: ./.travis/before_script/linux_gcc_debug_static.sh
 
     - name: Ubuntu 18.04 GCC Debug Shared
       os: linux
       dist: bionic
       env: TARGET=tests
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Debug
-          -DUJIT_TEST_LIB_TYPE=shared
-          -DUJIT_TEST_OPTIONS="-O4"
+      before_script: ./.travis/before_script/linux_gcc_debug_shared.sh
 
     - name: Ubuntu 18.04 GCC Release Static
       os: linux
       dist: bionic
       env: TARGET=tests_full
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Release
-          -DUJIT_TEST_LIB_TYPE=static
-          -DUJIT_TEST_OPTIONS="-O4"
+      before_script: ./.travis/before_script/linux_gcc_release_static.sh
 
     - name: Ubuntu 18.04 GCC Release Shared
       os: linux
       dist: bionic
       env: TARGET=tests
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Release
-          -DUJIT_TEST_LIB_TYPE=shared
-          -DUJIT_TEST_OPTIONS="-O4"
+      before_script: ./.travis/before_script/linux_gcc_release_shared.sh
 
     - name: Ubuntu 18.04 GCC Minimal Feature Set
       os: linux
       dist: bionic
       env: TARGET=tests_full
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Debug
-          -DUJIT_HAS_JIT=OFF
-          -DUJIT_HAS_FFI=OFF
-          -DUJIT_LUA52COMPAT=OFF
-          -DUJIT_ENABLE_GDBJIT=OFF
-          -DUJIT_ENABLE_PROFILER=OFF
-          -DUJIT_ENABLE_IPROF=OFF
-          -DUJIT_ENABLE_COVERAGE=OFF
-          -DUJIT_ENABLE_CO_TIMEOUT=OFF
-          -DUJIT_ENABLE_MEMPROF=OFF
-          -DUJIT_ENABLE_THREAD_SAFETY=OFF
+      before_script: ./.travis/before_script/linux_gcc_minimal_feature_set.sh
 
     - name: Ubuntu 18.04 Clang Debug Static
       os: linux
       dist: bionic
       env: TARGET=tests_full
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Debug
-          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
-          -DUJIT_TEST_LIB_TYPE=static
-          -DUJIT_TEST_OPTIONS="-O4"
+      before_script: ./.travis/before_script/linux_clang_debug_static.sh
 
     - name: Ubuntu 18.04 Clang Debug Shared
       os: linux
       dist: bionic
       env: TARGET=tests
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Debug
-          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
-          -DUJIT_TEST_LIB_TYPE=shared
-          -DUJIT_TEST_OPTIONS="-O4"
+      before_script: ./.travis/before_script/linux_clang_debug_shared.sh
 
     - name: Ubuntu 18.04 Clang Release Static
       os: linux
       dist: bionic
       env: TARGET=tests_full
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
-          -DUJIT_TEST_LIB_TYPE=static
-          -DUJIT_TEST_OPTIONS="-O4"
+      before_script: ./.travis/before_script/linux_clang_release_static.sh
 
     - name: Ubuntu 18.04 Clang Release Shared
       os: linux
       dist: bionic
       env: TARGET=tests
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
-          -DUJIT_TEST_LIB_TYPE=shared
-          -DUJIT_TEST_OPTIONS="-O4"
+      before_script: ./.travis/before_script/linux_clang_release_shared.sh
 
     - name: Ubuntu 18.04 Clang Minimal Feature Set
       os: linux
       dist: bionic
       env: TARGET=tests_full
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Debug
-          -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
-          -DUJIT_HAS_JIT=OFF
-          -DUJIT_HAS_FFI=OFF
-          -DUJIT_LUA52COMPAT=OFF
-          -DUJIT_ENABLE_GDBJIT=OFF
-          -DUJIT_ENABLE_PROFILER=OFF
-          -DUJIT_ENABLE_IPROF=OFF
-          -DUJIT_ENABLE_COVERAGE=OFF
-          -DUJIT_ENABLE_CO_TIMEOUT=OFF
-          -DUJIT_ENABLE_MEMPROF=OFF
-          -DUJIT_ENABLE_THREAD_SAFETY=OFF
+      before_script: ./.travis/before_script/linux_clang_minimal_feature_set.sh
+
+    - name: Ubuntu 20.04 GCC Debug Static
+      os: linux
+      dist: focal
+      env: TARGET=tests_full
+      before_script: ./.travis/before_script/linux_gcc_debug_static.sh
+
+    - name: Ubuntu 20.04 GCC Debug Shared
+      os: linux
+      dist: focal
+      env: TARGET=tests
+      before_script: ./.travis/before_script/linux_gcc_debug_shared.sh
+
+    - name: Ubuntu 20.04 GCC Release Static
+      os: linux
+      dist: focal
+      env: TARGET=tests_full
+      before_script: ./.travis/before_script/linux_gcc_release_static.sh
+
+    - name: Ubuntu 20.04 GCC Release Shared
+      os: linux
+      dist: focal
+      env: TARGET=tests
+      before_script: ./.travis/before_script/linux_gcc_release_shared.sh
+
+    - name: Ubuntu 20.04 GCC Minimal Feature Set
+      os: linux
+      dist: focal
+      env: TARGET=tests_full
+      before_script: ./.travis/before_script/linux_gcc_minimal_feature_set.sh
+
+    - name: Ubuntu 20.04 Clang Debug Static
+      os: linux
+      dist: focal
+      env: TARGET=tests_full
+      before_script: ./.travis/before_script/linux_clang_debug_static.sh
+
+    - name: Ubuntu 20.04 Clang Debug Shared
+      os: linux
+      dist: focal
+      env: TARGET=tests
+      before_script: ./.travis/before_script/linux_clang_debug_shared.sh
+
+    - name: Ubuntu 20.04 Clang Release Static
+      os: linux
+      dist: focal
+      env: TARGET=tests_full
+      before_script: ./.travis/before_script/linux_clang_release_static.sh
+
+    - name: Ubuntu 20.04 Clang Release Shared
+      os: linux
+      dist: focal
+      env: TARGET=tests
+      before_script: ./.travis/before_script/linux_clang_release_shared.sh
+
+    - name: Ubuntu 20.04 Clang Minimal Feature Set
+      os: linux
+      dist: focal
+      env: TARGET=tests_full
+      before_script: ./.travis/before_script/linux_clang_minimal_feature_set.sh
 
     - name: macOS 10.13 AppleClang 10.0.0 Debug
       os: osx
       osx_image: xcode10.1
       env: TARGET=tests
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Debug
+      before_script: ./.travis/before_script/macos_debug.sh
 
     - name: macOS 10.14 AppleClang 10.0.1 Debug
       os: osx
       osx_image: xcode10.3
       env: TARGET=tests
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Debug
+      before_script: ./.travis/before_script/macos_debug.sh
 
     - name: macOS 10.14 AppleClang 11.0.0 Debug
       os: osx
       osx_image: xcode11.3
       env: TARGET=tests
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Debug
+      before_script: ./.travis/before_script/macos_debug.sh
 
     - name: macOS 10.13 AppleClang 10.0.0 Release
       os: osx
       osx_image: xcode10.1
       env: TARGET=tests
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Release
+      before_script: ./.travis/before_script/macos_release.sh
 
     - name: macOS 10.14 AppleClang 10.0.1 Release
       os: osx
       osx_image: xcode10.3
       env: TARGET=tests
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Release
+      before_script: ./.travis/before_script/macos_release.sh
 
     - name: macOS 10.14 AppleClang 11.0.0 Release
       os: osx
       osx_image: xcode11.3
       env: TARGET=tests
-      before_script:
-        - cmake -H. -B${BUILD_DIR}
-          -DCMAKE_BUILD_TYPE=Release
+      before_script: ./.travis/before_script/macos_release.sh
 
 script:
   - cmake --build ${BUILD_DIR} --target tests_smoke

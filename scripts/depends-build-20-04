@@ -1,0 +1,9 @@
+autoconf
+clang-6.0
+cmake
+gcc
+gcc-8=8.4.0-*
+libc6-dev
+libstdc++-8-dev
+libstdc++6
+libtool

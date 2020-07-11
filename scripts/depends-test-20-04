@@ -1,0 +1,16 @@
+bc
+clang-format-6.0
+clang-tidy-6.0
+gdb
+graphviz
+libcmocka-dev=1.1.5-2
+libdigest-crc-perl
+libfile-find-rule-perl
+liblist-allutils-perl
+libtest-deep-perl
+libtext-table-perl
+perl
+python3
+python3-pip
+time
+valgrind

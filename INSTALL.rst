@@ -16,6 +16,8 @@ following compilers:
   * GCC 7.3.0 (Ubuntu 18.04)
   * GCC 7.4.0 (Ubuntu 18.04)
   * GCC 8.3.0 (Ubuntu 18.04)
+  * GCC 8.4.0 (Ubuntu 18.04)
+  * GCC 8.4.0 (Ubuntu 20.04)
   * Clang 3.8 (Ubuntu 14.04)
   * Clang 3.9 (Ubuntu 14.04)
   * Clang 6.0 (Ubuntu 18.04)
