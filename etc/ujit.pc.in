@@ -14,7 +14,7 @@ INSTALL_CMOD=${prefix}/lib/lua/${abiver}
 
 Name: uJIT
 Description: Just-in-time compiler for Lua
-URL: https://github.com/iponweb/luavela
+URL: https://github.com/luavela/luavela
 Version: @UJIT_VERSION_STRING@
 Requires:
 Libs: -L${libdir} -l${libname}

@@ -28,6 +28,7 @@ version 0.24-dev0
   * Extended Travis CI build with the tests under macOS 10.13 and 10.14
   * Enabled separate build of static and shared libraries
   * Extended Travis CI build with Ubuntu 20.04 jobs
+  * Fixed the URL for Travis CI build status badge.
 
 version 0.23-dev0
   * Added an ability to copy values between tables on-trace without guarded loads:

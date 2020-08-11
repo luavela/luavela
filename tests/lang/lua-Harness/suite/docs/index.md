@@ -11,7 +11,7 @@ This suite is usable with :
 
 - the standard [lua](http://www.lua.org/),
 - [LuaJIT](http://luajit.org/),
-- [LuaVela](https://github.com/iponweb/luavela),
+- [LuaVela](https://github.com/luavela/luavela),
 - ...
 
 See the given coverage :

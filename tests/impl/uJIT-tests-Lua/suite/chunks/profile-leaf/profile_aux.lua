@@ -2,7 +2,7 @@
 -- Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 -- NB! Please do not name this file aux.lua, as a weird bug has been filed:
--- https://github.com/iponweb/luavela/issues/15
+-- https://github.com/luavela/luavela/issues/15
 
 local aux = {}
 
