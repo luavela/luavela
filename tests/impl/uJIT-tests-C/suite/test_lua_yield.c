@@ -3,7 +3,7 @@
  * Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  *
  * This test is based on the reproducer provided by Arseny Vakhrushev
- * within https://github.com/iponweb/luavela/issues/12.
+ * within https://github.com/luavela/luavela/issues/12.
  */
 
 #include "test_common_lua.h"
