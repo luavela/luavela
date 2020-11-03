@@ -18,6 +18,7 @@ The team has given a number of talks (in English or Russian) about the project:
 
 - (RU) `LuaJIT as a Foundation for an Application Server <http://www.highload.ru/2016/abstracts/2304.html>`_, by Igor Ehrlich;
 - (EN) `Challenges Building Yet Another Lua Implementation <http://lua.moscow/conf/2017-03-LuaInMoscow/index.html#soldatov>`_, by Anton Soldatov;
+- (RU) `The Tracing JIT Compiler Peculiarities <https://youtu.be/SeGK_NxmWOk>`_, by Anton Soldatov;
 - (RU) `Adding New Features to an Implementation of Lua <https://youtu.be/IUtJJhQSLek?t=5548>`_, by Anton Soldatov;
 - (EN) `Rewriting LuaJIT: Why and How <https://www.lua.org/wshop18/Soldatov.pdf>`_, by Anton Soldatov (only slides are available at the time of writing);
 - (RU) `Working on a Stability of Our Implementation of Lua <https://www.youtube.com/watch?v=0MmDdTDql5E>`_, by Anton Soldatov;
