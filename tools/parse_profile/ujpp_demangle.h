@@ -12,7 +12,6 @@
 #include "ujpp_vector.h"
 #include "ujpp_utils.h"
 
-struct vector v;
 struct parser_state;
 struct hvmstate;
 
