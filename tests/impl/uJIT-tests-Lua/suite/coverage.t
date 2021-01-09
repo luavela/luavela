@@ -1,7 +1,8 @@
 #!/usr/bin/perl
 #
 # Tests on platform-level coverage.
-# Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 use 5.010;
 use warnings;
@@ -61,7 +62,7 @@ my @deeptests = (
         expected => [
             {
                 file_path => $test1,
-                line => 6,
+                line => 7,
                 file_path_crc => $crc1,
             },
             (
@@ -71,7 +72,7 @@ my @deeptests = (
                         line          => $_,
                         file_path_crc => $crc1,
                     }
-                } (8, 9, 10, 9, 10, 9, 10, 9, 12)
+                } (9, 10, 11, 10, 11, 10, 11, 10, 13)
             ),
         ],
     },
@@ -81,7 +82,7 @@ my @deeptests = (
         expected => [
             {
                 file_path => $test2,
-                line => 8,
+                line => 9,
                 file_path_crc => $crc2,
             },
             (
@@ -91,7 +92,7 @@ my @deeptests = (
                         line          => $_,
                         file_path_crc => $crc2,
                     }
-                } (10, 12, 13, 14, 15, 10, 13, 14, 15, 10, 13, 14, 15, 6, 7)
+                } (11, 13, 14, 15, 16, 11, 14, 15, 16, 11, 14, 15, 16, 7, 8)
             ),
         ],
     },
@@ -101,12 +102,12 @@ my @deeptests = (
         expected => [
             {
                 file_path => $test3,
-                line => 4,
+                line => 5,
                 file_path_crc => $crc3,
             },
 	    {
 	        file_path => '',
-		line => 10,
+		line => 11,
 		file_path_crc => $crc3,
 	    }
         ],

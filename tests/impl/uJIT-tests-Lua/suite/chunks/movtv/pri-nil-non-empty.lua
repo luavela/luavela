@@ -1,5 +1,6 @@
 -- This is a part of uJIT's testing suite.
--- Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+-- Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+-- Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 local src = {
 	{y = "y"}, -- non-empty table that does not contain required key

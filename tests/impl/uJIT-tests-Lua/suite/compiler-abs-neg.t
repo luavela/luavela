@@ -3,7 +3,8 @@
 # Constants for fast calculation of IR_NEG and IR_ABS
 # are stored as valid 128-bit TValue's. Behaviour of the test chunk
 # should be equal with JIT on and off. Besides, dumping IR code should
-# Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 use 5.010;
 use warnings;

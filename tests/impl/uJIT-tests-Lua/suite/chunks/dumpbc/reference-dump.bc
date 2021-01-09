@@ -1,4 +1,4 @@
--- BYTECODE -- ./chunks/dumpbc/chunk.lua:21-57
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:22-58
 0001    HOTCNT 
 0002    KSHORT   0  42
 0003    KNUM     1   0      ; -42.42
@@ -114,7 +114,7 @@
 0113    CALL     2   1   2
 0114    RET0     0   1
 
--- BYTECODE -- ./chunks/dumpbc/chunk.lua:59-73
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:60-74
 0001    HOTCNT 
 0002    KSHORT   0  42
 0003    KNUM     1   0      ; -42.42
@@ -156,7 +156,7 @@
 0039    MOV     11   5
 0040    RET      6   7
 
--- BYTECODE -- ./chunks/dumpbc/chunk.lua:75-83
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:76-84
 0001    HOTCNT 
 0002    KSHORT   0  42
 0003    MOV      1   0
@@ -166,7 +166,7 @@
 0007    VARG     5   0   0
 0008    RETM     5   0
 
--- BYTECODE -- ./chunks/dumpbc/chunk.lua:85-88
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:86-89
 0001    HOTCNT 
 0002    POW      2   0   1
 0003    MOV      3   0
@@ -175,7 +175,7 @@
 0006    CAT      3   3   5
 0007    RET0     0   1
 
--- BYTECODE -- ./chunks/dumpbc/chunk.lua:92-105
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:93-106
 0001    HOTCNT 
 0002    KSHORT   0  42
 0003    KNUM     1   0      ; -42.42
@@ -187,7 +187,7 @@
 0009    KNIL     7   8
 0010    RET0     0   1
 
--- BYTECODE -- ./chunks/dumpbc/chunk.lua:107-123
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:108-124
 0001    HOTCNT 
 0002    TNEW     0 2048
 0003    GGET     1   0      ; "x"
@@ -209,7 +209,7 @@
 0019    TSETM    5   0      ; 1
 0020    RET1     4   2
 
--- BYTECODE -- ./chunks/dumpbc/chunk.lua:130-139
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:131-140
 0001    HOTCNT 
 0002    UGET     2   0      ; grades
 0003    USETS    0   0      ; grades ; "xxxGRADESxxx"
@@ -227,25 +227,25 @@
 0015    KPRI     3   2
 0016    RET1     3   2
 
--- BYTECODE -- ./chunks/dumpbc/chunk.lua:129-140
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:130-141
 0001    HOTCNT 
 0002    GGET     2   0      ; "table"
 0003    TGETS    2   2   1  ; "sort"
 0004    MOV      3   0
-0005    FNEW     4   2      ; ./chunks/dumpbc/chunk.lua:130
+0005    FNEW     4   2      ; ./chunks/dumpbc/chunk.lua:131
 0006    CALL     2   1   3
 0007    UCLO     0 => 0008
 0008    RET0     0   1
 
--- BYTECODE -- ./chunks/dumpbc/chunk.lua:125-141
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:126-142
 0001    HOTCNT 
 0002    TDUP     0   0
 0003    TDUP     1   1
-0004    FNEW     2   2      ; ./chunks/dumpbc/chunk.lua:129
+0004    FNEW     2   2      ; ./chunks/dumpbc/chunk.lua:130
 0005    GSET     2   3      ; "sortbygrade"
 0006    RET0     0   1
 
--- BYTECODE -- ./chunks/dumpbc/chunk.lua:143-147
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:144-148
 0001    HOTCNT 
 0002    GGET     0   0      ; "print"
 0003    VARG     1   0   0
@@ -257,14 +257,14 @@
 0009    KSTR     1   1      ; "42"
 0010    CALLT    0   2
 
--- BYTECODE -- ./chunks/dumpbc/chunk.lua:148-150
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:149-151
 0001    HOTCNT 
 0002    GGET     0   0      ; "print"
 0003    KSHORT   1  42
 0004    VARG     2   0   0
 0005    CALLMT   0   1
 
--- BYTECODE -- ./chunks/dumpbc/chunk.lua:152-168
+-- BYTECODE -- ./chunks/dumpbc/chunk.lua:153-169
 0001    HOTCNT 
 0002    TDUP     0   0
 0003    GGET     1   1      ; "pairs"

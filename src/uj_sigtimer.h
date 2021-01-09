@@ -2,7 +2,8 @@
  * uJIT signal-based timers: Timer events are delivered to the application
  * via a configurable signal. Signal callback is handled in the thread that
  * started the timer.
- * Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  */
 
 #ifndef _UJIT_SIGTIMER_H

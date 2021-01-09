@@ -3,7 +3,8 @@
 -- TValue* pointer and led to trace explosion which slowed down compiled code
 -- 15-20x compared to interpreter (sic).
 --
--- Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+-- Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+-- Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 math.randomseed(0) -- constant seeding for deterministic results
 

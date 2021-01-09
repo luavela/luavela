@@ -1,6 +1,7 @@
 /*
  * Implementation of throwing errors.
- * Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  *
  * Only routines that implement complex logic (like invoking special handlers)
  * are provided as separate interfaces, simpler cases must be implemented

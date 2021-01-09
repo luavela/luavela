@@ -3,7 +3,8 @@
  * NB! Please note that all events are streamed inside a signal handler. This
  * means effectively that only async-signal-safe library functions and syscalls
  * MUST be used for streaming. Check with `man 7 signal` when in doubt.
- * Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  */
 
 #ifndef _UJP_WRITE_H

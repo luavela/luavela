@@ -1,7 +1,8 @@
 #!/bin/bash
 #
 # This is a part of uJIT's testing suite.
-# Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 TOOLS_TESTS_DIR="$(dirname "$(readlink -f "$0")")"
 TOOLS_DIR="$(realpath "$TOOLS_TESTS_DIR/..")"
 

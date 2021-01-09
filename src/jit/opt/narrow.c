@@ -1,7 +1,8 @@
 /*
  * NARROW: Narrowing of numbers to integers (double to int32_t).
  * STRIPOV: Stripping of overflow checks.
- * Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  *
  * Portions taken verbatim or adapted from LuaJIT.
  * Copyright (C) 2005-2017 Mike Pall. See Copyright Notice in luajit.h

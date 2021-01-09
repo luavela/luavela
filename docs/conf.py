@@ -2,7 +2,8 @@
 #
 # Configuration file for the Sphinx documentation builder.
 #
-# Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 # This file does only contain a selection of the most common options. For a
 # full list see the documentation:
