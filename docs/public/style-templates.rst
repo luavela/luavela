@@ -17,7 +17,8 @@ Template for a Translation Unit (aka Module)
 
     /*
      * Any appropriate description of the module.
-     * Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+     * Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+     * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
      *
      * Portions taken verbatim or adapted from LuaJIT.
      * Copyright (C) 2005-2017 Mike Pall. See Copyright Notice in luajit.h
@@ -86,10 +87,11 @@ Template for a Header File
 
     /*
      * Any appropriate description of the header.
-     * Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+     * Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+     * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
      *
      * Portions taken verbatim or adapted from LuaJIT.
-     * Copyright (C) 2005-2013 Mike Pall. See Copyright Notice in luajit.h
+     * Copyright (C) 2005-2017 Mike Pall. See Copyright Notice in luajit.h
      *
      * Portions taken verbatim or adapted from the Lua interpreter.
      * Copyright (C) 1994-2008 Lua.org, PUC-Rio. See Copyright Notice in lua.h
@@ -127,11 +129,12 @@ Flower Boxes
 The Contents of Flower Boxes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In general a flower box (a comment placed right in the beginning of a file) consists of three parts:
+In general a flower box (a comment placed right in the beginning of a file) consists of four parts:
 
-1. Module/Header description + IPONWEB's copyright note. Must be present in all files (both modules and headers) across the |PROJECT| code base.
-2. LuaJIT-related copyright note. Must be present in all files that were adopted from the LuaJIT code base.
-3. PUC-Rio Lua-related copyright note. Must be preserved in all cases when Mike Pall placed this notice in the LuaJIT code base files.
+1. Module/Header description + LuaVela's copyright note. Must be present in all files (both modules and headers) across the |PROJECT| code base.
+2. IPONWEB's copyright note. Must be present in all files (both modules and headers) across the |PROJECT| code base created before the project was transferred to LuaVela organization on GitHub.
+3. LuaJIT-related copyright note. Must be present in all files that were adopted from the LuaJIT code base.
+4. PUC-Rio Lua-related copyright note. Must be preserved in all cases when Mike Pall placed this notice in the LuaJIT code base files.
 
 Flower Boxes for Non-Core Code Base
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -142,7 +145,7 @@ CMake Files
 .. code-block:: cmake
 
     # Purpose of the file.
-    # Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+    # Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 Tools
 """""
@@ -154,7 +157,7 @@ Tools
     #!/usr/bin/perl -w
     #
     # This is a tool for doing blah-blah-blah
-    # Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+    # Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 **C**
 
@@ -170,14 +173,14 @@ Tests
 .. code-block:: lua
 
     -- Description of the chunk (what it actually tests, etc.).
-    -- Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+    -- Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 *Acceptable Default*
 
 .. code-block:: lua
 
     -- This is a part of uJIT's testing suite.
-    -- Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+    -- Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 **Perl**
 
@@ -188,7 +191,7 @@ Tests
     #!/usr/bin/perl
     #
     # Description of the test (what it actually tests, etc.).
-    # Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+    # Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 *Acceptable Default*
 
@@ -197,7 +200,7 @@ Tests
     #!/usr/bin/perl
     #
     # This is a part of uJIT's testing suite.
-    # Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+    # Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 **C**
 
@@ -211,7 +214,7 @@ Follows the same rules as for the core code base. Obviously LuaJIT and PUC-Rio L
 
     /*
      * This is a part of uJIT's testing suite.
-     * Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+     * Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
      */
 
 **Shell Runners**
@@ -223,7 +226,7 @@ Follows the same rules as for the core code base. Obviously LuaJIT and PUC-Rio L
     #!/bin/bash
     #
     # Description of the runner.
-    # Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+    # Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 *Acceptable Default*
 
@@ -232,7 +235,7 @@ Follows the same rules as for the core code base. Obviously LuaJIT and PUC-Rio L
     #!/bin/bash
     #
     # This is a part of uJIT's testing suite.
-    # Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+    # Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 Copyright Notice Format
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -241,4 +244,4 @@ There is no explicit policy on the matter, but for the sake of cross-project con
 
 .. code-block:: none
 
-    Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+    Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
