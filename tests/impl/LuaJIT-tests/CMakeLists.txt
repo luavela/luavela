@@ -2,7 +2,8 @@
 # LuaJIT's "THIS IS NOT THE TEST SUITE FOR LUAJIT!" test suite
 # Source: https://github.com/LuaJIT/LuaJIT-test-cleanup
 #
-# Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 set(SUITE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(SUITE_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/suite_run)

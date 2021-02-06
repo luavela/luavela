@@ -1,5 +1,6 @@
 -- Tests if instrumentation for coverage corrupt variable info
--- Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+-- Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+-- Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 --
 -- Portions taken verbatim or adapted from LuaJIT testsuite
 

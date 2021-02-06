@@ -4,7 +4,8 @@
  * modifications and reasonable simplifications (marked with NB!
  * throughout the code).
  * Disassembling itself is performed using udis86 library.
- * Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  */
 
 #include "udis86.h"

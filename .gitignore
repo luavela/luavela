@@ -122,6 +122,8 @@
 /tests/impl/uJIT-tests-C/suite_run
 /tests/impl/uJIT-tests-Lua/Makefile*
 /tests/impl/uJIT-tests-Lua/suite_run
+/tests/impl/uJIT-tests-smoke/Makefile
+/tests/impl/uJIT-tests-smoke/suite_run
 /tests/iponweb/perf/Makefile
 /tests/iponweb/perf/capi/Makefile
 /tests/iponweb/perf/src/Makefile

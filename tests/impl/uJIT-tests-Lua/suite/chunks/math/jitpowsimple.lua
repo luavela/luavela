@@ -1,5 +1,6 @@
 -- Tests on POW folding optimization.
--- Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+-- Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+-- Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 jit.opt.start("fold", "hotloop=3")
 

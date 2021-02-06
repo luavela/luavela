@@ -2,7 +2,8 @@
  * Test cases:
  *  * GC interrupts concatenation and triggers stack reallocation
  *  * GC interrupts __concat metamethod and triggers stack reallocation
- * Copyright (C) 2015-2019 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  */
 
 #include "test_common_lua.h"
