@@ -3,7 +3,7 @@
 # Wrapping runner script for all benchmarks.
 # Not integrated into uJIT build/test chain, should be run
 # and evaluated manually or via uJIT's CI.
-# Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2020-2022 LuaVela Authors. See Copyright Notice in COPYRIGHT
 # Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 UJIT_TEST_DIR=`pwd`

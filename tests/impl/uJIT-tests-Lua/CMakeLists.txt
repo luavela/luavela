@@ -1,7 +1,7 @@
 #
 # Functional testing of uJIT
 #
-# Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2020-2022 LuaVela Authors. See Copyright Notice in COPYRIGHT
 # Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 set(SUITE_DIR ${CMAKE_CURRENT_SOURCE_DIR})

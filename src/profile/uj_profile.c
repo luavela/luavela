@@ -7,7 +7,7 @@
  * In multi-threaded environment, several VMs can co-exist in multiple threads,
  * but only one VM per process can be profiled at a time: Only this VM receives
  * and handles profiler events. Profiler events block thread execution.
- * Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2020-2022 LuaVela Authors. See Copyright Notice in COPYRIGHT
  * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  */
 

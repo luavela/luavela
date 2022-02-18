@@ -16,7 +16,7 @@
 --   constants, upvalue names and anything else that goes to a "hint" which is
 --   printed after ';' in the dumped line. Currently hint buffer is limited to
 --   80 chars, so this test does not cover corner cases with too long hint data.
--- Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+-- Copyright (C) 2020-2022 LuaVela Authors. See Copyright Notice in COPYRIGHT
 -- Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 function comparison_ops()

@@ -4,7 +4,7 @@
  *  * It is not garbage collected (this is achieved by ensuring that a sealed
  *    object links only to another sealed object or NULL in an object chain).
  *  * It is immutable.
- * Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2020-2022 LuaVela Authors. See Copyright Notice in COPYRIGHT
  * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  */
 #ifndef _UJ_OBJ_SEAL_H
