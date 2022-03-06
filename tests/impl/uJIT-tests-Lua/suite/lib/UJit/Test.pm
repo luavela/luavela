@@ -3,7 +3,7 @@ package UJit::Test;
 # Mini-framework for testing uJIT. Allows to run arbitrary Lua chunks from files
 # or strings, specify command-line options, inspect exit code and the contents
 # of stdout and stderr.
-# Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2020-2022 LuaVela Authors. See Copyright Notice in COPYRIGHT
 # Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 use 5.010;

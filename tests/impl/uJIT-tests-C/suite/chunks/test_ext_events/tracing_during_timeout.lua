@@ -2,7 +2,7 @@
 -- following situation: During running the timeout function, the JIT compiler
 -- starts recording a trace and aborts. The platform must not re-enable
 -- timeout checks for the coroutine in these cirsumstances.
--- Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+-- Copyright (C) 2020-2022 LuaVela Authors. See Copyright Notice in COPYRIGHT
 -- Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 jit.on()

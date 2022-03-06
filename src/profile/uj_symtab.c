@@ -1,7 +1,7 @@
 /*
  * Implementation of the Lua symbol table dumper.
  *
- * Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2020-2022 LuaVela Authors. See Copyright Notice in COPYRIGHT
  * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  */
 

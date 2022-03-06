@@ -4,7 +4,7 @@
  * to perform clean-up of all frames that are destroyed during unwinding
  * stacks towards the catch frame. The API is intended to be used by DWARF 2
  * personality routine (aka external unwinder; see lj_err.c for details).
- * Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2020-2022 LuaVela Authors. See Copyright Notice in COPYRIGHT
  * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  */
 

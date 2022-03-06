@@ -1,5 +1,5 @@
 # Find, check and set uJIT's version from ChangeLog or a VCS tag.
-# Copyright (C) 2020-2021 LuaVela Authors. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2020-2022 LuaVela Authors. See Copyright Notice in COPYRIGHT
 # Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 # This module exposes following variables to the project:
