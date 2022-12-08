@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2009-2018, Perrad Francois
+-- Copyright (C) 2009-2021, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -24,7 +24,7 @@ First tests in order to check infrastructure.
 
 --]]
 
-require'tap'
+require'test_assertion'
 
 plan(5)
 
@@ -35,7 +35,7 @@ function factorial (n)
         return n * factorial(n-1)
     end
 end
-is(factorial(7), 5040, "factorial (recursive)")
+equals(factorial(7), 5040, "factorial (recursive)")
 
 local function local_factorial (n)
     if n == 0 then
@@ -44,7 +44,7 @@ local function local_factorial (n)
         return n * local_factorial(n-1)
     end
 end
-is(local_factorial(7), 5040, "factorial (recursive)")
+equals(local_factorial(7), 5040, "factorial (recursive)")
 
 local function loop_factorial (n)
     local a = 1
@@ -53,7 +53,7 @@ local function loop_factorial (n)
     end
     return a
 end
-is(loop_factorial(7), 5040, "factorial (loop)")
+equals(loop_factorial(7), 5040, "factorial (loop)")
 
 local function iter_factorial (n)
     local function iter (product, counter)
@@ -65,12 +65,12 @@ local function iter_factorial (n)
     end
     return iter(1, 1)
 end
-is(iter_factorial(7), 5040, "factorial (iter)")
+equals(iter_factorial(7), 5040, "factorial (iter)")
 
 --[[
 
   Knuth's "man or boy" test.
-  See http://en.wikipedia.org/wiki/Man_or_boy_test
+  See https://en.wikipedia.org/wiki/Man_or_boy_test
 
 ]]
 
@@ -86,7 +86,7 @@ local function A (k, x1, x2, x3, x4, x5)
     end
 end
 
-is(A(10,
+equals(A(10,
         function () return 1 end,
         function () return -1 end,
         function () return -1 end,

@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2010-2019, Perrad Francois
+-- Copyright (C) 2010-2021, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -21,16 +21,17 @@
 See section "The Complete Syntax of Lua" in "Reference Manual"
 L<https://www.lua.org/manual/5.1/manual.html#8>,
 L<https://www.lua.org/manual/5.2/manual.html#9>,
-L<https://www.lua.org/manual/5.3/manual.html#9>
+L<https://www.lua.org/manual/5.3/manual.html#9>,
+L<https://www.lua.org/manual/5.4/manual.html#9>
 
 =cut
 
 --]]
 
-require'tap'
+require'test_assertion'
 local profile = require'profile'
 local has_goto = _VERSION >= 'Lua 5.2' or jit
-local has_anno = _VERSION >= 'Lua 5.4'
+local has_attr = _VERSION >= 'Lua 5.4'
 local loadstring = loadstring or load
 
 plan'no_plan'
@@ -38,19 +39,19 @@ plan'no_plan'
 do --[[ empty statement ]]
     local f, msg = loadstring [[; a = 1]]
     if _VERSION == 'Lua 5.1' and not profile.luajit_compat52 then
-        like(msg, "^[^:]+:%d+: unexpected symbol near ';'", "empty statement")
+        matches(msg, "^[^:]+:%d+: unexpected symbol near ';'", "empty statement")
     else
-        type_ok(f, 'function', "empty statement")
+        is_function(f, "empty statement")
     end
 
     f = loadstring [[a = 1; a = 2]]
-    type_ok(f, 'function')
+    is_function(f)
 
     f, msg = loadstring [[a = 1;;; a = 2]]
     if _VERSION == 'Lua 5.1' and not profile.luajit_compat52 then
-        like(msg, "^[^:]+:%d+: unexpected symbol near ';'")
+        matches(msg, "^[^:]+:%d+: unexpected symbol near ';'")
     else
-        type_ok(f, 'function')
+        is_function(f)
     end
 end
 
@@ -66,11 +67,11 @@ function f()
 end
 ]]
     if _VERSION == 'Lua 5.1' then
-        like(msg, "^[^:]+:%d+: no loop to break", "orphan break")
+        matches(msg, "^[^:]+:%d+: no loop to break", "orphan break")
     elseif _VERSION <= 'Lua 5.3' then
-        like(msg, "^[^:]+:%d+: <break> at line 5 not inside a loop", "orphan break")
+        matches(msg, "^[^:]+:%d+: <break> at line 5 not inside a loop", "orphan break")
     else
-        like(msg, "^[^:]+:%d+: break outside loop at line 5", "orphan break")
+        matches(msg, "^[^:]+:%d+: break outside loop at line 5", "orphan break")
     end
 end
 
@@ -87,9 +88,9 @@ function f()
 end
 ]]
     if _VERSION == 'Lua 5.1' and not profile.luajit_compat52 then
-        like(msg, "^[^:]+:%d+: 'end' expected %(to close 'while' at line 3%) near 'print'", "break anywhere")
+        matches(msg, "^[^:]+:%d+: 'end' expected %(to close 'while' at line 3%) near 'print'", "break anywhere")
     else
-        type_ok(f, 'function', "break anywhere")
+        is_function(f, "break anywhere")
     end
 
     f, msg = loadstring [[
@@ -106,9 +107,9 @@ function f()
 end
 ]]
     if _VERSION == 'Lua 5.1' and not profile.luajit_compat52 then
-        like(msg, "^[^:]+:%d+: 'end' expected %(to close 'if' at line 5%) near 'print'", "break anywhere")
+        matches(msg, "^[^:]+:%d+: 'end' expected %(to close 'if' at line 5%) near 'print'", "break anywhere")
     else
-        type_ok(f, 'function', "break anywhere")
+        is_function(f, "break anywhere")
     end
 end
 
@@ -119,9 +120,9 @@ if has_goto then
     goto unknown
 ]]
     if jit then
-        like(msg, ":%d+: undefined label 'unknown'", "unknown goto")
+        matches(msg, ":%d+: undefined label 'unknown'", "unknown goto")
     else
-        like(msg, ":%d+: no visible label 'unknown' for <goto> at line %d+", "unknown goto")
+        matches(msg, ":%d+: no visible label 'unknown' for <goto> at line %d+", "unknown goto")
     end
 
     f, msg = loadstring [[
@@ -130,9 +131,9 @@ if has_goto then
 ::label::
 ]]
     if jit then
-        like(msg, ":%d+: duplicate label 'label'", "duplicate label")
+        matches(msg, ":%d+: duplicate label 'label'", "duplicate label")
     else
-        like(msg, ":%d+: label 'label' already defined on line %d+", "duplicate label")
+        matches(msg, ":%d+: label 'label' already defined on line %d+", "duplicate label")
     end
 
     f, msg = loadstring [[
@@ -143,9 +144,9 @@ if has_goto then
     goto e
 ]]
     if jit then
-        like(msg, ":%d+: <goto f> jumps into the scope of local 'x'", "bad goto")
+        matches(msg, ":%d+: <goto f> jumps into the scope of local 'x'", "bad goto")
     else
-        like(msg, ":%d+: <goto f> at line %d+ jumps into the scope of local 'x'", "bad goto")
+        matches(msg, ":%d+: <goto f> at line %d+ jumps into the scope of local 'x'", "bad goto")
     end
 
     f= loadstring [[
@@ -159,67 +160,67 @@ do
 ::s3::
 end
 ]]
-    type_ok(f, 'function', "goto")
+    is_function(f, "goto")
 else
     diag("no goto")
 end
 
 do --[[ syntax error ]]
     local f, msg = loadstring [[a = { 1, 2, 3)]]
-    like(msg, ":%d+: '}' expected near '%)'", "constructor { }")
+    matches(msg, ":%d+: '}' expected near '%)'", "constructor { }")
 
     f, msg = loadstring [[a = (1 + 2}]]
-    like(msg, ":%d+: '%)' expected near '}'", "expr ( )")
+    matches(msg, ":%d+: '%)' expected near '}'", "expr ( )")
 
     f, msg = loadstring [[a = f(1, 2}]]
-    like(msg, ":%d+: '%)' expected near '}'", "expr ( )")
+    matches(msg, ":%d+: '%)' expected near '}'", "expr ( )")
 
     f, msg = loadstring [[function f () return 1]]
-    like(msg, ":%d+: 'end' expected near '?<eof>'?", "function end")
+    matches(msg, ":%d+: 'end' expected near '?<eof>'?", "function end")
 
     f, msg = loadstring [[do local a = f()]]
-    like(msg, ":%d+: 'end' expected near '?<eof>'?", "do end")
+    matches(msg, ":%d+: 'end' expected near '?<eof>'?", "do end")
 
     f, msg = loadstring [[for i = 1, 2 do print(i)]]
-    like(msg, ":%d+: 'end' expected near '?<eof>'?", "for end")
+    matches(msg, ":%d+: 'end' expected near '?<eof>'?", "for end")
 
     f, msg = loadstring [[if true then f()]]
-    like(msg, ":%d+: 'end' expected near '?<eof>'?", "if end")
+    matches(msg, ":%d+: 'end' expected near '?<eof>'?", "if end")
 
     f, msg = loadstring [[while true do f()]]
-    like(msg, ":%d+: 'end' expected near '?<eof>'?", "while end")
+    matches(msg, ":%d+: 'end' expected near '?<eof>'?", "while end")
 
     f, msg = loadstring [[repeat f()]]
-    like(msg, ":%d+: 'until' expected near '?<eof>'?", "repeat until")
+    matches(msg, ":%d+: 'until' expected near '?<eof>'?", "repeat until")
 
     f, msg = loadstring [[function f (a, 2) return a * 2 end]]
-    like(msg, ":%d+: <name> or '...' expected near '2'", "function parameter list")
+    matches(msg, ":%d+: <name> or '...' expected near '2'", "function parameter list")
 
     f, msg = loadstring [[a = o:m[1, 2)]]
-    like(msg, ":%d+: function arguments expected near '%['", "function argument list")
+    matches(msg, ":%d+: function arguments expected near '%['", "function argument list")
 
     f, msg = loadstring [[for i do print(i) end]]
-    like(msg, ":%d+: '=' or 'in' expected near 'do'", "for init")
+    matches(msg, ":%d+: '=' or 'in' expected near 'do'", "for init")
 
     f, msg = loadstring [[for i = 1, 2 print(i) end]]
-    like(msg, ":%d+: 'do' expected near 'print'", "for do")
+    matches(msg, ":%d+: 'do' expected near 'print'", "for do")
 
     f, msg = loadstring [[if true f() end]]
-    like(msg, ":%d+: 'then' expected near 'f'", "if then")
+    matches(msg, ":%d+: 'then' expected near 'f'", "if then")
 
     f, msg = loadstring [[while true f() end]]
-    like(msg, ":%d+: 'do' expected near 'f", "while do")
+    matches(msg, ":%d+: 'do' expected near 'f", "while do")
 end
 
-if has_anno then
-    local f, msg = load [[local < bar > foo = 'bar']]
-    like(msg, "^[^:]+:%d+: unknown attribute 'bar'")
+if has_attr then
+    local f, msg = load [[local foo < bar > = 'bar']]
+    matches(msg, "^[^:]+:%d+: unknown attribute 'bar'")
 
-    f, msg = load [[local <const> foo = 'bar'; foo = 'baz']]
-    like(msg, "^[^:]+:%d+: attempt to assign to const variable 'foo'")
+    f, msg = load [[local foo <const> = 'bar'; foo = 'baz']]
+    matches(msg, "^[^:]+:%d+: attempt to assign to const variable 'foo'")
 
-    f, msg = load [[local <toclose> foo = 'bar'; foo = 'baz']]
-    like(msg, "^[^:]+:%d+: attempt to assign to const variable 'foo'")
+    f, msg = load [[local foo <close> = 'bar'; foo = 'baz']]
+    matches(msg, "^[^:]+:%d+: attempt to assign to const variable 'foo'")
 end
 
 done_testing()

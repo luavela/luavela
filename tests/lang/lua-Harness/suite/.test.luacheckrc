@@ -1,35 +1,35 @@
 codes = true
+max_line_length = 132
 read_globals = {
-    -- Test.More
+    -- test_assertion (subset of Test.Assertion)
+    '_dofile',
+    '_retrieve_progname',
     'plan',
     'done_testing',
     'skip_all',
-    'BAIL_OUT',
-    'ok',
-    'nok',
-    'is',
-    'isnt',
-    'like',
-    'unlike',
-    'cmp_ok',
-    'type_ok',
-    'subtest',
-    'pass',
-    'fail',
+    'truthy',
+    'falsy',
+    'equals',
+    'not_equals',
+    'near',
+    'matches',
+    'is_false', 'is_nil', 'is_true',
+    'is_boolean', 'is_cdata', 'is_function', 'is_number', 'is_string', 'is_table', 'is_thread', 'is_userdata',
+    'passes',
+    'fails',
     'require_ok',
-    'eq_array',
-    'is_deeply',
-    'error_is',
-    'error_like',
-    'lives_ok',
+    'array_equals',
+    'error_equals',
+    'error_matches',
+    'not_errors',
     'diag',
-    'note',
     'skip',
-    'todo_skip',
     'skip_rest',
     'todo',
     -- LuaVela
     'ujit',
+    -- Ravi
+    'ravi',
 }
 
 files['test_lua/000-sanity.t'].ignore = { '111', '113' }
@@ -37,6 +37,7 @@ files['test_lua/001-if.t'].ignore = { '111', '113', '511' }
 files['test_lua/002-table.t'].ignore = { '111', '113' }
 files['test_lua/014-fornum.t'].ignore = { '512' }
 files['test_lua/201-assign.t'].ignore = { '411/my_i', '531', '532' }
+files['test_lua/202-expr.t'].ignore = { '581' }
 files['test_lua/211-scope.t'].ignore = { '421' }
 files['test_lua/231-metatable.t'].ignore = { '421', '431' }
 files['test_lua/308-io.t'].ignore = { '512' }

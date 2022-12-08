@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2009-2018, Perrad Francois
+-- Copyright (C) 2009-2021, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -25,7 +25,7 @@ section "Coroutines as Iterators" in "Programming in Lua".
 
 --]]
 
-require'tap'
+require'test_assertion'
 
 plan(8)
 
@@ -48,7 +48,7 @@ do --[[ list_iter ]]
     for element in list_iter(t) do
         output[#output+1] = element
     end
-    eq_array(output, t, "list_iter")
+    array_equals(output, t, "list_iter")
 end
 
 do --[[ values ]]
@@ -65,7 +65,7 @@ do --[[ values ]]
     for element in values(t) do
         output[#output+1] = element
     end
-    eq_array(output, t, "values")
+    array_equals(output, t, "values")
 end
 
 do --[[ emul ipairs ]]
@@ -87,7 +87,7 @@ do --[[ emul ipairs ]]
         output[#output+1] = i
         output[#output+1] = v
     end
-    eq_array(output, {1, 'one', 2, 'two', 3, 'three'}, "emul ipairs")
+    array_equals(output, {1, 'one', 2, 'two', 3, 'three'}, "emul ipairs")
 end
 
 do --[[ emul pairs ]]
@@ -101,7 +101,7 @@ do --[[ emul pairs ]]
         output[#output+1] = k
         output[#output+1] = v
     end
-    eq_array(output, {1, 'one', 2, 'two', 3, 'three'}, "emul ipairs")
+    array_equals(output, {1, 'one', 2, 'two', 3, 'three'}, "emul ipairs")
 end
 
 do --[[ with next ]]
@@ -111,7 +111,7 @@ do --[[ with next ]]
         output[#output+1] = k
         output[#output+1] = v
     end
-    eq_array(output, {1, 'one', 2, 'two', 3, 'three'}, "with next")
+    array_equals(output, {1, 'one', 2, 'two', 3, 'three'}, "with next")
 end
 
 do --[[ permutations ]]
@@ -143,7 +143,7 @@ do --[[ permutations ]]
     for p in permutations{'a', 'b', 'c'} do
         output[#output+1] = table.concat(p, ' ')
     end
-    eq_array(output, {'b c a','c b a','c a b','a c b','b a c','a b c'}, "permutations")
+    array_equals(output, {'b c a','c b a','c a b','a c b','b a c','a b c'}, "permutations")
 end
 
 do --[[ permutations with wrap ]]
@@ -171,7 +171,7 @@ do --[[ permutations with wrap ]]
     for p in permutations{'a', 'b', 'c'} do
         output[#output+1] = table.concat(p, ' ')
     end
-    eq_array(output, {'b c a','c b a','c a b','a c b','b a c','a b c'}, "permutations with wrap")
+    array_equals(output, {'b c a','c b a','c a b','a c b','b a c','a b c'}, "permutations with wrap")
 end
 
 do --[[ fibo ]]
@@ -192,7 +192,7 @@ do --[[ fibo ]]
         output[#output+1] = n
         if n > 30 then break end
     end
-    eq_array(output, {0, 1, 1, 2, 3, 5, 8, 13, 21, 34}, "fibo")
+    array_equals(output, {0, 1, 1, 2, 3, 5, 8, 13, 21, 34}, "fibo")
 end
 
 -- Local Variables:

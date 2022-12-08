@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2009-2018, Perrad Francois
+-- Copyright (C) 2009-2021, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -49,7 +49,7 @@ Description of the test.
 
 --]]
 
-require'tap'
+require'test_assertion'
 local loadstring = loadstring or load
 
 plan(162)
@@ -164,7 +164,7 @@ local function split (line)
 end
 
 local test_number = 0
-local dirname = arg[0]:sub(1, arg[0]:find'314' -1)
+local dirname = arg[0]:gsub('([^/\\]+)$', '')
 for _, filename in ipairs(test_files) do
     local f, msg = io.open(dirname .. filename, 'r')
     if f == nil then
@@ -198,14 +198,14 @@ for _, filename in ipairs(test_files) do
             end
             if result:sub(1, 1) == '/' then
                 pattern = result:sub(2, result:len() - 1)
-                error_like(compiled, pattern, desc)
+                error_matches(compiled, pattern, desc)
             else
                 local r, out
                 r, msg = pcall(function () out = compiled() end)
                 if r then
-                    is(out, result, desc)
+                    equals(out, result, desc)
                 else
-                    fail(desc)
+                    fails(desc)
                     diag(msg)
                 end
             end

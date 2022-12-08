@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2019-06-13 19:44:15</td>
+            <td class="headerValue">2022-10-23 09:46:28</td>
             <td></td>
           </tr>
           <tr>
@@ -64,44 +64,44 @@
       <td>
 <pre class="sourceHeading">          Line data    Source code</pre>
 <pre class="source">
-<span class="lineNum">       1 </span>            : /*
-<span class="lineNum">       2 </span>            : ** $Id: linit.c,v 1.14.1.1 2007/12/27 13:02:25 roberto Exp $
-<span class="lineNum">       3 </span>            : ** Initialization of libraries for lua.c
-<span class="lineNum">       4 </span>            : ** See Copyright Notice in lua.h
-<span class="lineNum">       5 </span>            : */
-<span class="lineNum">       6 </span>            : 
-<span class="lineNum">       7 </span>            : 
-<span class="lineNum">       8 </span>            : #define linit_c
-<span class="lineNum">       9 </span>            : #define LUA_LIB
-<span class="lineNum">      10 </span>            : 
-<span class="lineNum">      11 </span>            : #include &quot;lua.h&quot;
-<span class="lineNum">      12 </span>            : 
-<span class="lineNum">      13 </span>            : #include &quot;lualib.h&quot;
-<span class="lineNum">      14 </span>            : #include &quot;lauxlib.h&quot;
-<span class="lineNum">      15 </span>            : 
-<span class="lineNum">      16 </span>            : 
-<span class="lineNum">      17 </span>            : static const luaL_Reg lualibs[] = {
-<span class="lineNum">      18 </span>            :   {&quot;&quot;, luaopen_base},
-<span class="lineNum">      19 </span>            :   {LUA_LOADLIBNAME, luaopen_package},
-<span class="lineNum">      20 </span>            :   {LUA_TABLIBNAME, luaopen_table},
-<span class="lineNum">      21 </span>            :   {LUA_IOLIBNAME, luaopen_io},
-<span class="lineNum">      22 </span>            :   {LUA_OSLIBNAME, luaopen_os},
-<span class="lineNum">      23 </span>            :   {LUA_STRLIBNAME, luaopen_string},
-<span class="lineNum">      24 </span>            :   {LUA_MATHLIBNAME, luaopen_math},
-<span class="lineNum">      25 </span>            :   {LUA_DBLIBNAME, luaopen_debug},
-<span class="lineNum">      26 </span>            :   {NULL, NULL}
-<span class="lineNum">      27 </span>            : };
-<span class="lineNum">      28 </span>            : 
-<span class="lineNum">      29 </span>            : 
-<span class="lineNum">      30 </span><span class="lineCov">         87 : LUALIB_API void luaL_openlibs (lua_State *L) {</span>
-<span class="lineNum">      31 </span><span class="lineCov">         87 :   const luaL_Reg *lib = lualibs;</span>
-<span class="lineNum">      32 </span><span class="lineCov">        783 :   for (; lib-&gt;func; lib++) {</span>
-<span class="lineNum">      33 </span><span class="lineCov">        696 :     lua_pushcfunction(L, lib-&gt;func);</span>
-<span class="lineNum">      34 </span><span class="lineCov">        696 :     lua_pushstring(L, lib-&gt;name);</span>
-<span class="lineNum">      35 </span><span class="lineCov">        696 :     lua_call(L, 1, 0);</span>
-<span class="lineNum">      36 </span>            :   }
-<span class="lineNum">      37 </span><span class="lineCov">         87 : }</span>
-<span class="lineNum">      38 </span>            : 
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<a name="2"><span class="lineNum">       2 </span>            : ** $Id: linit.c,v 1.14.1.1 2007/12/27 13:02:25 roberto Exp $</a>
+<a name="3"><span class="lineNum">       3 </span>            : ** Initialization of libraries for lua.c</a>
+<a name="4"><span class="lineNum">       4 </span>            : ** See Copyright Notice in lua.h</a>
+<a name="5"><span class="lineNum">       5 </span>            : */</a>
+<a name="6"><span class="lineNum">       6 </span>            : </a>
+<a name="7"><span class="lineNum">       7 </span>            : </a>
+<a name="8"><span class="lineNum">       8 </span>            : #define linit_c</a>
+<a name="9"><span class="lineNum">       9 </span>            : #define LUA_LIB</a>
+<a name="10"><span class="lineNum">      10 </span>            : </a>
+<a name="11"><span class="lineNum">      11 </span>            : #include &quot;lua.h&quot;</a>
+<a name="12"><span class="lineNum">      12 </span>            : </a>
+<a name="13"><span class="lineNum">      13 </span>            : #include &quot;lualib.h&quot;</a>
+<a name="14"><span class="lineNum">      14 </span>            : #include &quot;lauxlib.h&quot;</a>
+<a name="15"><span class="lineNum">      15 </span>            : </a>
+<a name="16"><span class="lineNum">      16 </span>            : </a>
+<a name="17"><span class="lineNum">      17 </span>            : static const luaL_Reg lualibs[] = {</a>
+<a name="18"><span class="lineNum">      18 </span>            :   {&quot;&quot;, luaopen_base},</a>
+<a name="19"><span class="lineNum">      19 </span>            :   {LUA_LOADLIBNAME, luaopen_package},</a>
+<a name="20"><span class="lineNum">      20 </span>            :   {LUA_TABLIBNAME, luaopen_table},</a>
+<a name="21"><span class="lineNum">      21 </span>            :   {LUA_IOLIBNAME, luaopen_io},</a>
+<a name="22"><span class="lineNum">      22 </span>            :   {LUA_OSLIBNAME, luaopen_os},</a>
+<a name="23"><span class="lineNum">      23 </span>            :   {LUA_STRLIBNAME, luaopen_string},</a>
+<a name="24"><span class="lineNum">      24 </span>            :   {LUA_MATHLIBNAME, luaopen_math},</a>
+<a name="25"><span class="lineNum">      25 </span>            :   {LUA_DBLIBNAME, luaopen_debug},</a>
+<a name="26"><span class="lineNum">      26 </span>            :   {NULL, NULL}</a>
+<a name="27"><span class="lineNum">      27 </span>            : };</a>
+<a name="28"><span class="lineNum">      28 </span>            : </a>
+<a name="29"><span class="lineNum">      29 </span>            : </a>
+<a name="30"><span class="lineNum">      30 </span><span class="lineCov">         88 : LUALIB_API void luaL_openlibs (lua_State *L) {</span></a>
+<a name="31"><span class="lineNum">      31 </span><span class="lineCov">         88 :   const luaL_Reg *lib = lualibs;</span></a>
+<a name="32"><span class="lineNum">      32 </span><span class="lineCov">        792 :   for (; lib-&gt;func; lib++) {</span></a>
+<a name="33"><span class="lineNum">      33 </span><span class="lineCov">        704 :     lua_pushcfunction(L, lib-&gt;func);</span></a>
+<a name="34"><span class="lineNum">      34 </span><span class="lineCov">        704 :     lua_pushstring(L, lib-&gt;name);</span></a>
+<a name="35"><span class="lineNum">      35 </span><span class="lineCov">        704 :     lua_call(L, 1, 0);</span></a>
+<a name="36"><span class="lineNum">      36 </span>            :   }</a>
+<a name="37"><span class="lineNum">      37 </span><span class="lineCov">         88 : }</span></a>
+<a name="38"><span class="lineNum">      38 </span>            : </a>
 </pre>
       </td>
     </tr>
@@ -110,7 +110,7 @@
 
   <table width="100%" border=0 cellspacing=0 cellpadding=0>
     <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
-    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 1.16</a></td></tr>
   </table>
   <br>
 

@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2009-2018, Perrad Francois
+-- Copyright (C) 2009-2021, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -21,7 +21,8 @@
 See section "Visibility Rules" in "Reference Manual"
 L<https://www.lua.org/manual/5.1/manual.html#2.6>,
 L<https://www.lua.org/manual/5.2/manual.html#3.5>,
-L<https://www.lua.org/manual/5.3/manual.html#3.5>
+L<https://www.lua.org/manual/5.3/manual.html#3.5>,
+L<https://www.lua.org/manual/5.4/manual.html#3.5>
 
 See section "Local Variables and Blocks" in "Programming in Lua".
 
@@ -29,7 +30,7 @@ See section "Local Variables and Blocks" in "Programming in Lua".
 
 --]]
 
-require'tap'
+require'test_assertion'
 
 plan(10)
 
@@ -37,15 +38,15 @@ plan(10)
 x = 10
 do
     local x = x
-    is(x, 10, "scope")
+    equals(x, 10, "scope")
     x = x + 1
     do
         local x = x + 1
-        is(x, 12)
+        equals(x, 12)
     end
-    is(x, 11)
+    equals(x, 11)
 end
-is(x, 10)
+equals(x, 10)
 
 --[[ scope ]]
 x = 10
@@ -60,22 +61,22 @@ end
 if i > 20 then
     local x
     x = 20
-    nok("scope")
+    fails("scope")
 else
-    is(x, 10, "scope")
+    equals(x, 10, "scope")
 end
 
-is(x, 10)
+equals(x, 10)
 
 --[[ scope ]]
 local a, b = 1, 10
 if a < b then
-    is(a, 1, "scope")
+    equals(a, 1, "scope")
     local a
-    is(a, nil)
+    equals(a, nil)
 end
-is(a, 1)
-is(b, 10)
+equals(a, 1)
+equals(b, 10)
 
 -- Local Variables:
 --   mode: lua

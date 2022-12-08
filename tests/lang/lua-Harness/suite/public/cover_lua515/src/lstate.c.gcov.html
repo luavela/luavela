@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Date:</td>
-            <td class="headerValue">2019-06-13 19:44:15</td>
+            <td class="headerValue">2022-10-23 09:46:28</td>
             <td></td>
           </tr>
           <tr>
@@ -64,220 +64,220 @@
       <td>
 <pre class="sourceHeading">          Line data    Source code</pre>
 <pre class="source">
-<span class="lineNum">       1 </span>            : /*
-<span class="lineNum">       2 </span>            : ** $Id: lstate.c,v 2.36.1.2 2008/01/03 15:20:39 roberto Exp $
-<span class="lineNum">       3 </span>            : ** Global State
-<span class="lineNum">       4 </span>            : ** See Copyright Notice in lua.h
-<span class="lineNum">       5 </span>            : */
-<span class="lineNum">       6 </span>            : 
-<span class="lineNum">       7 </span>            : 
-<span class="lineNum">       8 </span>            : #include &lt;stddef.h&gt;
-<span class="lineNum">       9 </span>            : 
-<span class="lineNum">      10 </span>            : #define lstate_c
-<span class="lineNum">      11 </span>            : #define LUA_CORE
-<span class="lineNum">      12 </span>            : 
-<span class="lineNum">      13 </span>            : #include &quot;lua.h&quot;
-<span class="lineNum">      14 </span>            : 
-<span class="lineNum">      15 </span>            : #include &quot;ldebug.h&quot;
-<span class="lineNum">      16 </span>            : #include &quot;ldo.h&quot;
-<span class="lineNum">      17 </span>            : #include &quot;lfunc.h&quot;
-<span class="lineNum">      18 </span>            : #include &quot;lgc.h&quot;
-<span class="lineNum">      19 </span>            : #include &quot;llex.h&quot;
-<span class="lineNum">      20 </span>            : #include &quot;lmem.h&quot;
-<span class="lineNum">      21 </span>            : #include &quot;lstate.h&quot;
-<span class="lineNum">      22 </span>            : #include &quot;lstring.h&quot;
-<span class="lineNum">      23 </span>            : #include &quot;ltable.h&quot;
-<span class="lineNum">      24 </span>            : #include &quot;ltm.h&quot;
-<span class="lineNum">      25 </span>            : 
-<span class="lineNum">      26 </span>            : 
-<span class="lineNum">      27 </span>            : #define state_size(x)   (sizeof(x) + LUAI_EXTRASPACE)
-<span class="lineNum">      28 </span>            : #define fromstate(l)    (cast(lu_byte *, (l)) - LUAI_EXTRASPACE)
-<span class="lineNum">      29 </span>            : #define tostate(l)   (cast(lua_State *, cast(lu_byte *, l) + LUAI_EXTRASPACE))
-<span class="lineNum">      30 </span>            : 
-<span class="lineNum">      31 </span>            : 
-<span class="lineNum">      32 </span>            : /*
-<span class="lineNum">      33 </span>            : ** Main thread combines a thread state and the global state
-<span class="lineNum">      34 </span>            : */
-<span class="lineNum">      35 </span>            : typedef struct LG {
-<span class="lineNum">      36 </span>            :   lua_State l;
-<span class="lineNum">      37 </span>            :   global_State g;
-<span class="lineNum">      38 </span>            : } LG;
-<span class="lineNum">      39 </span>            :   
-<span class="lineNum">      40 </span>            : 
-<span class="lineNum">      41 </span>            : 
-<span class="lineNum">      42 </span><span class="lineCov">        122 : static void stack_init (lua_State *L1, lua_State *L) {</span>
-<span class="lineNum">      43 </span>            :   /* initialize CallInfo array */
-<span class="lineNum">      44 </span><span class="lineCov">        122 :   L1-&gt;base_ci = luaM_newvector(L, BASIC_CI_SIZE, CallInfo);</span>
-<span class="lineNum">      45 </span><span class="lineCov">        122 :   L1-&gt;ci = L1-&gt;base_ci;</span>
-<span class="lineNum">      46 </span><span class="lineCov">        122 :   L1-&gt;size_ci = BASIC_CI_SIZE;</span>
-<span class="lineNum">      47 </span><span class="lineCov">        122 :   L1-&gt;end_ci = L1-&gt;base_ci + L1-&gt;size_ci - 1;</span>
-<span class="lineNum">      48 </span>            :   /* initialize stack array */
-<span class="lineNum">      49 </span><span class="lineCov">        122 :   L1-&gt;stack = luaM_newvector(L, BASIC_STACK_SIZE + EXTRA_STACK, TValue);</span>
-<span class="lineNum">      50 </span><span class="lineCov">        122 :   L1-&gt;stacksize = BASIC_STACK_SIZE + EXTRA_STACK;</span>
-<span class="lineNum">      51 </span><span class="lineCov">        122 :   L1-&gt;top = L1-&gt;stack;</span>
-<span class="lineNum">      52 </span><span class="lineCov">        122 :   L1-&gt;stack_last = L1-&gt;stack+(L1-&gt;stacksize - EXTRA_STACK)-1;</span>
-<span class="lineNum">      53 </span>            :   /* initialize first ci */
-<span class="lineNum">      54 </span><span class="lineCov">        122 :   L1-&gt;ci-&gt;func = L1-&gt;top;</span>
-<span class="lineNum">      55 </span><span class="lineCov">        122 :   setnilvalue(L1-&gt;top++);  /* `function' entry for this `ci' */</span>
-<span class="lineNum">      56 </span><span class="lineCov">        122 :   L1-&gt;base = L1-&gt;ci-&gt;base = L1-&gt;top;</span>
-<span class="lineNum">      57 </span><span class="lineCov">        122 :   L1-&gt;ci-&gt;top = L1-&gt;top + LUA_MINSTACK;</span>
-<span class="lineNum">      58 </span><span class="lineCov">        122 : }</span>
-<span class="lineNum">      59 </span>            : 
-<span class="lineNum">      60 </span>            : 
-<span class="lineNum">      61 </span><span class="lineCov">        113 : static void freestack (lua_State *L, lua_State *L1) {</span>
-<span class="lineNum">      62 </span><span class="lineCov">        113 :   luaM_freearray(L, L1-&gt;base_ci, L1-&gt;size_ci, CallInfo);</span>
-<span class="lineNum">      63 </span><span class="lineCov">        113 :   luaM_freearray(L, L1-&gt;stack, L1-&gt;stacksize, TValue);</span>
-<span class="lineNum">      64 </span><span class="lineCov">        113 : }</span>
-<span class="lineNum">      65 </span>            : 
-<span class="lineNum">      66 </span>            : 
-<span class="lineNum">      67 </span>            : /*
-<span class="lineNum">      68 </span>            : ** open parts that may cause memory-allocation errors
-<span class="lineNum">      69 </span>            : */
-<span class="lineNum">      70 </span><span class="lineCov">         99 : static void f_luaopen (lua_State *L, void *ud) {</span>
-<span class="lineNum">      71 </span><span class="lineCov">         99 :   global_State *g = G(L);</span>
-<span class="lineNum">      72 </span>            :   UNUSED(ud);
-<span class="lineNum">      73 </span><span class="lineCov">         99 :   stack_init(L, L);  /* init stack */</span>
-<span class="lineNum">      74 </span><span class="lineCov">         99 :   sethvalue(L, gt(L), luaH_new(L, 0, 2));  /* table of globals */</span>
-<span class="lineNum">      75 </span><span class="lineCov">         99 :   sethvalue(L, registry(L), luaH_new(L, 0, 2));  /* registry */</span>
-<span class="lineNum">      76 </span><span class="lineCov">         99 :   luaS_resize(L, MINSTRTABSIZE);  /* initial size of string table */</span>
-<span class="lineNum">      77 </span><span class="lineCov">         99 :   luaT_init(L);</span>
-<span class="lineNum">      78 </span><span class="lineCov">         99 :   luaX_init(L);</span>
-<span class="lineNum">      79 </span><span class="lineCov">         99 :   luaS_fix(luaS_newliteral(L, MEMERRMSG));</span>
-<span class="lineNum">      80 </span><span class="lineCov">         99 :   g-&gt;GCthreshold = 4*g-&gt;totalbytes;</span>
-<span class="lineNum">      81 </span><span class="lineCov">         99 : }</span>
-<span class="lineNum">      82 </span>            : 
-<span class="lineNum">      83 </span>            : 
-<span class="lineNum">      84 </span><span class="lineCov">        122 : static void preinit_state (lua_State *L, global_State *g) {</span>
-<span class="lineNum">      85 </span><span class="lineCov">        122 :   G(L) = g;</span>
-<span class="lineNum">      86 </span><span class="lineCov">        122 :   L-&gt;stack = NULL;</span>
-<span class="lineNum">      87 </span><span class="lineCov">        122 :   L-&gt;stacksize = 0;</span>
-<span class="lineNum">      88 </span><span class="lineCov">        122 :   L-&gt;errorJmp = NULL;</span>
-<span class="lineNum">      89 </span><span class="lineCov">        122 :   L-&gt;hook = NULL;</span>
-<span class="lineNum">      90 </span><span class="lineCov">        122 :   L-&gt;hookmask = 0;</span>
-<span class="lineNum">      91 </span><span class="lineCov">        122 :   L-&gt;basehookcount = 0;</span>
-<span class="lineNum">      92 </span><span class="lineCov">        122 :   L-&gt;allowhook = 1;</span>
-<span class="lineNum">      93 </span><span class="lineCov">        122 :   resethookcount(L);</span>
-<span class="lineNum">      94 </span><span class="lineCov">        122 :   L-&gt;openupval = NULL;</span>
-<span class="lineNum">      95 </span><span class="lineCov">        122 :   L-&gt;size_ci = 0;</span>
-<span class="lineNum">      96 </span><span class="lineCov">        122 :   L-&gt;nCcalls = L-&gt;baseCcalls = 0;</span>
-<span class="lineNum">      97 </span><span class="lineCov">        122 :   L-&gt;status = 0;</span>
-<span class="lineNum">      98 </span><span class="lineCov">        122 :   L-&gt;base_ci = L-&gt;ci = NULL;</span>
-<span class="lineNum">      99 </span><span class="lineCov">        122 :   L-&gt;savedpc = NULL;</span>
-<span class="lineNum">     100 </span><span class="lineCov">        122 :   L-&gt;errfunc = 0;</span>
-<span class="lineNum">     101 </span><span class="lineCov">        122 :   setnilvalue(gt(L));</span>
-<span class="lineNum">     102 </span><span class="lineCov">        122 : }</span>
-<span class="lineNum">     103 </span>            : 
-<span class="lineNum">     104 </span>            : 
-<span class="lineNum">     105 </span><span class="lineCov">         90 : static void close_state (lua_State *L) {</span>
-<span class="lineNum">     106 </span><span class="lineCov">         90 :   global_State *g = G(L);</span>
-<span class="lineNum">     107 </span><span class="lineCov">         90 :   luaF_close(L, L-&gt;stack);  /* close all upvalues for this thread */</span>
-<span class="lineNum">     108 </span><span class="lineCov">         90 :   luaC_freeall(L);  /* collect all objects */</span>
-<span class="lineNum">     109 </span>            :   lua_assert(g-&gt;rootgc == obj2gco(L));
-<span class="lineNum">     110 </span>            :   lua_assert(g-&gt;strt.nuse == 0);
-<span class="lineNum">     111 </span><span class="lineCov">         90 :   luaM_freearray(L, G(L)-&gt;strt.hash, G(L)-&gt;strt.size, TString *);</span>
-<span class="lineNum">     112 </span><span class="lineCov">         90 :   luaZ_freebuffer(L, &amp;g-&gt;buff);</span>
-<span class="lineNum">     113 </span><span class="lineCov">         90 :   freestack(L, L);</span>
-<span class="lineNum">     114 </span>            :   lua_assert(g-&gt;totalbytes == sizeof(LG));
-<span class="lineNum">     115 </span><span class="lineCov">         90 :   (*g-&gt;frealloc)(g-&gt;ud, fromstate(L), state_size(LG), 0);</span>
-<span class="lineNum">     116 </span><span class="lineCov">         90 : }</span>
-<span class="lineNum">     117 </span>            : 
-<span class="lineNum">     118 </span>            : 
-<span class="lineNum">     119 </span><span class="lineCov">         23 : lua_State *luaE_newthread (lua_State *L) {</span>
-<span class="lineNum">     120 </span><span class="lineCov">         23 :   lua_State *L1 = tostate(luaM_malloc(L, state_size(lua_State)));</span>
-<span class="lineNum">     121 </span><span class="lineCov">         23 :   luaC_link(L, obj2gco(L1), LUA_TTHREAD);</span>
-<span class="lineNum">     122 </span><span class="lineCov">         23 :   preinit_state(L1, G(L));</span>
-<span class="lineNum">     123 </span><span class="lineCov">         23 :   stack_init(L1, L);  /* init stack */</span>
-<span class="lineNum">     124 </span><span class="lineCov">         23 :   setobj2n(L, gt(L1), gt(L));  /* share table of globals */</span>
-<span class="lineNum">     125 </span><span class="lineCov">         23 :   L1-&gt;hookmask = L-&gt;hookmask;</span>
-<span class="lineNum">     126 </span><span class="lineCov">         23 :   L1-&gt;basehookcount = L-&gt;basehookcount;</span>
-<span class="lineNum">     127 </span><span class="lineCov">         23 :   L1-&gt;hook = L-&gt;hook;</span>
-<span class="lineNum">     128 </span><span class="lineCov">         23 :   resethookcount(L1);</span>
-<span class="lineNum">     129 </span>            :   lua_assert(iswhite(obj2gco(L1)));
-<span class="lineNum">     130 </span><span class="lineCov">         23 :   return L1;</span>
-<span class="lineNum">     131 </span>            : }
-<span class="lineNum">     132 </span>            : 
-<span class="lineNum">     133 </span>            : 
-<span class="lineNum">     134 </span><span class="lineCov">         23 : void luaE_freethread (lua_State *L, lua_State *L1) {</span>
-<span class="lineNum">     135 </span><span class="lineCov">         23 :   luaF_close(L1, L1-&gt;stack);  /* close all upvalues for this thread */</span>
-<span class="lineNum">     136 </span>            :   lua_assert(L1-&gt;openupval == NULL);
-<span class="lineNum">     137 </span>            :   luai_userstatefree(L1);
-<span class="lineNum">     138 </span><span class="lineCov">         23 :   freestack(L, L1);</span>
-<span class="lineNum">     139 </span><span class="lineCov">         23 :   luaM_freemem(L, fromstate(L1), state_size(lua_State));</span>
-<span class="lineNum">     140 </span><span class="lineCov">         23 : }</span>
-<span class="lineNum">     141 </span>            : 
-<span class="lineNum">     142 </span>            : 
-<span class="lineNum">     143 </span><span class="lineCov">         99 : LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {</span>
-<span class="lineNum">     144 </span>            :   int i;
-<span class="lineNum">     145 </span>            :   lua_State *L;
-<span class="lineNum">     146 </span>            :   global_State *g;
-<span class="lineNum">     147 </span><span class="lineCov">         99 :   void *l = (*f)(ud, NULL, 0, state_size(LG));</span>
-<span class="lineNum">     148 </span><span class="lineCov">         99 :   if (l == NULL) return NULL;</span>
-<span class="lineNum">     149 </span><span class="lineCov">         99 :   L = tostate(l);</span>
-<span class="lineNum">     150 </span><span class="lineCov">         99 :   g = &amp;((LG *)L)-&gt;g;</span>
-<span class="lineNum">     151 </span><span class="lineCov">         99 :   L-&gt;next = NULL;</span>
-<span class="lineNum">     152 </span><span class="lineCov">         99 :   L-&gt;tt = LUA_TTHREAD;</span>
-<span class="lineNum">     153 </span><span class="lineCov">         99 :   g-&gt;currentwhite = bit2mask(WHITE0BIT, FIXEDBIT);</span>
-<span class="lineNum">     154 </span><span class="lineCov">         99 :   L-&gt;marked = luaC_white(g);</span>
-<span class="lineNum">     155 </span><span class="lineCov">         99 :   set2bits(L-&gt;marked, FIXEDBIT, SFIXEDBIT);</span>
-<span class="lineNum">     156 </span><span class="lineCov">         99 :   preinit_state(L, g);</span>
-<span class="lineNum">     157 </span><span class="lineCov">         99 :   g-&gt;frealloc = f;</span>
-<span class="lineNum">     158 </span><span class="lineCov">         99 :   g-&gt;ud = ud;</span>
-<span class="lineNum">     159 </span><span class="lineCov">         99 :   g-&gt;mainthread = L;</span>
-<span class="lineNum">     160 </span><span class="lineCov">         99 :   g-&gt;uvhead.u.l.prev = &amp;g-&gt;uvhead;</span>
-<span class="lineNum">     161 </span><span class="lineCov">         99 :   g-&gt;uvhead.u.l.next = &amp;g-&gt;uvhead;</span>
-<span class="lineNum">     162 </span><span class="lineCov">         99 :   g-&gt;GCthreshold = 0;  /* mark it as unfinished state */</span>
-<span class="lineNum">     163 </span><span class="lineCov">         99 :   g-&gt;strt.size = 0;</span>
-<span class="lineNum">     164 </span><span class="lineCov">         99 :   g-&gt;strt.nuse = 0;</span>
-<span class="lineNum">     165 </span><span class="lineCov">         99 :   g-&gt;strt.hash = NULL;</span>
-<span class="lineNum">     166 </span><span class="lineCov">         99 :   setnilvalue(registry(L));</span>
-<span class="lineNum">     167 </span><span class="lineCov">         99 :   luaZ_initbuffer(L, &amp;g-&gt;buff);</span>
-<span class="lineNum">     168 </span><span class="lineCov">         99 :   g-&gt;panic = NULL;</span>
-<span class="lineNum">     169 </span><span class="lineCov">         99 :   g-&gt;gcstate = GCSpause;</span>
-<span class="lineNum">     170 </span><span class="lineCov">         99 :   g-&gt;rootgc = obj2gco(L);</span>
-<span class="lineNum">     171 </span><span class="lineCov">         99 :   g-&gt;sweepstrgc = 0;</span>
-<span class="lineNum">     172 </span><span class="lineCov">         99 :   g-&gt;sweepgc = &amp;g-&gt;rootgc;</span>
-<span class="lineNum">     173 </span><span class="lineCov">         99 :   g-&gt;gray = NULL;</span>
-<span class="lineNum">     174 </span><span class="lineCov">         99 :   g-&gt;grayagain = NULL;</span>
-<span class="lineNum">     175 </span><span class="lineCov">         99 :   g-&gt;weak = NULL;</span>
-<span class="lineNum">     176 </span><span class="lineCov">         99 :   g-&gt;tmudata = NULL;</span>
-<span class="lineNum">     177 </span><span class="lineCov">         99 :   g-&gt;totalbytes = sizeof(LG);</span>
-<span class="lineNum">     178 </span><span class="lineCov">         99 :   g-&gt;gcpause = LUAI_GCPAUSE;</span>
-<span class="lineNum">     179 </span><span class="lineCov">         99 :   g-&gt;gcstepmul = LUAI_GCMUL;</span>
-<span class="lineNum">     180 </span><span class="lineCov">         99 :   g-&gt;gcdept = 0;</span>
-<span class="lineNum">     181 </span><span class="lineCov">        990 :   for (i=0; i&lt;NUM_TAGS; i++) g-&gt;mt[i] = NULL;</span>
-<span class="lineNum">     182 </span><span class="lineCov">         99 :   if (luaD_rawrunprotected(L, f_luaopen, NULL) != 0) {</span>
-<span class="lineNum">     183 </span>            :     /* memory allocation error: free partial state */
-<span class="lineNum">     184 </span><span class="lineNoCov">          0 :     close_state(L);</span>
-<span class="lineNum">     185 </span><span class="lineNoCov">          0 :     L = NULL;</span>
-<span class="lineNum">     186 </span>            :   }
-<span class="lineNum">     187 </span>            :   else
-<span class="lineNum">     188 </span>            :     luai_userstateopen(L);
-<span class="lineNum">     189 </span><span class="lineCov">         99 :   return L;</span>
-<span class="lineNum">     190 </span>            : }
-<span class="lineNum">     191 </span>            : 
-<span class="lineNum">     192 </span>            : 
-<span class="lineNum">     193 </span><span class="lineCov">         90 : static void callallgcTM (lua_State *L, void *ud) {</span>
-<span class="lineNum">     194 </span>            :   UNUSED(ud);
-<span class="lineNum">     195 </span><span class="lineCov">         90 :   luaC_callGCTM(L);  /* call GC metamethods for all udata */</span>
-<span class="lineNum">     196 </span><span class="lineCov">         90 : }</span>
-<span class="lineNum">     197 </span>            : 
-<span class="lineNum">     198 </span>            : 
-<span class="lineNum">     199 </span><span class="lineCov">         90 : LUA_API void lua_close (lua_State *L) {</span>
-<span class="lineNum">     200 </span><span class="lineCov">         90 :   L = G(L)-&gt;mainthread;  /* only the main thread can be closed */</span>
-<span class="lineNum">     201 </span>            :   lua_lock(L);
-<span class="lineNum">     202 </span><span class="lineCov">         90 :   luaF_close(L, L-&gt;stack);  /* close all upvalues for this thread */</span>
-<span class="lineNum">     203 </span><span class="lineCov">         90 :   luaC_separateudata(L, 1);  /* separate udata that have GC metamethods */</span>
-<span class="lineNum">     204 </span><span class="lineCov">         90 :   L-&gt;errfunc = 0;  /* no error function during GC metamethods */</span>
-<span class="lineNum">     205 </span>            :   do {  /* repeat until no more errors */
-<span class="lineNum">     206 </span><span class="lineCov">         90 :     L-&gt;ci = L-&gt;base_ci;</span>
-<span class="lineNum">     207 </span><span class="lineCov">         90 :     L-&gt;base = L-&gt;top = L-&gt;ci-&gt;base;</span>
-<span class="lineNum">     208 </span><span class="lineCov">         90 :     L-&gt;nCcalls = L-&gt;baseCcalls = 0;</span>
-<span class="lineNum">     209 </span><span class="lineCov">         90 :   } while (luaD_rawrunprotected(L, callallgcTM, NULL) != 0);</span>
-<span class="lineNum">     210 </span>            :   lua_assert(G(L)-&gt;tmudata == NULL);
-<span class="lineNum">     211 </span>            :   luai_userstateclose(L);
-<span class="lineNum">     212 </span><span class="lineCov">         90 :   close_state(L);</span>
-<span class="lineNum">     213 </span><span class="lineCov">         90 : }</span>
-<span class="lineNum">     214 </span>            : 
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<a name="2"><span class="lineNum">       2 </span>            : ** $Id: lstate.c,v 2.36.1.2 2008/01/03 15:20:39 roberto Exp $</a>
+<a name="3"><span class="lineNum">       3 </span>            : ** Global State</a>
+<a name="4"><span class="lineNum">       4 </span>            : ** See Copyright Notice in lua.h</a>
+<a name="5"><span class="lineNum">       5 </span>            : */</a>
+<a name="6"><span class="lineNum">       6 </span>            : </a>
+<a name="7"><span class="lineNum">       7 </span>            : </a>
+<a name="8"><span class="lineNum">       8 </span>            : #include &lt;stddef.h&gt;</a>
+<a name="9"><span class="lineNum">       9 </span>            : </a>
+<a name="10"><span class="lineNum">      10 </span>            : #define lstate_c</a>
+<a name="11"><span class="lineNum">      11 </span>            : #define LUA_CORE</a>
+<a name="12"><span class="lineNum">      12 </span>            : </a>
+<a name="13"><span class="lineNum">      13 </span>            : #include &quot;lua.h&quot;</a>
+<a name="14"><span class="lineNum">      14 </span>            : </a>
+<a name="15"><span class="lineNum">      15 </span>            : #include &quot;ldebug.h&quot;</a>
+<a name="16"><span class="lineNum">      16 </span>            : #include &quot;ldo.h&quot;</a>
+<a name="17"><span class="lineNum">      17 </span>            : #include &quot;lfunc.h&quot;</a>
+<a name="18"><span class="lineNum">      18 </span>            : #include &quot;lgc.h&quot;</a>
+<a name="19"><span class="lineNum">      19 </span>            : #include &quot;llex.h&quot;</a>
+<a name="20"><span class="lineNum">      20 </span>            : #include &quot;lmem.h&quot;</a>
+<a name="21"><span class="lineNum">      21 </span>            : #include &quot;lstate.h&quot;</a>
+<a name="22"><span class="lineNum">      22 </span>            : #include &quot;lstring.h&quot;</a>
+<a name="23"><span class="lineNum">      23 </span>            : #include &quot;ltable.h&quot;</a>
+<a name="24"><span class="lineNum">      24 </span>            : #include &quot;ltm.h&quot;</a>
+<a name="25"><span class="lineNum">      25 </span>            : </a>
+<a name="26"><span class="lineNum">      26 </span>            : </a>
+<a name="27"><span class="lineNum">      27 </span>            : #define state_size(x)   (sizeof(x) + LUAI_EXTRASPACE)</a>
+<a name="28"><span class="lineNum">      28 </span>            : #define fromstate(l)    (cast(lu_byte *, (l)) - LUAI_EXTRASPACE)</a>
+<a name="29"><span class="lineNum">      29 </span>            : #define tostate(l)   (cast(lua_State *, cast(lu_byte *, l) + LUAI_EXTRASPACE))</a>
+<a name="30"><span class="lineNum">      30 </span>            : </a>
+<a name="31"><span class="lineNum">      31 </span>            : </a>
+<a name="32"><span class="lineNum">      32 </span>            : /*</a>
+<a name="33"><span class="lineNum">      33 </span>            : ** Main thread combines a thread state and the global state</a>
+<a name="34"><span class="lineNum">      34 </span>            : */</a>
+<a name="35"><span class="lineNum">      35 </span>            : typedef struct LG {</a>
+<a name="36"><span class="lineNum">      36 </span>            :   lua_State l;</a>
+<a name="37"><span class="lineNum">      37 </span>            :   global_State g;</a>
+<a name="38"><span class="lineNum">      38 </span>            : } LG;</a>
+<a name="39"><span class="lineNum">      39 </span>            :   </a>
+<a name="40"><span class="lineNum">      40 </span>            : </a>
+<a name="41"><span class="lineNum">      41 </span>            : </a>
+<a name="42"><span class="lineNum">      42 </span><span class="lineCov">        124 : static void stack_init (lua_State *L1, lua_State *L) {</span></a>
+<a name="43"><span class="lineNum">      43 </span>            :   /* initialize CallInfo array */</a>
+<a name="44"><span class="lineNum">      44 </span><span class="lineCov">        124 :   L1-&gt;base_ci = luaM_newvector(L, BASIC_CI_SIZE, CallInfo);</span></a>
+<a name="45"><span class="lineNum">      45 </span><span class="lineCov">        124 :   L1-&gt;ci = L1-&gt;base_ci;</span></a>
+<a name="46"><span class="lineNum">      46 </span><span class="lineCov">        124 :   L1-&gt;size_ci = BASIC_CI_SIZE;</span></a>
+<a name="47"><span class="lineNum">      47 </span><span class="lineCov">        124 :   L1-&gt;end_ci = L1-&gt;base_ci + L1-&gt;size_ci - 1;</span></a>
+<a name="48"><span class="lineNum">      48 </span>            :   /* initialize stack array */</a>
+<a name="49"><span class="lineNum">      49 </span><span class="lineCov">        124 :   L1-&gt;stack = luaM_newvector(L, BASIC_STACK_SIZE + EXTRA_STACK, TValue);</span></a>
+<a name="50"><span class="lineNum">      50 </span><span class="lineCov">        124 :   L1-&gt;stacksize = BASIC_STACK_SIZE + EXTRA_STACK;</span></a>
+<a name="51"><span class="lineNum">      51 </span><span class="lineCov">        124 :   L1-&gt;top = L1-&gt;stack;</span></a>
+<a name="52"><span class="lineNum">      52 </span><span class="lineCov">        124 :   L1-&gt;stack_last = L1-&gt;stack+(L1-&gt;stacksize - EXTRA_STACK)-1;</span></a>
+<a name="53"><span class="lineNum">      53 </span>            :   /* initialize first ci */</a>
+<a name="54"><span class="lineNum">      54 </span><span class="lineCov">        124 :   L1-&gt;ci-&gt;func = L1-&gt;top;</span></a>
+<a name="55"><span class="lineNum">      55 </span><span class="lineCov">        124 :   setnilvalue(L1-&gt;top++);  /* `function' entry for this `ci' */</span></a>
+<a name="56"><span class="lineNum">      56 </span><span class="lineCov">        124 :   L1-&gt;base = L1-&gt;ci-&gt;base = L1-&gt;top;</span></a>
+<a name="57"><span class="lineNum">      57 </span><span class="lineCov">        124 :   L1-&gt;ci-&gt;top = L1-&gt;top + LUA_MINSTACK;</span></a>
+<a name="58"><span class="lineNum">      58 </span><span class="lineCov">        124 : }</span></a>
+<a name="59"><span class="lineNum">      59 </span>            : </a>
+<a name="60"><span class="lineNum">      60 </span>            : </a>
+<a name="61"><span class="lineNum">      61 </span><span class="lineCov">        114 : static void freestack (lua_State *L, lua_State *L1) {</span></a>
+<a name="62"><span class="lineNum">      62 </span><span class="lineCov">        114 :   luaM_freearray(L, L1-&gt;base_ci, L1-&gt;size_ci, CallInfo);</span></a>
+<a name="63"><span class="lineNum">      63 </span><span class="lineCov">        114 :   luaM_freearray(L, L1-&gt;stack, L1-&gt;stacksize, TValue);</span></a>
+<a name="64"><span class="lineNum">      64 </span><span class="lineCov">        114 : }</span></a>
+<a name="65"><span class="lineNum">      65 </span>            : </a>
+<a name="66"><span class="lineNum">      66 </span>            : </a>
+<a name="67"><span class="lineNum">      67 </span>            : /*</a>
+<a name="68"><span class="lineNum">      68 </span>            : ** open parts that may cause memory-allocation errors</a>
+<a name="69"><span class="lineNum">      69 </span>            : */</a>
+<a name="70"><span class="lineNum">      70 </span><span class="lineCov">        100 : static void f_luaopen (lua_State *L, void *ud) {</span></a>
+<a name="71"><span class="lineNum">      71 </span><span class="lineCov">        100 :   global_State *g = G(L);</span></a>
+<a name="72"><span class="lineNum">      72 </span>            :   UNUSED(ud);</a>
+<a name="73"><span class="lineNum">      73 </span><span class="lineCov">        100 :   stack_init(L, L);  /* init stack */</span></a>
+<a name="74"><span class="lineNum">      74 </span><span class="lineCov">        100 :   sethvalue(L, gt(L), luaH_new(L, 0, 2));  /* table of globals */</span></a>
+<a name="75"><span class="lineNum">      75 </span><span class="lineCov">        100 :   sethvalue(L, registry(L), luaH_new(L, 0, 2));  /* registry */</span></a>
+<a name="76"><span class="lineNum">      76 </span><span class="lineCov">        100 :   luaS_resize(L, MINSTRTABSIZE);  /* initial size of string table */</span></a>
+<a name="77"><span class="lineNum">      77 </span><span class="lineCov">        100 :   luaT_init(L);</span></a>
+<a name="78"><span class="lineNum">      78 </span><span class="lineCov">        100 :   luaX_init(L);</span></a>
+<a name="79"><span class="lineNum">      79 </span><span class="lineCov">        100 :   luaS_fix(luaS_newliteral(L, MEMERRMSG));</span></a>
+<a name="80"><span class="lineNum">      80 </span><span class="lineCov">        100 :   g-&gt;GCthreshold = 4*g-&gt;totalbytes;</span></a>
+<a name="81"><span class="lineNum">      81 </span><span class="lineCov">        100 : }</span></a>
+<a name="82"><span class="lineNum">      82 </span>            : </a>
+<a name="83"><span class="lineNum">      83 </span>            : </a>
+<a name="84"><span class="lineNum">      84 </span><span class="lineCov">        124 : static void preinit_state (lua_State *L, global_State *g) {</span></a>
+<a name="85"><span class="lineNum">      85 </span><span class="lineCov">        124 :   G(L) = g;</span></a>
+<a name="86"><span class="lineNum">      86 </span><span class="lineCov">        124 :   L-&gt;stack = NULL;</span></a>
+<a name="87"><span class="lineNum">      87 </span><span class="lineCov">        124 :   L-&gt;stacksize = 0;</span></a>
+<a name="88"><span class="lineNum">      88 </span><span class="lineCov">        124 :   L-&gt;errorJmp = NULL;</span></a>
+<a name="89"><span class="lineNum">      89 </span><span class="lineCov">        124 :   L-&gt;hook = NULL;</span></a>
+<a name="90"><span class="lineNum">      90 </span><span class="lineCov">        124 :   L-&gt;hookmask = 0;</span></a>
+<a name="91"><span class="lineNum">      91 </span><span class="lineCov">        124 :   L-&gt;basehookcount = 0;</span></a>
+<a name="92"><span class="lineNum">      92 </span><span class="lineCov">        124 :   L-&gt;allowhook = 1;</span></a>
+<a name="93"><span class="lineNum">      93 </span><span class="lineCov">        124 :   resethookcount(L);</span></a>
+<a name="94"><span class="lineNum">      94 </span><span class="lineCov">        124 :   L-&gt;openupval = NULL;</span></a>
+<a name="95"><span class="lineNum">      95 </span><span class="lineCov">        124 :   L-&gt;size_ci = 0;</span></a>
+<a name="96"><span class="lineNum">      96 </span><span class="lineCov">        124 :   L-&gt;nCcalls = L-&gt;baseCcalls = 0;</span></a>
+<a name="97"><span class="lineNum">      97 </span><span class="lineCov">        124 :   L-&gt;status = 0;</span></a>
+<a name="98"><span class="lineNum">      98 </span><span class="lineCov">        124 :   L-&gt;base_ci = L-&gt;ci = NULL;</span></a>
+<a name="99"><span class="lineNum">      99 </span><span class="lineCov">        124 :   L-&gt;savedpc = NULL;</span></a>
+<a name="100"><span class="lineNum">     100 </span><span class="lineCov">        124 :   L-&gt;errfunc = 0;</span></a>
+<a name="101"><span class="lineNum">     101 </span><span class="lineCov">        124 :   setnilvalue(gt(L));</span></a>
+<a name="102"><span class="lineNum">     102 </span><span class="lineCov">        124 : }</span></a>
+<a name="103"><span class="lineNum">     103 </span>            : </a>
+<a name="104"><span class="lineNum">     104 </span>            : </a>
+<a name="105"><span class="lineNum">     105 </span><span class="lineCov">         90 : static void close_state (lua_State *L) {</span></a>
+<a name="106"><span class="lineNum">     106 </span><span class="lineCov">         90 :   global_State *g = G(L);</span></a>
+<a name="107"><span class="lineNum">     107 </span><span class="lineCov">         90 :   luaF_close(L, L-&gt;stack);  /* close all upvalues for this thread */</span></a>
+<a name="108"><span class="lineNum">     108 </span><span class="lineCov">         90 :   luaC_freeall(L);  /* collect all objects */</span></a>
+<a name="109"><span class="lineNum">     109 </span>            :   lua_assert(g-&gt;rootgc == obj2gco(L));</a>
+<a name="110"><span class="lineNum">     110 </span>            :   lua_assert(g-&gt;strt.nuse == 0);</a>
+<a name="111"><span class="lineNum">     111 </span><span class="lineCov">         90 :   luaM_freearray(L, G(L)-&gt;strt.hash, G(L)-&gt;strt.size, TString *);</span></a>
+<a name="112"><span class="lineNum">     112 </span><span class="lineCov">         90 :   luaZ_freebuffer(L, &amp;g-&gt;buff);</span></a>
+<a name="113"><span class="lineNum">     113 </span><span class="lineCov">         90 :   freestack(L, L);</span></a>
+<a name="114"><span class="lineNum">     114 </span>            :   lua_assert(g-&gt;totalbytes == sizeof(LG));</a>
+<a name="115"><span class="lineNum">     115 </span><span class="lineCov">         90 :   (*g-&gt;frealloc)(g-&gt;ud, fromstate(L), state_size(LG), 0);</span></a>
+<a name="116"><span class="lineNum">     116 </span><span class="lineCov">         90 : }</span></a>
+<a name="117"><span class="lineNum">     117 </span>            : </a>
+<a name="118"><span class="lineNum">     118 </span>            : </a>
+<a name="119"><span class="lineNum">     119 </span><span class="lineCov">         24 : lua_State *luaE_newthread (lua_State *L) {</span></a>
+<a name="120"><span class="lineNum">     120 </span><span class="lineCov">         24 :   lua_State *L1 = tostate(luaM_malloc(L, state_size(lua_State)));</span></a>
+<a name="121"><span class="lineNum">     121 </span><span class="lineCov">         24 :   luaC_link(L, obj2gco(L1), LUA_TTHREAD);</span></a>
+<a name="122"><span class="lineNum">     122 </span><span class="lineCov">         24 :   preinit_state(L1, G(L));</span></a>
+<a name="123"><span class="lineNum">     123 </span><span class="lineCov">         24 :   stack_init(L1, L);  /* init stack */</span></a>
+<a name="124"><span class="lineNum">     124 </span><span class="lineCov">         24 :   setobj2n(L, gt(L1), gt(L));  /* share table of globals */</span></a>
+<a name="125"><span class="lineNum">     125 </span><span class="lineCov">         24 :   L1-&gt;hookmask = L-&gt;hookmask;</span></a>
+<a name="126"><span class="lineNum">     126 </span><span class="lineCov">         24 :   L1-&gt;basehookcount = L-&gt;basehookcount;</span></a>
+<a name="127"><span class="lineNum">     127 </span><span class="lineCov">         24 :   L1-&gt;hook = L-&gt;hook;</span></a>
+<a name="128"><span class="lineNum">     128 </span><span class="lineCov">         24 :   resethookcount(L1);</span></a>
+<a name="129"><span class="lineNum">     129 </span>            :   lua_assert(iswhite(obj2gco(L1)));</a>
+<a name="130"><span class="lineNum">     130 </span><span class="lineCov">         24 :   return L1;</span></a>
+<a name="131"><span class="lineNum">     131 </span>            : }</a>
+<a name="132"><span class="lineNum">     132 </span>            : </a>
+<a name="133"><span class="lineNum">     133 </span>            : </a>
+<a name="134"><span class="lineNum">     134 </span><span class="lineCov">         24 : void luaE_freethread (lua_State *L, lua_State *L1) {</span></a>
+<a name="135"><span class="lineNum">     135 </span><span class="lineCov">         24 :   luaF_close(L1, L1-&gt;stack);  /* close all upvalues for this thread */</span></a>
+<a name="136"><span class="lineNum">     136 </span>            :   lua_assert(L1-&gt;openupval == NULL);</a>
+<a name="137"><span class="lineNum">     137 </span>            :   luai_userstatefree(L1);</a>
+<a name="138"><span class="lineNum">     138 </span><span class="lineCov">         24 :   freestack(L, L1);</span></a>
+<a name="139"><span class="lineNum">     139 </span><span class="lineCov">         24 :   luaM_freemem(L, fromstate(L1), state_size(lua_State));</span></a>
+<a name="140"><span class="lineNum">     140 </span><span class="lineCov">         24 : }</span></a>
+<a name="141"><span class="lineNum">     141 </span>            : </a>
+<a name="142"><span class="lineNum">     142 </span>            : </a>
+<a name="143"><span class="lineNum">     143 </span><span class="lineCov">        100 : LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {</span></a>
+<a name="144"><span class="lineNum">     144 </span>            :   int i;</a>
+<a name="145"><span class="lineNum">     145 </span>            :   lua_State *L;</a>
+<a name="146"><span class="lineNum">     146 </span>            :   global_State *g;</a>
+<a name="147"><span class="lineNum">     147 </span><span class="lineCov">        100 :   void *l = (*f)(ud, NULL, 0, state_size(LG));</span></a>
+<a name="148"><span class="lineNum">     148 </span><span class="lineCov">        100 :   if (l == NULL) return NULL;</span></a>
+<a name="149"><span class="lineNum">     149 </span><span class="lineCov">        100 :   L = tostate(l);</span></a>
+<a name="150"><span class="lineNum">     150 </span><span class="lineCov">        100 :   g = &amp;((LG *)L)-&gt;g;</span></a>
+<a name="151"><span class="lineNum">     151 </span><span class="lineCov">        100 :   L-&gt;next = NULL;</span></a>
+<a name="152"><span class="lineNum">     152 </span><span class="lineCov">        100 :   L-&gt;tt = LUA_TTHREAD;</span></a>
+<a name="153"><span class="lineNum">     153 </span><span class="lineCov">        100 :   g-&gt;currentwhite = bit2mask(WHITE0BIT, FIXEDBIT);</span></a>
+<a name="154"><span class="lineNum">     154 </span><span class="lineCov">        100 :   L-&gt;marked = luaC_white(g);</span></a>
+<a name="155"><span class="lineNum">     155 </span><span class="lineCov">        100 :   set2bits(L-&gt;marked, FIXEDBIT, SFIXEDBIT);</span></a>
+<a name="156"><span class="lineNum">     156 </span><span class="lineCov">        100 :   preinit_state(L, g);</span></a>
+<a name="157"><span class="lineNum">     157 </span><span class="lineCov">        100 :   g-&gt;frealloc = f;</span></a>
+<a name="158"><span class="lineNum">     158 </span><span class="lineCov">        100 :   g-&gt;ud = ud;</span></a>
+<a name="159"><span class="lineNum">     159 </span><span class="lineCov">        100 :   g-&gt;mainthread = L;</span></a>
+<a name="160"><span class="lineNum">     160 </span><span class="lineCov">        100 :   g-&gt;uvhead.u.l.prev = &amp;g-&gt;uvhead;</span></a>
+<a name="161"><span class="lineNum">     161 </span><span class="lineCov">        100 :   g-&gt;uvhead.u.l.next = &amp;g-&gt;uvhead;</span></a>
+<a name="162"><span class="lineNum">     162 </span><span class="lineCov">        100 :   g-&gt;GCthreshold = 0;  /* mark it as unfinished state */</span></a>
+<a name="163"><span class="lineNum">     163 </span><span class="lineCov">        100 :   g-&gt;strt.size = 0;</span></a>
+<a name="164"><span class="lineNum">     164 </span><span class="lineCov">        100 :   g-&gt;strt.nuse = 0;</span></a>
+<a name="165"><span class="lineNum">     165 </span><span class="lineCov">        100 :   g-&gt;strt.hash = NULL;</span></a>
+<a name="166"><span class="lineNum">     166 </span><span class="lineCov">        100 :   setnilvalue(registry(L));</span></a>
+<a name="167"><span class="lineNum">     167 </span><span class="lineCov">        100 :   luaZ_initbuffer(L, &amp;g-&gt;buff);</span></a>
+<a name="168"><span class="lineNum">     168 </span><span class="lineCov">        100 :   g-&gt;panic = NULL;</span></a>
+<a name="169"><span class="lineNum">     169 </span><span class="lineCov">        100 :   g-&gt;gcstate = GCSpause;</span></a>
+<a name="170"><span class="lineNum">     170 </span><span class="lineCov">        100 :   g-&gt;rootgc = obj2gco(L);</span></a>
+<a name="171"><span class="lineNum">     171 </span><span class="lineCov">        100 :   g-&gt;sweepstrgc = 0;</span></a>
+<a name="172"><span class="lineNum">     172 </span><span class="lineCov">        100 :   g-&gt;sweepgc = &amp;g-&gt;rootgc;</span></a>
+<a name="173"><span class="lineNum">     173 </span><span class="lineCov">        100 :   g-&gt;gray = NULL;</span></a>
+<a name="174"><span class="lineNum">     174 </span><span class="lineCov">        100 :   g-&gt;grayagain = NULL;</span></a>
+<a name="175"><span class="lineNum">     175 </span><span class="lineCov">        100 :   g-&gt;weak = NULL;</span></a>
+<a name="176"><span class="lineNum">     176 </span><span class="lineCov">        100 :   g-&gt;tmudata = NULL;</span></a>
+<a name="177"><span class="lineNum">     177 </span><span class="lineCov">        100 :   g-&gt;totalbytes = sizeof(LG);</span></a>
+<a name="178"><span class="lineNum">     178 </span><span class="lineCov">        100 :   g-&gt;gcpause = LUAI_GCPAUSE;</span></a>
+<a name="179"><span class="lineNum">     179 </span><span class="lineCov">        100 :   g-&gt;gcstepmul = LUAI_GCMUL;</span></a>
+<a name="180"><span class="lineNum">     180 </span><span class="lineCov">        100 :   g-&gt;gcdept = 0;</span></a>
+<a name="181"><span class="lineNum">     181 </span><span class="lineCov">       1000 :   for (i=0; i&lt;NUM_TAGS; i++) g-&gt;mt[i] = NULL;</span></a>
+<a name="182"><span class="lineNum">     182 </span><span class="lineCov">        100 :   if (luaD_rawrunprotected(L, f_luaopen, NULL) != 0) {</span></a>
+<a name="183"><span class="lineNum">     183 </span>            :     /* memory allocation error: free partial state */</a>
+<a name="184"><span class="lineNum">     184 </span><span class="lineNoCov">          0 :     close_state(L);</span></a>
+<a name="185"><span class="lineNum">     185 </span><span class="lineNoCov">          0 :     L = NULL;</span></a>
+<a name="186"><span class="lineNum">     186 </span>            :   }</a>
+<a name="187"><span class="lineNum">     187 </span>            :   else</a>
+<a name="188"><span class="lineNum">     188 </span>            :     luai_userstateopen(L);</a>
+<a name="189"><span class="lineNum">     189 </span><span class="lineCov">        100 :   return L;</span></a>
+<a name="190"><span class="lineNum">     190 </span>            : }</a>
+<a name="191"><span class="lineNum">     191 </span>            : </a>
+<a name="192"><span class="lineNum">     192 </span>            : </a>
+<a name="193"><span class="lineNum">     193 </span><span class="lineCov">         90 : static void callallgcTM (lua_State *L, void *ud) {</span></a>
+<a name="194"><span class="lineNum">     194 </span>            :   UNUSED(ud);</a>
+<a name="195"><span class="lineNum">     195 </span><span class="lineCov">         90 :   luaC_callGCTM(L);  /* call GC metamethods for all udata */</span></a>
+<a name="196"><span class="lineNum">     196 </span><span class="lineCov">         90 : }</span></a>
+<a name="197"><span class="lineNum">     197 </span>            : </a>
+<a name="198"><span class="lineNum">     198 </span>            : </a>
+<a name="199"><span class="lineNum">     199 </span><span class="lineCov">         90 : LUA_API void lua_close (lua_State *L) {</span></a>
+<a name="200"><span class="lineNum">     200 </span><span class="lineCov">         90 :   L = G(L)-&gt;mainthread;  /* only the main thread can be closed */</span></a>
+<a name="201"><span class="lineNum">     201 </span>            :   lua_lock(L);</a>
+<a name="202"><span class="lineNum">     202 </span><span class="lineCov">         90 :   luaF_close(L, L-&gt;stack);  /* close all upvalues for this thread */</span></a>
+<a name="203"><span class="lineNum">     203 </span><span class="lineCov">         90 :   luaC_separateudata(L, 1);  /* separate udata that have GC metamethods */</span></a>
+<a name="204"><span class="lineNum">     204 </span><span class="lineCov">         90 :   L-&gt;errfunc = 0;  /* no error function during GC metamethods */</span></a>
+<a name="205"><span class="lineNum">     205 </span>            :   do {  /* repeat until no more errors */</a>
+<a name="206"><span class="lineNum">     206 </span><span class="lineCov">         90 :     L-&gt;ci = L-&gt;base_ci;</span></a>
+<a name="207"><span class="lineNum">     207 </span><span class="lineCov">         90 :     L-&gt;base = L-&gt;top = L-&gt;ci-&gt;base;</span></a>
+<a name="208"><span class="lineNum">     208 </span><span class="lineCov">         90 :     L-&gt;nCcalls = L-&gt;baseCcalls = 0;</span></a>
+<a name="209"><span class="lineNum">     209 </span><span class="lineCov">         90 :   } while (luaD_rawrunprotected(L, callallgcTM, NULL) != 0);</span></a>
+<a name="210"><span class="lineNum">     210 </span>            :   lua_assert(G(L)-&gt;tmudata == NULL);</a>
+<a name="211"><span class="lineNum">     211 </span>            :   luai_userstateclose(L);</a>
+<a name="212"><span class="lineNum">     212 </span><span class="lineCov">         90 :   close_state(L);</span></a>
+<a name="213"><span class="lineNum">     213 </span><span class="lineCov">         90 : }</span></a>
+<a name="214"><span class="lineNum">     214 </span>            : </a>
 </pre>
       </td>
     </tr>
@@ -286,7 +286,7 @@
 
   <table width="100%" border=0 cellspacing=0 cellpadding=0>
     <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
-    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="https://github.com/linux-test-project/lcov" target="_parent">LCOV version 1.16</a></td></tr>
   </table>
   <br>
 

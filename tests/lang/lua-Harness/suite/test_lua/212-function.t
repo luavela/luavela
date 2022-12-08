@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2009-2018, Perrad Francois
+-- Copyright (C) 2009-2021, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -21,7 +21,8 @@
 See section "Function Definitions" in "Reference Manual"
 L<https://www.lua.org/manual/5.1/manual.html#2.5.9>,
 L<https://www.lua.org/manual/5.2/manual.html#3.4.10>,
-L<https://www.lua.org/manual/5.3/manual.html#3.4.11>
+L<https://www.lua.org/manual/5.3/manual.html#3.4.11>,
+L<https://www.lua.org/manual/5.4/manual.html#3.4.11>
 
 See section "Functions" in "Programming in Lua".
 
@@ -29,7 +30,7 @@ See section "Functions" in "Programming in Lua".
 
 --]]
 
-require'tap'
+require'test_assertion'
 local loadstring = loadstring or load
 
 plan(68)
@@ -44,15 +45,15 @@ do --[[ add ]]
     end
 
     local t = { 10, 20, 30, 40 }
-    is(add(t), 100, "add")
+    equals(add(t), 100, "add")
 end
 
 do --[[ f ]]
     local function f(a, b) return a or b end
 
-    is(f(3), 3, "f")
-    is(f(3, 4), 3)
-    is(f(3, 4, 5), 3)
+    equals(f(3), 3, "f")
+    equals(f(3, 4), 3)
+    equals(f(3, 4, 5), 3)
 end
 
 do --[[ incCount ]]
@@ -63,13 +64,13 @@ do --[[ incCount ]]
         count = count + n
     end
 
-    is(count, 0, "inCount")
+    equals(count, 0, "inCount")
     incCount()
-    is(count, 1)
+    equals(count, 1)
     incCount(2)
-    is(count, 3)
+    equals(count, 3)
     incCount(1)
-    is(count, 4)
+    equals(count, 4)
 end
 
 do --[[ maximum ]]
@@ -86,8 +87,8 @@ do --[[ maximum ]]
     end
 
     local m, mi = maximum({8,10,23,12,5})
-    is(m, 23, "maximum")
-    is(mi, 3)
+    equals(m, 23, "maximum")
+    equals(mi, 3)
 end
 
 do --[[ call by value ]]
@@ -97,13 +98,13 @@ do --[[ call by value ]]
     end
 
     local a = 12
-    is(a, 12, "call by value")
+    equals(a, 12, "call by value")
     local b = f(a)
-    is(b, 11)
-    is(a, 12)
+    equals(b, 11)
+    equals(a, 12)
     local c = f(12)
-    is(c, 11)
-    is(a, 12)
+    equals(c, 11)
+    equals(a, 12)
 end
 
 do --[[ call by ref ]]
@@ -113,38 +114,38 @@ do --[[ call by ref ]]
     end
 
     local a = { 'a', 'b', 'c' }
-    is(table.concat(a, ','), 'a,b,c', "call by ref")
+    equals(table.concat(a, ','), 'a,b,c', "call by ref")
     local b = f(a)
-    is(table.concat(b, ','), 'a,b,c,end')
-    is(table.concat(a, ','), 'a,b,c,end')
+    equals(table.concat(b, ','), 'a,b,c,end')
+    equals(table.concat(a, ','), 'a,b,c,end')
 end
 
 do --[[ var args ]]
     local function g1(a, b, ...)
         local arg = {...}
-        is(a, 3, "vararg")
-        is(b, nil)
-        is(#arg, 0)
-        is(arg[1], nil)
+        equals(a, 3, "vararg")
+        equals(b, nil)
+        equals(#arg, 0)
+        equals(arg[1], nil)
     end
     g1(3)
 
     local function g2(a, b, ...)
         local arg = {...}
-        is(a, 3)
-        is(b, 4)
-        is(#arg, 0)
-        is(arg[1], nil)
+        equals(a, 3)
+        equals(b, 4)
+        equals(#arg, 0)
+        equals(arg[1], nil)
     end
     g2(3, 4)
 
     local function g3(a, b, ...)
         local arg = {...}
-        is(a, 3)
-        is(b, 4)
-        is(#arg, 2)
-        is(arg[1], 5)
-        is(arg[2], 8)
+        equals(a, 3)
+        equals(b, 4)
+        equals(#arg, 2)
+        equals(arg[1], 5)
+        equals(arg[2], 8)
     end
     g3(3, 4, 5, 8)
 end
@@ -152,48 +153,48 @@ end
 do --[[ var args ]]
     local function g1(a, b, ...)
         local c, d, e = ...
-        is(a, 3, "var args")
-        is(b, nil)
-        is(c, nil)
-        is(d, nil)
-        is(e, nil)
+        equals(a, 3, "var args")
+        equals(b, nil)
+        equals(c, nil)
+        equals(d, nil)
+        equals(e, nil)
     end
     g1(3)
 
     local function g2(a, b, ...)
         local c, d, e = ...
-        is(a, 3)
-        is(b, 4)
-        is(c, nil)
-        is(d, nil)
-        is(e, nil)
+        equals(a, 3)
+        equals(b, 4)
+        equals(c, nil)
+        equals(d, nil)
+        equals(e, nil)
     end
     g2(3, 4)
 
     local function g3(a, b, ...)
         local c, d, e = ...
-        is(a, 3)
-        is(b, 4)
-        is(c, 5)
-        is(d, 8)
-        is(e, nil)
+        equals(a, 3)
+        equals(b, 4)
+        equals(c, 5)
+        equals(d, 8)
+        equals(e, nil)
     end
     g3(3, 4, 5, 8)
 end
 
 do --[[ var args ]]
     local function g1(a, b, ...)
-        is(#{a, b, ...}, 1, "varargs")
+        equals(#{a, b, ...}, 1, "varargs")
     end
     g1(3)
 
     local function g2(a, b, ...)
-        is(#{a, b, ...}, 2)
+        equals(#{a, b, ...}, 2)
     end
     g2(3, 4)
 
     local function g3(a, b, ...)
-        is(#{a, b, ...}, 4)
+        equals(#{a, b, ...}, 4)
     end
     g3(3, 4, 5, 8)
 end
@@ -205,20 +206,20 @@ do --[[ var args ]]
     local function k() return 'c', (f()) end
 
     local x, y = f()
-    is(x, 1, "var args")
-    is(y, 2)
+    equals(x, 1, "var args")
+    equals(y, 2)
     local z
     x, y, z = g()
-    is(x, 'a')
-    is(y, 1)
-    is(z, 2)
+    equals(x, 'a')
+    equals(y, 1)
+    equals(z, 2)
     x, y = h()
-    is(x, 1)
-    is(y, 'b')
+    equals(x, 1)
+    equals(y, 'b')
     x, y, z = k()
-    is(x, 'c')
-    is(y, 1)
-    is(z, nil)
+    equals(x, 'c')
+    equals(y, 1)
+    equals(z, nil)
 end
 
 do --[[ invalid var args ]]
@@ -227,7 +228,7 @@ function f ()
     print(...)
 end
 ]]
-    like(msg, "^[^:]+:%d+: cannot use '...' outside a vararg function", "invalid var args")
+    matches(msg, "^[^:]+:%d+: cannot use '...' outside a vararg function", "invalid var args")
 end
 
 do --[[ tail call ]]
@@ -240,8 +241,8 @@ do --[[ tail call ]]
         return 'end', 0
     end
 
-    eq_array({foo(3)}, {'end', 0}, "tail call")
-    eq_array(output, {3, 2, 1, 0})
+    array_equals({foo(3)}, {'end', 0}, "tail call")
+    array_equals(output, {3, 2, 1, 0})
 end
 
 do --[[ no tail call ]]
@@ -254,8 +255,8 @@ do --[[ no tail call ]]
         return 'end', 0
     end
 
-    is(foo(3), 'end', "no tail call")
-    eq_array(output, {3, 2, 1, 0})
+    equals(foo(3), 'end', "no tail call")
+    array_equals(output, {3, 2, 1, 0})
 end
 
 do --[[ no tail call ]]
@@ -267,16 +268,16 @@ do --[[ no tail call ]]
         end
     end
 
-    is(foo(3), nil, "no tail call")
-    eq_array(output, {3, 2, 1, 0})
+    equals(foo(3), nil, "no tail call")
+    array_equals(output, {3, 2, 1, 0})
 end
 
 do --[[ sub name ]]
     local function f () return 1 end
-    is(f(), 1, "sub name")
+    equals(f(), 1, "sub name")
 
     function f () return 2 end
-    is(f(), 2)
+    equals(f(), 2)
 end
 
 -- Local Variables:
