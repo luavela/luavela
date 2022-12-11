@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2014-2018, Perrad Francois
+-- Copyright (C) 2014-2021, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -23,22 +23,28 @@ Tests Lua UTF-8 Library
 This library was introduced in Lua 5.3.
 
 See section "UTF-8 support" in "Reference Manual"
-L<https://www.lua.org/manual/5.3/manual.html#6.5>.
+L<https://www.lua.org/manual/5.3/manual.html#6.5>,
+L<https://www.lua.org/manual/5.4/manual.html#6.5>
 
 =cut
 
 --]]
 
-require 'tap'
+require 'test_assertion'
 
-local has_utf8 = _VERSION >= 'Lua 5.3'
+local profile = require'profile'
+local has_utf8 = _VERSION >= 'Lua 5.3' or profile.utf8
 
 if not utf8 then
     plan(1)
-    nok(has_utf8, "no has_utf8")
+    falsy(has_utf8, "no has_utf8")
 else
-    plan(71)
-    dofile'lexico53/utf8.t'
+    plan'no_plan'
+    _dofile'lexico53/utf8.t'
+    if _VERSION >= 'Lua 5.4' or ravi then
+        _dofile'lexico54/utf8.t'
+    end
+    done_testing()
 end
 
 -- Local Variables:

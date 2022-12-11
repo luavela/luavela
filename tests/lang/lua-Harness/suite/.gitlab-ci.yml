@@ -1,8 +1,7 @@
-image: python:alpine
+image: python
 
 before_script:
-  - apk --update add git
-  - pip install mkdocs
+  - pip3 install mkdocs
 
 pages:
   script:

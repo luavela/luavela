@@ -2,7 +2,9 @@
 
 This is a carbon copy of the lua-Harness test suite from
 https://framagit.org/fperrad/lua-Harness. Cloned from commit
-[93b550fc](https://framagit.org/fperrad/lua-Harness/commit/93b550fc07b128c38cccb598c812ff18122a59c1).
+[ba91613f](https://framagit.org/fperrad/lua-Harness/-/commit/ba91613ff0eae395ca13acdd3f691817d6a9df75)
+with [ef39820e](https://framagit.org/fperrad/lua-Harness/-/commit/ef39820ece94254266e037a531d62dfe18a95bfd)
+reverted from the tree.
 
 For lua-Harness license information see suite/COPYRIGHT.
 

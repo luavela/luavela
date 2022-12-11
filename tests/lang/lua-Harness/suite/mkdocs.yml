@@ -1,9 +1,10 @@
 site_name: lua-Harness
 site_description: a test suite for Lua
 site_author: François Perrad
+site_url: https://fperrad.frama.io/lua-Harness
 repo_url: https://framagit.org/fperrad/lua-Harness
-pages:
+nav:
 - Home: index.md
 - Usage: usage.md
 theme: mkdocs
-copyright: Copyright &copy; 2009-2018 Fran&ccedil;ois Perrad
+copyright: Copyright &copy; 2009-2021 Fran&ccedil;ois Perrad

@@ -3,6 +3,9 @@
 # Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 list(APPEND SUITE_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/.gitignore
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/.gitlab-ci.yml
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/.test.luacheckrc
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/COPYRIGHT
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.1.5
@@ -11,12 +14,12 @@ list(APPEND SUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.2.4
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.2.4/src
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.2.4/src/Makefile
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.3.5
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.3.5/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.3.5/src/Makefile
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.4.0-alpha
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.4.0-alpha/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.4.0-alpha/src/Makefile
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.3.6
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.3.6/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.3.6/src/Makefile
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.4.4
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.4.4/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/lua-5.4.4/src/Makefile
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/coverage/Makefile
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/docs
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/docs/index.md
@@ -113,97 +116,97 @@ list(APPEND SUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/src/lvm.c.gcov.html
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/src/lzio.c.gcov.html
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua524/updown.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/amber.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/emerald.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/gcov.css
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/glass.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/index.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/index-sort-l.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/ruby.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/snow.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/index.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/index-sort-l.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lapi.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lauxlib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lbaselib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lbitlib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lcode.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lcorolib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/ldblib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/ldebug.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/ldo.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/ldump.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lfunc.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lgc.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/linit.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/liolib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/llex.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lmathlib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lmem.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/loadlib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lobject.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/loslib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lparser.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lstate.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lstring.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lstrlib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/ltable.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/ltablib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/ltm.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/luac.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lua.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lundump.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lutf8lib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lvm.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/src/lzio.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua535/updown.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/amber.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/emerald.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/gcov.css
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/glass.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/index.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/index-sort-l.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/ruby.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/snow.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/index.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/index-sort-l.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lapi.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lauxlib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lbaselib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lcode.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lcorolib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/ldblib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/ldebug.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/ldo.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/ldump.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lfunc.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lgc.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/linit.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/liolib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/llex.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lmathlib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lmem.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/loadlib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lobject.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/loslib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lparser.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lstate.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lstring.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lstrlib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/ltable.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/ltablib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/ltm.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/luac.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lua.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lundump.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lutf8lib.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lvm.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/src/lzio.c.gcov.html
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua540/updown.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/amber.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/emerald.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/gcov.css
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/glass.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/index.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/index-sort-l.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/ruby.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/snow.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/index.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/index-sort-l.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lapi.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lauxlib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lbaselib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lbitlib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lcode.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lcorolib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/ldblib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/ldebug.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/ldo.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/ldump.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lfunc.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lgc.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/linit.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/liolib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/llex.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lmathlib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lmem.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/loadlib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lobject.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/loslib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lparser.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lstate.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lstring.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lstrlib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/ltable.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/ltablib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/ltm.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/luac.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lua.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lundump.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lutf8lib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lvm.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/src/lzio.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua536/updown.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/amber.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/emerald.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/gcov.css
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/glass.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/index.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/index-sort-l.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/ruby.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/snow.png
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/index.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/index-sort-l.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lapi.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lauxlib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lbaselib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lcode.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lcorolib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/ldblib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/ldebug.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/ldo.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/ldump.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lfunc.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lgc.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/linit.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/liolib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/llex.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lmathlib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lmem.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/loadlib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lobject.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/loslib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lparser.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lstate.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lstring.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lstrlib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/ltable.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/ltablib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/ltm.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/luac.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lua.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lundump.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lutf8lib.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lvm.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/src/lzio.c.gcov.html
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/public/cover_lua544/updown.png
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/README.md
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/000-sanity.t
@@ -254,7 +257,8 @@ list(APPEND SUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/401-bitop.t
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/402-ffi.t
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/403-jit.t
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/404-luajit.t
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/404-ext.t
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/411-luajit.t
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexico52
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexico52/lexico.t
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexico53
@@ -268,9 +272,13 @@ list(APPEND SUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexico53/thread.t
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexico53/userdata.t
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexico53/utf8.t
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexico54
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexico54/lexico.t
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexico54/metatable.t
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexico54/utf8.t
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexicojit
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexicojit/basic.t
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexicojit/ext.t
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/lexicojit/lexico.t
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/Makefile
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/profile.lua
@@ -288,8 +296,11 @@ list(APPEND SUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/profile_luajit20.lua
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/profile_luajit21_compat52.lua
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/profile_luajit21.lua
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/profile_openresty.lua
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/profile_ravi.lua
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/profile_tiny_fork.lua
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/rx_captures
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/rx_charclass
     ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/rx_metachars
-    ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/tap.lua
+    ${CMAKE_CURRENT_SOURCE_DIR}/suite/test_lua/test_assertion.lua
 )

@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2018, Perrad Francois
+-- Copyright (C) 2018-2021, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -22,18 +22,18 @@
 
 ]]
 
-require'tap'
+require'test_assertion'
 
 plan'no_plan'
 
-type_ok(_VERSION, 'string', "variable _VERSION")
-like(_VERSION, '^Lua 5%.%d$')
+is_string(_VERSION, "variable _VERSION")
+matches(_VERSION, '^Lua 5%.%d$')
 
 if jit then
-    type_ok(jit.version_num, 'number', "variable jit.version_num")
+    is_number(jit.version_num, "variable jit.version_num")
 end
 
-local profile = require_ok'profile'
+require_ok'profile'
 
 done_testing()
 

@@ -1,25 +1,25 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2015-2018, Perrad Francois
+-- Copyright (C) 2015-2021, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
 --
 
-is("\u{41}", "A")
-is("\u{20AC}", "\xE2\x82\xAC")
-is("\u{20ac}", "\xe2\x82\xac")
+equals("\u{41}", "A")
+equals("\u{20AC}", "\xE2\x82\xAC")
+equals("\u{20ac}", "\xe2\x82\xac")
 
 do
     local f, msg = load [[a = "A\u{yz}"]]
-    like(msg, "^[^:]+:%d+: .- near")
+    matches(msg, "^[^:]+:%d+: .- near")
 
     f, msg = load [[a = "A\u{41"]]
-    like(msg, "^[^:]+:%d+: .- near")
+    matches(msg, "^[^:]+:%d+: .- near")
 
     f, msg = load [[a = "A\u{FFFFFFFFFF}"]]
-    like(msg, "^[^:]+:%d+: .- near")
+    matches(msg, "^[^:]+:%d+: .- near")
 end
 
 -- Local Variables:

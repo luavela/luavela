@@ -35,6 +35,7 @@ local profile = {
 
 --[[ luajit
     luajit_compat52 = true,
+    openresty = false,
 --]]
 
 }
@@ -44,7 +45,7 @@ package.loaded.profile = profile        -- prevents loading of default profile
 return profile
 
 --
--- Copyright (c) 2018 Francois Perrad
+-- Copyright (c) 2018-2019 Francois Perrad
 --
 -- This library is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.

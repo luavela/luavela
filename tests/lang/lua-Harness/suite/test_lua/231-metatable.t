@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2009-2019, Perrad Francois
+-- Copyright (C) 2009-2021, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -21,7 +21,8 @@
 See section "Metatables and Metamethods" in "Reference Manual"
 L<https://www.lua.org/manual/5.1/manual.html#2.8>,
 L<https://www.lua.org/manual/5.2/manual.html#2.4>,
-L<https://www.lua.org/manual/5.3/manual.html#2.4>
+L<https://www.lua.org/manual/5.3/manual.html#2.4>,
+L<https://www.lua.org/manual/5.4/manual.html#2.4>
 
 See section "Metatables and Metamethods" in "Programming in Lua".
 
@@ -29,7 +30,7 @@ See section "Metatables and Metamethods" in "Programming in Lua".
 
 --]]
 
-require'tap'
+require'test_assertion'
 local profile = require'profile'
 local has_metamethod52 = _VERSION >= 'Lua 5.2' or profile.luajit_compat52
 local has_metamethod_ipairs = _VERSION == 'Lua 5.2' or profile.compat52 or profile.luajit_compat52
@@ -43,34 +44,34 @@ plan'no_plan'
 
 do
     local t = {}
-    is(getmetatable(t), nil, "metatable")
+    equals(getmetatable(t), nil, "metatable")
     local t1 = {}
-    is(setmetatable(t, t1), t)
-    is(getmetatable(t), t1)
-    is(setmetatable(t, nil), t)
-    error_like(function () setmetatable(t, true) end,
-               "^[^:]+:%d+: bad argument #2 to 'setmetatable' %(nil or table expected")
+    equals(setmetatable(t, t1), t)
+    equals(getmetatable(t), t1)
+    equals(setmetatable(t, nil), t)
+    error_matches(function () setmetatable(t, true) end,
+            "^[^:]+:%d+: bad argument #2 to 'setmetatable' %(nil or table expected")
 
     local mt = {}
     mt.__metatable = "not your business"
     setmetatable(t, mt)
-    is(getmetatable(t), "not your business", "protected metatable")
-    error_like(function () setmetatable(t, {}) end,
-               "^[^:]+:%d+: cannot change a protected metatable")
+    equals(getmetatable(t), "not your business", "protected metatable")
+    error_matches(function () setmetatable(t, {}) end,
+            "^[^:]+:%d+: cannot change a protected metatable")
 
-    is(getmetatable('').__index, string, "metatable for string")
+    equals(getmetatable('').__index, string, "metatable for string")
 
-    is(getmetatable(nil), nil, "metatable for nil")
-    is(getmetatable(false), nil, "metatable for boolean")
-    is(getmetatable(2), nil, "metatable for number")
-    is(getmetatable(print), nil, "metatable for function")
+    equals(getmetatable(nil), nil, "metatable for nil")
+    equals(getmetatable(false), nil, "metatable for boolean")
+    equals(getmetatable(2), nil, "metatable for number")
+    equals(getmetatable(print), nil, "metatable for function")
 end
 
 do
     local t = {}
     local mt = { __tostring=function () return '__TABLE__' end }
     setmetatable(t, mt)
-    is(tostring(t), '__TABLE__', "__tostring")
+    equals(tostring(t), '__TABLE__', "__tostring")
 end
 
 do
@@ -80,26 +81,26 @@ do
     function mt.__tostring () a = "return nothing" end
     setmetatable(t, mt)
     if has_metamethod_tostring53 then
-        error_like(function () tostring(t) end,
-                   "^[^:]+:%d+: '__tostring' must return a string")
-        is(a, "return nothing")
+        error_matches(function () tostring(t) end,
+                "^[^:]+:%d+: '__tostring' must return a string")
+        equals(a, "return nothing")
         if has_metamethod_tostring54 then
-            error_like(function () print(t) end,
-                       "^[^:]+:%d+: '__tostring' must return a string")
+            error_matches(function () print(t) end,
+                    "^[^:]+:%d+: '__tostring' must return a string")
         else
-            error_is(function () print(t) end,
-                     "'__tostring' must return a string")
+            error_equals(function () print(t) end,
+                    "'__tostring' must return a string")
         end
     else
-        is(tostring(t), nil, "__tostring no-output")
-        is(a, "return nothing")
-        error_like(function () print(t) end,
-                   "^[^:]+:%d+: 'tostring' must return a string to 'print'")
+        equals(tostring(t), nil, "__tostring no-output")
+        equals(a, "return nothing")
+        error_matches(function () print(t) end,
+                "^[^:]+:%d+: 'tostring' must return a string to 'print'")
     end
 
     mt.__tostring = function () return '__FIRST__', 2 end
     setmetatable(t, mt)
-    is(tostring(t), '__FIRST__', "__tostring too-many-output")
+    equals(tostring(t), '__FIRST__', "__tostring too-many-output")
 end
 
 do
@@ -107,9 +108,9 @@ do
     t.mt = {}
     setmetatable(t, t.mt)
     t.mt.__tostring = "not a function"
-    error_like(function () tostring(t) end,
-               "attempt to call",
-               "__tostring invalid")
+    error_matches(function () tostring(t) end,
+            "attempt to call",
+            "__tostring invalid")
 end
 
 do
@@ -117,9 +118,9 @@ do
     local mt = { __len=function () return 42 end }
     setmetatable(t, mt)
     if has_metamethod52 then
-        is(#t, 42, "__len")
+        equals(#t, 42, "__len")
     else
-        is(#t, 0, "__len 5.1")
+        equals(#t, 0, "__len 5.1")
     end
 end
 
@@ -130,9 +131,9 @@ if has_metamethod52 then
     if jit then
         todo("not with LuaJIT")
     end
-    error_like(function () print(table.concat(t)) end,
-               "object length is not a.-er",
-               "__len invalid")
+    error_matches(function () print(table.concat(t)) end,
+            "object length is not a.-er",
+            "__len invalid")
 end
 
 do
@@ -144,7 +145,7 @@ do
         end,
     }
     setmetatable(t, mt)
-    is(t .. t .. t ..'end' .. '.', "t|t|t|end.", "__concat")
+    equals(t .. t .. t ..'end' .. '.', "t|t|t|end.", "__concat")
 end
 
 do --[[ Cplx ]]
@@ -182,11 +183,11 @@ do --[[ Cplx ]]
     local c1 = Cplx.new(1, 3)
     local c2 = Cplx.new(2, -1)
 
-    is(tostring(c1 + c2), '(3,2)', "cplx __add")
-    is(tostring(c1 + 3), '(4,3)')
-    is(tostring(-2 + c1), '(-1,3)')
-    is(tostring(c1 + '3'), '(4,3)')
-    is(tostring('-2' + c1), '(-1,3)')
+    equals(tostring(c1 + c2), '(3,2)', "cplx __add")
+    equals(tostring(c1 + 3), '(4,3)')
+    equals(tostring(-2 + c1), '(-1,3)')
+    equals(tostring(c1 + '3'), '(4,3)')
+    equals(tostring('-2' + c1), '(-1,3)')
 
     function Cplx.mt.__sub (a, b)
         if type(a) ~= 'table' then
@@ -199,11 +200,11 @@ do --[[ Cplx ]]
         return r
     end
 
-    is(tostring(c1 - c2), '(-1,4)', "cplx __sub")
-    is(tostring(c1 - 3), '(-2,3)')
-    is(tostring(-2 - c1), '(-3,-3)')
-    is(tostring(c1 - '3'), '(-2,3)')
-    is(tostring('-2' - c1), '(-3,-3)')
+    equals(tostring(c1 - c2), '(-1,4)', "cplx __sub")
+    equals(tostring(c1 - 3), '(-2,3)')
+    equals(tostring(-2 - c1), '(-3,-3)')
+    equals(tostring(c1 - '3'), '(-2,3)')
+    equals(tostring('-2' - c1), '(-3,-3)')
 
     function Cplx.mt.__mul (a, b)
         if type(a) ~= 'table' then
@@ -217,11 +218,11 @@ do --[[ Cplx ]]
         return r
     end
 
-    is(tostring(c1 * c2), '(5,5)', "cplx __mul")
-    is(tostring(c1 * 3), '(3,9)')
-    is(tostring(-2 * c1), '(-2,-6)')
-    is(tostring(c1 * '3'), '(3,9)')
-    is(tostring('-2' * c1), '(-2,-6)')
+    equals(tostring(c1 * c2), '(5,5)', "cplx __mul")
+    equals(tostring(c1 * 3), '(3,9)')
+    equals(tostring(-2 * c1), '(-2,-6)')
+    equals(tostring(c1 * '3'), '(3,9)')
+    equals(tostring('-2' * c1), '(-2,-6)')
 
     function Cplx.mt.__div (a, b)
         if type(a) ~= 'table' then
@@ -240,11 +241,11 @@ do --[[ Cplx ]]
     c1 = Cplx.new(2, 6)
     c2 = Cplx.new(2, 0)
 
-    is(tostring(c1 / c2), '(1,3)', "cplx __div")
-    is(tostring(c1 / 2), '(1,3)')
-    is(tostring(-4 / c2), '(-2,0)')
-    is(tostring(c1 / '2'), '(1,3)')
-    is(tostring('-4' / c2), '(-2,0)')
+    equals(tostring(c1 / c2), '(1,3)', "cplx __div")
+    equals(tostring(c1 / 2), '(1,3)')
+    equals(tostring(-4 / c2), '(-2,0)')
+    equals(tostring(c1 / '2'), '(1,3)')
+    equals(tostring('-4' / c2), '(-2,0)')
 
     function Cplx.mt.__unm (a)
         if type(a) ~= 'table' then
@@ -255,7 +256,7 @@ do --[[ Cplx ]]
     end
 
     c1 = Cplx.new(1, 3)
-    is(tostring(- c1), '(-1,-3)', "cplx __unm")
+    equals(tostring(- c1), '(-1,-3)', "cplx __unm")
 
     function Cplx.mt.__len (a)
         return math.sqrt(a.re*a.re + a.im*a.im)
@@ -263,9 +264,9 @@ do --[[ Cplx ]]
 
     c1 = Cplx.new(3, 4)
     if has_metamethod52 then
-        is( #c1, 5, "cplx __len")
+        equals( #c1, 5, "cplx __len")
     else
-        is( #c1, 0, "__len 5.1")
+        equals( #c1, 0, "__len 5.1")
     end
 
     function Cplx.mt.__eq (a, b)
@@ -282,10 +283,10 @@ do --[[ Cplx ]]
     c2 = Cplx.new(1, 3)
     local c3 = Cplx.new(2, 0)
 
-    is(c1 ~= c2, true, "cplx __eq")
-    is(c1 == c3, true)
-    is(c1 == 2, false)
-    is(Cplx.mt.__eq(c1, 2), true)
+    equals(c1 ~= c2, true, "cplx __eq")
+    equals(c1 == c3, true)
+    equals(c1 == 2, false)
+    equals(Cplx.mt.__eq(c1, 2), true)
 
     function Cplx.mt.__lt (a, b)
         if type(a) ~= 'table' then
@@ -299,14 +300,14 @@ do --[[ Cplx ]]
         return ra < rb
     end
 
-    is(c1 < c2, true, "cplx __lt")
-    is(c1 < c3, false)
+    equals(c1 < c2, true, "cplx __lt")
+    equals(c1 < c3, false)
     if has_metamethod_le_emulated then
-        is(c1 <= c3, true)
+        equals(c1 <= c3, true)
     end
     if has_metamethod52 then
-        is(c1 < 1, false)
-        is(c1 < 4, true)
+        equals(c1 < 1, false)
+        equals(c1 < 4, true)
     end
 
     function Cplx.mt.__le (a, b)
@@ -321,9 +322,9 @@ do --[[ Cplx ]]
         return ra <= rb
     end
 
-    is(c1 < c2, true, "cplx __lt __le")
-    is(c1 < c3, false)
-    is(c1 <= c3, true)
+    equals(c1 < c2, true, "cplx __lt __le")
+    equals(c1 < c3, false)
+    equals(c1 <= c3, true)
 
     local a = nil
     function Cplx.mt.__call (obj)
@@ -333,20 +334,20 @@ do --[[ Cplx ]]
 
     c1 = Cplx.new(2, 0)
     local r = c1()
-    is(r, true, "cplx __call (without args)")
-    is(a, "Cplx.__call (2,0)")
+    equals(r, true, "cplx __call (without args)")
+    equals(a, "Cplx.__call (2,0)")
 
     function Cplx.mt.__call (obj, ...)
         a = "Cplx.__call " .. tostring(obj) .. ", " .. table.concat({...}, ", ")
         return true
     end
 
-    is(c1(), true, "cplx __call (with args)")
-    is(a, "Cplx.__call (2,0), ")
-    is(c1('a'), true)
-    is(a, "Cplx.__call (2,0), a")
-    is(c1('a', 'b', 'c'), true)
-    is(a, "Cplx.__call (2,0), a, b, c")
+    equals(c1(), true, "cplx __call (with args)")
+    equals(a, "Cplx.__call (2,0), ")
+    equals(c1('a'), true)
+    equals(a, "Cplx.__call (2,0), a")
+    equals(c1('a', 'b', 'c'), true)
+    equals(a, "Cplx.__call (2,0), a, b, c")
 end
 
 --[[ delegate ]]
@@ -370,7 +371,7 @@ if has_metamethod_pairs then
         r[#r+1] = k
     end
     table.sort(r)
-    is( table.concat(r, ','), 'a,b,c', "__pairs" )
+    equals( table.concat(r, ','), 'a,b,c', "__pairs" )
 end
 if has_metamethod_ipairs then
     local t = {
@@ -387,7 +388,7 @@ if has_metamethod_ipairs then
     for i, v in ipairs(t) do
         r = r .. v
     end
-    is( r, 'abc', "__ipairs" )
+    equals( r, 'abc', "__ipairs" )
 end
 
 do --[[ Window ]]
@@ -408,17 +409,17 @@ do --[[ Window ]]
     end
 
     local w = Window.new{x=10, y=20}
-    is(w.x, 10, "table-access")
-    is(w.width, 100)
-    is(rawget(w, 'x'), 10)
-    is(rawget(w, 'width'), nil)
+    equals(w.x, 10, "table-access")
+    equals(w.width, 100)
+    equals(rawget(w, 'x'), 10)
+    equals(rawget(w, 'width'), nil)
 
     Window.mt.__index = Window.prototype  -- just a table
     w = Window.new{x=10, y=20}
-    is(w.x, 10, "table-access")
-    is(w.width, 100)
-    is(rawget(w, 'x'), 10)
-    is(rawget(w, 'width'), nil)
+    equals(w.x, 10, "table-access")
+    equals(w.width, 100)
+    equals(rawget(w, 'x'), 10)
+    equals(rawget(w, 'width'), nil)
 end
 
 do --[[ tables with default values ]]
@@ -428,11 +429,11 @@ do --[[ tables with default values ]]
     end
 
     local tab = {x=10, y=20}
-    is(tab.x, 10, "tables with default values")
-    is(tab.z, nil)
+    equals(tab.x, 10, "tables with default values")
+    equals(tab.z, nil)
     setDefault_1(tab, 0)
-    is(tab.x, 10)
-    is(tab.z, 0)
+    equals(tab.x, 10)
+    equals(tab.z, 0)
 end
 
 do --[[ tables with default values ]]
@@ -443,11 +444,11 @@ do --[[ tables with default values ]]
     end
 
     local tab = {x=10, y=20}
-    is(tab.x, 10, "tables with default values")
-    is(tab.z, nil)
+    equals(tab.x, 10, "tables with default values")
+    equals(tab.z, nil)
     setDefault_2(tab, 0)
-    is(tab.x, 10)
-    is(tab.z, 0)
+    equals(tab.x, 10)
+    equals(tab.z, 0)
 end
 
 do --[[ tables with default values ]]
@@ -459,11 +460,11 @@ do --[[ tables with default values ]]
     end
 
     local tab = {x=10, y=20}
-    is(tab.x, 10, "tables with default values")
-    is(tab.z, nil)
+    equals(tab.x, 10, "tables with default values")
+    equals(tab.z, nil)
     setDefault_3(tab, 0)
-    is(tab.x, 10)
-    is(tab.z, 0)
+    equals(tab.x, 10)
+    equals(tab.z, 0)
 end
 
 do --[[ private access ]]
@@ -491,9 +492,9 @@ do --[[ private access ]]
     setmetatable(t, mt)
 
     t[2] = 'hello'
-    is(t[2], 'hello', "tracking table accesses")
-    is(w, "*update of element 2 to hello")
-    is(r, "*access to element 2")
+    equals(t[2], 'hello', "tracking table accesses")
+    equals(w, "*update of element 2 to hello")
+    equals(r, "*access to element 2")
 end
 
 do --[[ private access ]]
@@ -526,9 +527,9 @@ do --[[ private access ]]
     t = track(t)
 
     t[2] = 'hello'
-    is(t[2], 'hello', "tracking table accesses")
-    is(w, "*update of element 2 to hello")
-    is(r, "*access to element 2")
+    equals(t[2], 'hello', "tracking table accesses")
+    equals(w, "*update of element 2 to hello")
+    equals(r, "*access to element 2")
 end
 
 do --[[ read-only table ]]
@@ -547,10 +548,10 @@ do --[[ read-only table ]]
     local days = readOnly{'Sunday', 'Monday', 'Tuesday', 'Wednesday',
                          'Thurday', 'Friday', 'Saturday'}
 
-    is(days[1], 'Sunday', "read-only tables")
+    equals(days[1], 'Sunday', "read-only tables")
 
-    error_like(function () days[2] = 'Noday' end,
-               "^[^:]+:%d+: attempt to update a read%-only table")
+    error_matches(function () days[2] = 'Noday' end,
+            "^[^:]+:%d+: attempt to update a read%-only table")
 end
 
 do --[[ declare global ]]
@@ -567,13 +568,13 @@ do --[[ declare global ]]
         end,
     })
 
-    error_like(function () new_a = 1 end,
-               "^[^:]+:%d+: attempt to write to undeclared variable new_a",
-               "declaring global variables")
+    error_matches(function () new_a = 1 end,
+            "^[^:]+:%d+: attempt to write to undeclared variable new_a",
+            "declaring global variables")
 
     declare 'new_a'
     new_a = 1
-    is(new_a, 1)
+    equals(new_a, 1)
 end
 
 do
@@ -584,11 +585,11 @@ do
     }
     local t = setmetatable({}, mt)
     t[1] = 42
-    is(newindex[1], 42, "__newindex")
+    equals(newindex[1], 42, "__newindex")
 end
 
 if has_anno_toclose then
-    dofile'lexico54/metatable.t'
+    _dofile'lexico54/metatable.t'
 end
 
 done_testing()

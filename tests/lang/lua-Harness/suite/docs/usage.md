@@ -8,13 +8,13 @@
 The directory `test_lua` contains the following files:
 
 - *.t : test files written in Lua
-- tap.lua : a minimal TAP library used when [Test.More](https://fperrad.frama.io/lua-TestMore/) is not available
+- test_assertion.lua : a minimal TAP library used when [Test.Assertion](https://fperrad.frama.io/lua-TestAssertion/) is not available
 - profile*.lua : a set of predefined profile files, `profile.lua` is loaded by default.
 - Makefile : an helper
 
 ## Running the whole test suite
 
-As tests produce a [TAP](http://en.wikipedia.org/wiki/Test_Anything_Protocol) output,
+As tests produce a [TAP](https://en.wikipedia.org/wiki/Test_Anything_Protocol) output,
 a TAP consumer like [prove](https://perldoc.perl.org/prove.html)
 is required (`prove` comes with any Perl distribution, usually on GNU/Linux,
 `prove` is already installed).
@@ -51,7 +51,7 @@ ok 3 - pass
 
 The features included (ie. compiled) in a Lua interpreter could be selected via this file
 
-``` lua
+```lua
 local profile = {
 
 --[[ compat 5.0
@@ -86,6 +86,7 @@ local profile = {
 
 --[[ luajit
     luajit_compat52 = true,
+    openresty = false,
 --]]
 
 }

@@ -2,7 +2,7 @@
 --
 -- lua-Harness : <https://fperrad.frama.io/lua-Harness/>
 --
--- Copyright (C) 2018-2019, Perrad Francois
+-- Copyright (C) 2018-2021, Perrad Francois
 --
 -- This code is licensed under the terms of the MIT/X11 license,
 -- like Lua itself.
@@ -18,89 +18,137 @@
 
 =head2 Description
 
-See L<http://luajit.org/ext_jit.html>.
+See L<https://luajit.org/ext_jit.html>.
 
 =cut
 
 --]]
 
-require 'tap'
+require 'test_assertion'
+local profile = require'profile'
 
 if not jit then
     skip_all("only with LuaJIT")
 end
 
 local compiled_with_jit = jit.status()
+local luajit20 = jit.version_num < 20100 and not jit.version:match'RaptorJIT'
 local has_jit_opt = compiled_with_jit
-local has_jit_util = (jit.version_num < 20100) and not ujit
+local has_jit_security = jit.security
+local has_jit_util = not ujit and not jit.version:match'RaptorJIT'
 
 plan'no_plan'
 
-is(package.loaded.jit, _G.jit, "package.loaded")
-is(require'jit', jit, "require")
+equals(package.loaded.jit, _G.jit, "package.loaded")
+equals(require'jit', jit, "require")
 
 do -- arch
-    type_ok(jit.arch, 'string', "arch")
+    is_string(jit.arch, "arch")
 end
 
 do -- flush
-    type_ok(jit.flush, 'function', "flush")
+    is_function(jit.flush, 'function', "flush")
 end
 
 do -- off
     jit.off()
-    is(jit.status(), false, "off")
+    is_false(jit.status(), "off")
 end
 
 -- on
 if compiled_with_jit then
     jit.on()
-    is(jit.status(), true, "on")
+    is_true(jit.status(), "on")
 else
-    error_like(function () jit.on() end,
-               "^[^:]+:%d+: JIT compiler permanently disabled by build option",
-               "no jit.on")
+    error_matches(function () jit.on() end,
+            "^[^:]+:%d+: JIT compiler permanently disabled by build option",
+            "no jit.on")
 end
 
 -- opt
 if has_jit_opt then
-    type_ok(jit.opt, 'table', "opt.*")
-    type_ok(jit.opt.start, 'function', "opt.start")
+    is_table(jit.opt, "opt.*")
+    is_function(jit.opt.start, 'function', "opt.start")
 else
-    is(jit.opt, nil, "no jit.opt")
+    is_nil(jit.opt, "no jit.opt")
 end
 
 do -- os
-    type_ok(jit.os, 'string', "os")
+    is_string(jit.os, "os")
+end
+
+-- prngstate
+if profile.openresty then
+    is_table(jit.prngstate(), "prngstate")
+    local s1 = { 1, 2, 3, 4, 5, 6, 7, 8}
+    is_table(jit.prngstate(s1))
+    local s2 = { 8, 7, 6, 5, 4, 3, 2, 1}
+    array_equals(jit.prngstate(s2), s1)
+    array_equals(jit.prngstate(), s2)
+
+    is_table(jit.prngstate(32), 'table', "backward compat")
+    array_equals(jit.prngstate(5617), { 32, 0, 0, 0, 0, 0, 0, 0 })
+    array_equals(jit.prngstate(), { 5617, 0, 0, 0, 0, 0, 0, 0 })
+
+    error_matches(function () jit.prngstate(-1) end,
+            "^[^:]+:%d+: bad argument #1 to 'prngstate' %(PRNG state must be an array with up to 8 integers or an integer%)")
+
+    error_matches(function () jit.prngstate(false) end,
+            "^[^:]+:%d+: bad argument #1 to 'prngstate' %(table expected, got boolean%)")
+else
+    is_nil(jit.prngstate, "no jit.prngstate");
+end
+
+-- security
+if has_jit_security then
+    is_function(jit.security, "security")
+    is_number(jit.security('prng'), "prng")
+    is_number(jit.security('strhash'), "strhash")
+    is_number(jit.security('strid'), "stdid")
+    is_number(jit.security('mcode'), "mcode")
+
+    error_matches(function () jit.security('foo') end,
+            "^[^:]+:%d+: bad argument #1 to 'security' %(invalid option 'foo'%)")
+else
+    is_nil(jit.security, "no jit.security")
 end
 
 do -- status
     local status = { jit.status() }
-    type_ok(status[1], 'boolean', "status")
+    is_boolean(status[1], "status")
     if compiled_with_jit then
         for i = 2, #status do
-            type_ok(status[i], 'string', status[i])
+            is_string(status[i], status[i])
         end
     else
-        is(#status, 1)
+        equals(#status, 1)
     end
 end
 
 -- util
 if has_jit_util then
-    type_ok(jit.util, 'table', "util.*")
+    local jutil = require'jit.util'
+    is_table(jutil, "util")
+    equals(package.loaded['jit.util'], jutil)
+
+    if luajit20 then
+        equals(jit.util, jutil, "util inside jit")
+    else
+        is_nil(jit.util, "no util inside jit")
+    end
 else
-    is(jit.util, nil, "no jit.util")
+    local r = pcall(require, 'jit.util')
+    is_false(r, "no jit.util")
 end
 
 do -- version
-    type_ok(jit.version, 'string', "version")
-    like(jit.version, '^LuaJIT 2%.%d%.%d')
+    is_string(jit.version, "version")
+    matches(jit.version, '^%w+ %d%.%d%.%d')
 end
 
 do -- version_num
-    type_ok(jit.version_num, 'number', "version_num")
-    like(string.format("%06d", jit.version_num), '^020[01]%d%d$')
+    is_number(jit.version_num, "version_num")
+    matches(string.format("%06d", jit.version_num), '^0[12]0[012]%d%d$')
 end
 
 done_testing()
