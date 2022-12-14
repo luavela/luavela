@@ -299,7 +299,7 @@ def frame_prev(framelink):
 
 
 def funcproto(func):
-    assert(func['ffid'] == 0)
+    assert func['ffid'] == 0
     pc = func['pc']
     pc = cast('char *', pc)
     pc -= sizeof('struct GCproto')
