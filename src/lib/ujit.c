@@ -590,7 +590,7 @@ LJLIB_CF(ujit_profile_stop)
 	setnumfield(L, t_cnt, "_NUM_OVERRUNS", counters.num_overruns);
 
 	/* t_cnt["_ID"] = tostring(counters.id) */
-	sprintf(profile_id, "%#018llx", (unsigned long long)counters.id);
+	sprintf(profile_id, "%#017llx", (unsigned long long)counters.id);
 	lua_pushstring(L, profile_id);
 	lua_setfield(L, -2, "_ID");
 
