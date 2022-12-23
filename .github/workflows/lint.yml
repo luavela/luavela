@@ -1,0 +1,56 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - 'master'
+    tags:
+      - '**'
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+  workflow_dispatch:
+
+concurrency:
+  # Update of a developer branch cancels the previously scheduled workflow run
+  # for this branch. However, the 'master' branch and tag workflow runs are
+  # never canceled.
+  #
+  # We use the following hack: define the concurrency group as 'workflow run ID'
+  # + 'workflow run attempt' because it is a unique combination for any run. So
+  # it effectively discards grouping.
+  #
+  # XXX: we cannot use `github.sha` as a unique identifier because pushing a tag
+  # may cancel a run that works on a branch push event.
+  group: ${{ (
+    github.ref == 'refs/heads/master' ||
+    startsWith(github.ref, 'refs/tags/')) &&
+    format('{0}-{1}', github.run_id, github.run_attempt) ||
+    format('{0}-{1}', github.workflow, github.ref) }}
+  cancel-in-progress: true
+
+jobs:
+  linters:
+    strategy:
+      fail-fast: false
+      matrix:
+        LINTER: [clang_tidy, clang_format, luacheck, flake8]
+        include:
+          - LINTER: clang_tidy
+            NAME: Clang Tidy
+          - LINTER: clang_format
+            NAME: Clang Format
+          - LINTER: luacheck
+            NAME: Luacheck
+          - LINTER: flake8
+            NAME: Flake8
+    runs-on: ubuntu-20.04
+    name: ${{ matrix.NAME }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: setup Linux
+        uses: ./.github/actions/setup-linux
+      - name: configure
+        run: cmake -S . -B ${{ env.BUILDDIR }}
+      - name: ${{ matrix.NAME }}
+        run: cmake --build . --parallel --target ${{ matrix.LINTER }}
+        working-directory: ${{ env.BUILDDIR }}
