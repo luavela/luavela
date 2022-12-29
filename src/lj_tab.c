@@ -1046,7 +1046,7 @@ GCtab* lj_tab_toset(lua_State *L, const GCtab *src)
     if (src_v == NULL || tvisnil(src_v))
       break;
 
-    dst_v = lj_tab_newkey(L, dst, src_v);
+    dst_v = lj_tab_set(L, dst, src_v);
     setboolV(dst_v, 1);
   }
 

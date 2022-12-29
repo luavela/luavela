@@ -4,6 +4,7 @@
 -- Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 require("jit").off()
 
+local utils = require("utils")
 local toset = require("ujit.table").toset
 local tests = {}
 
@@ -93,6 +94,19 @@ function tests.nil_last_explicit_int_keys()
 	local s = toset(t)
 	assert(s.abc == true)
 	assert(s.def == nil)
+end
+
+function tests.duplicates()
+	local t = {"abc", "def"}
+	for i = 1, #t do
+		table.insert(t, t[i])
+	end
+	assert(utils.count(t) == 4)
+
+	local s = toset(t)
+	assert(s.abc == true)
+	assert(s.def == true)
+	assert(utils.count(s) == 2)
 end
 
 for _, test in pairs(tests) do
