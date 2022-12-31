@@ -34,15 +34,25 @@ jobs:
       fail-fast: false
       matrix:
         BUILDTYPE: [Debug, Release]
-        OS: [Linux]
+        OS: [Linux, macOS]
         LIBTYPE: [shared, static]
         CC: [GCC, Clang]
         include:
           - OS: Linux
             RUNNER: [ubuntu-20.04]
             TESTOPTIONS: -DUJIT_TEST_OPTIONS=-O4
+          - OS: macOS
+            RUNNER: [macos-11]
           - CC: Clang
             TOOLCHAIN: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
+        exclude:
+          # XXX: Strictly saying, macOS simply aliases `gcc' to AppleClang
+          # compiler, and this exclude rule just signals that AppleClang
+          # doesn't need any extra tweaks of the testing environment.
+          - OS: macOS
+            CC: Clang
+          - OS: macOS
+            LIBTYPE: shared
     runs-on: ${{ matrix.RUNNER }}
     name: >
       ${{ matrix.OS }}
@@ -53,6 +63,10 @@ jobs:
       - uses: actions/checkout@v3
       - name: setup Linux
         uses: ./.github/actions/setup-linux
+        if: ${{ matrix.OS == 'Linux' }}
+      - name: setup macOS
+        uses: ./.github/actions/setup-macos
+        if: ${{ matrix.OS == 'macOS' }}
       - name: configure
         run: >
           cmake -S . -B ${{ env.BUILDDIR }}
