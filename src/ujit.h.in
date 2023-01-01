@@ -1,7 +1,7 @@
 /*
  * uJIT -- interpreter and JIT compiler for Lua language.
  *
- * Copyright (C) 2020-2022 LuaVela Authors. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
  * Copyright (C) 2015-2020 IPONWEB Ltd. All rights reserved.
  *
  * Building, testing and running uJIT depends on third party software.
@@ -22,7 +22,7 @@
 #define UJIT_PRODUCT_NAME_VERSION "LuaVela aka uJIT @UJIT_VERSION_STRING@"
 #define UJIT_VERSION_STRING       "@UJIT_VERSION_STRING@"
 
-#define UJIT_COPYRIGHT "Copyright (C) 2020-2022 LuaVela Authors."
+#define UJIT_COPYRIGHT "Copyright (C) 2020-2023 LuaVela Authors."
 #define UJIT_URL       "https://github.com/luavela/luavela"
 
 #endif /* !_UJIT_H */

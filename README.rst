@@ -9,7 +9,7 @@ programming language.
 
 Project Homepage: https://github.com/luavela/luavela
 
-LuaVela is Copyright (C) 2020-2022 LuaVela Authors. See Copyright Notice in COPYRIGHT
+LuaVela is Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 LuaVela was previously called "uJIT" internally. The developers of LuaVela use
 "uJIT", "ujit" and "uj"/"UJ" prefixes in a code base.
