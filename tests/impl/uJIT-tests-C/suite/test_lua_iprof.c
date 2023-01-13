@@ -298,12 +298,10 @@ unsigned int parent_iter = 5, parent_timeout = 1;
 const char *parent_name = "PARENT";
 const char *parent_chunk =
 	" jit.off() "
-	" local ffi = require 'ffi'                                 "
-	" ffi.cdef('unsigned int sleep(unsigned int seconds);')     "
 	" local parent = ujit.iprof.profile(function(iter, timeout) "
 	"   local coro = coroutine.create(function(n, t)            "
 	"     for _ = 1, n do                                       "
-	"       ffi.C.sleep(t)                                      "
+	"       sleep(t)                                            "
 	"       coroutine.yield()                                   "
 	"     end                                                   "
 	"   end)                                                    "
@@ -313,6 +311,12 @@ const char *parent_chunk =
 	"   end                                                     "
 	" end, parent_cb, parent_name, ujit.iprof.PLAIN)            "
 	" parent(parent_iter, parent_timeout)                       ";
+
+static int sleep_lua(lua_State *L)
+{
+	sleep(luaL_checkint(L, 1));
+	return 0;
+}
 
 static int parent_cb(lua_State *L)
 {
@@ -340,6 +344,8 @@ static void test_parent(void **state)
 	/* Check whether ujit.iprof.profile was not defined by luaL_openlibs */
 	assert_ujit_iprof_profile(L);
 
+	/* Register function Lua C wrapper for sleep(3) function */
+	lua_register(L, "sleep", sleep_lua);
 	/* Register callback for reporting and entity name */
 	lua_register(L, "parent_cb", parent_cb);
 	lua_export(L, string, parent_name);
