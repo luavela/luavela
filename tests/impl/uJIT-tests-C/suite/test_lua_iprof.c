@@ -4,10 +4,80 @@
  * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  */
 
+#include <time.h>
 #include <unistd.h>
 #include "test_common_lua.h"
 
-#define EPSILON 1e-1
+#define EPSILON 1e-6
+
+/* Clock emulation {{{ */
+
+/*
+ * We try to make the test less fragile by removing its dependence on the system
+ * time by overriding <clock_gettime(3)> function. For this reason, clock mock
+ * static counter is introduced and <clock_gettime> simply adds a jiffy to this
+ * counter, normalizes .nsec and .sec fields of the mock and respectively sets
+ * the value to the given struct timespec argument.
+ *
+ * According to jargon file (http://www.catb.org/~esr/jargon/html/J/jiffy.html):
+ * | 1. The duration of one tick of the system clock on your computer. Often one
+ * |    AC cycle time (1/60 second in the U.S. and Canada, 1/50 most other
+ * |    places), but more recently 1/100 sec has become common. "The swapper
+ * |    runs every 6 jiffies" means that the virtual memory management routine
+ * |    is executed once for every 6 ticks of the clock, or about ten times a
+ * |    second.
+ * | 2. Confusingly, the term is sometimes also used for a 1-millisecond wall
+ * |    time interval.
+ * | 3. Even more confusingly, physicists semi-jokingly use 'jiffy' to mean the
+ * |    time required for light to travel one foot in a vacuum, which turns out
+ * |    to be close to one nanosecond. Other physicists use the term for the
+ * |    quantum-mechanical lower bound on meaningful time lengths.
+ * | 4. Indeterminate time from a few seconds to forever. "I'll do it in a
+ * |    jiffy" means certainly not now and possibly never. This is a bit
+ * |    contrary to the more widespread use of the word. Oppose nano.
+ *
+ * Besides, there are several <sleep(3)> calls required in the test cases to
+ * check whether "lua" and "wall" counters are calculated right. This function
+ * is also overridden, considering how time is counted within this test: since
+ * <sleep> receives the seconds as an argument, simply add the given amount of
+ * seconds to the clock mock.
+ *
+ * Unfortunately, there is one flaw in such time mocking: these are not real
+ * nanoseconds and seconds used in the clock mock, but just two types of
+ * counters: short (for consecutive actions) and long (for interrupted actions).
+ * Hence, we can't use some real jiffy value (i.e. the first one from the jargon
+ * file), considering the cumulative discrepancy between linear mocked clock
+ * behaviour and non-linear real clock behaviour.
+ *
+ * Considering everything above "physicists semi-joking" constant (i.e. 1 ns)
+ * looks fine to be a jiffy in for a clock mock.
+ */
+#define JIFFY (1L)
+#define NSECNORM ((long)1e9)
+
+static struct timespec clock_mock = {
+	.tv_sec = 0,
+	.tv_nsec = 0,
+};
+
+extern int clock_gettime(clockid_t clockid, struct timespec *tp)
+{
+	UNUSED(clockid);
+	clock_mock.tv_nsec += JIFFY;
+	clock_mock.tv_sec += clock_mock.tv_nsec / NSECNORM;
+	clock_mock.tv_nsec = clock_mock.tv_nsec % NSECNORM;
+	tp->tv_sec = clock_mock.tv_sec;
+	tp->tv_nsec = clock_mock.tv_nsec;
+	return 0;
+}
+
+extern unsigned int sleep(unsigned int seconds)
+{
+	clock_mock.tv_sec += seconds;
+	return 0;
+}
+
+/* }}} */
 
 const char *ujit_iprof_profile =
 	" return function (pfn, pcb, name, mode, level)                   "
@@ -298,12 +368,10 @@ unsigned int parent_iter = 5, parent_timeout = 1;
 const char *parent_name = "PARENT";
 const char *parent_chunk =
 	" jit.off() "
-	" local ffi = require 'ffi'                                 "
-	" ffi.cdef('unsigned int sleep(unsigned int seconds);')     "
 	" local parent = ujit.iprof.profile(function(iter, timeout) "
 	"   local coro = coroutine.create(function(n, t)            "
 	"     for _ = 1, n do                                       "
-	"       ffi.C.sleep(t)                                      "
+	"       sleep(t)                                            "
 	"       coroutine.yield()                                   "
 	"     end                                                   "
 	"   end)                                                    "
@@ -313,6 +381,12 @@ const char *parent_chunk =
 	"   end                                                     "
 	" end, parent_cb, parent_name, ujit.iprof.PLAIN)            "
 	" parent(parent_iter, parent_timeout)                       ";
+
+static int sleep_lua(lua_State *L)
+{
+	sleep(luaL_checkint(L, 1));
+	return 0;
+}
 
 static int parent_cb(lua_State *L)
 {
@@ -340,6 +414,8 @@ static void test_parent(void **state)
 	/* Check whether ujit.iprof.profile was not defined by luaL_openlibs */
 	assert_ujit_iprof_profile(L);
 
+	/* Register function Lua C wrapper for sleep(3) function */
+	lua_register(L, "sleep", sleep_lua);
 	/* Register callback for reporting and entity name */
 	lua_register(L, "parent_cb", parent_cb);
 	lua_export(L, string, parent_name);
