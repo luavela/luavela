@@ -25,6 +25,7 @@
    tut-folding-engine
    tut-snap
    tut-new-gc
+   tut-allocation-sinking
 
 
 
