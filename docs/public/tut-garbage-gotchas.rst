@@ -94,7 +94,7 @@ Instead, use ``uj_..._stack_save`` / ``uj_..._stack_restore``.
 How Many White Colors Do We Use Actually?
 ------------------------------------------
 
-**Two**. This is somewhat explained in the `original LuaJIT paper <http://wiki.luajit.org/New-Garbage-Collector>`__:
+**Two**. This is somewhat explained in the :ref:`original LuaJIT paper <tut-new-gc>`:
 
 The sweep phase can be made incremental by using two whites and flipping between them just before entering the sweep phase. Objects with the 'current' white need to be kept. Only objects with the 'other' white should be freed.
 
