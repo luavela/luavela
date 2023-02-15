@@ -24,8 +24,9 @@ import os
 
 # -- Project information -----------------------------------------------------
 
-project = u'Documentation'
-copyright = u'2015-2019 IPONWEB Ltd.'
+project = u'LuaVela'
+copyright = u'2020-2023 LuaVela Authors, 2015-2019 IPONWEB Ltd'
+
 author = u'uJIT team'
 
 # The short X.Y version
