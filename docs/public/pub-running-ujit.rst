@@ -138,7 +138,7 @@ Here are the available flags and at what optimization levels they are enabled: 
    ``fwd``                      ✅    ✅         Load Forwarding (L2L) and Store Forwarding (S2L)
    ``dse``                      ✅    ✅         Dead-Store Elimination
    ``abc``                      ✅    ✅         Array Bounds Check Elimination
-   ``sink``                     ✅    ✅         `Allocation Sinking Optimization <http://wiki.luajit.org/Allocation-Sinking-Optimization>`__
+   ``sink``                     ✅    ✅         :ref:`Allocation Sinking Optimization <tut-allocation-sinking>`
    ``fuse``                                 ❗   Fusion of operands into instructions. This optimization is currently a no-op in |PROJECT| at the moment.
    ``nohrefk``                         ✅        Disables emission of the ``HREFK`` IR instruction. Available since |PROJECT| 0.10.
    ``noretl``                          ✅        Disables recording of returns to lower Lua frames. Available since |PROJECT| 0.10.
