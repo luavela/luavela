@@ -118,11 +118,6 @@ use constant CHECKS => {
 		'src/uj_meta.c' => [
 			'-clang-analyzer-core.NullDereference'
 		],
-		# An obvious false positive specific to clang-tidy 5.0.
-		# TODO: Please remove after upgrade:
-		'src/frontend/lj_bcread.c' => [
-			'-misc-redundant-expression'
-		],
         # Long test cases are totally reasonable here.
         'tests/impl/uJIT-tests-C/suite/test_emit_sse2.c' => [
             '-hicpp-function-size'
