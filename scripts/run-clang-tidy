@@ -75,6 +75,8 @@ use constant CHECKS => {
 		'-hicpp-signed-bitwise',
 		# not following LLVM conventions
 		'-llvm-*',
+		# not using LLVM libc
+		'-llvmlibc-*',
 		# much noise, little value
 		'-misc-static-assert',
 		# no C++-specific checks
