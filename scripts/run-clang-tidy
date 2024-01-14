@@ -45,6 +45,10 @@ use constant CHECKS => {
 		'-android-*',
 		# no C++-specific checks
 		'-boost-*',
+		# much noise, little value
+		'-bugprone-misplaced-widening-cast',
+		# false positives in our code base
+		'-bugprone-sizeof-expression',
 		# not following CERT guidelines
 		'-cert-*',
 		# no unstable checks
@@ -71,10 +75,6 @@ use constant CHECKS => {
 		'-hicpp-signed-bitwise',
 		# not following LLVM conventions
 		'-llvm-*',
-		# much noise, little value
-		'-misc-misplaced-widening-cast',
-		# false positives in our code base
-		'-misc-sizeof-expression',
 		# much noise, little value
 		'-misc-static-assert',
 		# no C++-specific checks
