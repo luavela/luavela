@@ -1,6 +1,6 @@
 bc
 clang-format-6.0
-clang-tidy-6.0
+clang-tidy-11
 gdb
 graphviz
 libcmocka-dev=1.1.5-2

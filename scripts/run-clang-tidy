@@ -21,7 +21,7 @@ use constant DEFAULTS => {
 	project => '.',
 	clang_tidy => {
 		prefix => '/usr/bin/clang-tidy',
-		versions => [ qw(6.0) ],
+		versions => [ qw(11) ],
 	},
 	tries => 3,
 };
