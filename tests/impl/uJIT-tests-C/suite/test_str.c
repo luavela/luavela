@@ -7,7 +7,6 @@
 #include "test_common.h"
 
 #include <string.h>
-#include <utils/lj_char.c>
 #include <utils/str.c>
 
 #define TEST_STR_BUFFER_SIZE 256
