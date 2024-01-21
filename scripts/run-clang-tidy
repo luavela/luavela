@@ -47,6 +47,8 @@ use constant CHECKS => {
 		'-boost-*',
 		# much noise, little value
 		'-bugprone-misplaced-widening-cast',
+		# much noise, little value
+		'-bugprone-reserved-identifier',
 		# false positives in our code base
 		'-bugprone-sizeof-expression',
 		# not following CERT guidelines
