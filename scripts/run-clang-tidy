@@ -127,6 +127,26 @@ use constant CHECKS => {
 		'src/uj_gdbjit.c' => [
 			'-hicpp-no-assembler',
 		],
+		# Include CRC calculation API to avoid uJIT linking.
+		'tests/impl/uJIT-tests-C/suite/test_crc.c' => [
+			'-bugprone-suspicious-include',
+		],
+		# Include LEB128/ULEB128 encoding API to avoid uJIT linking.
+		'tests/impl/uJIT-tests-C/suite/test_leb128.c' => [
+			'-bugprone-suspicious-include',
+		],
+		# Include random HEX file extension API to avoid uJIT linking.
+		'tests/impl/uJIT-tests-C/suite/test_random.c' => [
+			'-bugprone-suspicious-include',
+		],
+		# Include common string utils API to avoid uJIT linking.
+		'tests/impl/uJIT-tests-C/suite/test_str.c' => [
+			'-bugprone-suspicious-include',
+		],
+		# Include string scanning API to avoid uJIT linking.
+		'tests/impl/uJIT-tests-C/suite/test_strscan.c' => [
+			'-bugprone-suspicious-include',
+		],
 	}
 };
 
