@@ -61,6 +61,8 @@ use constant CHECKS => {
 		'-clang-analyzer-optin.osx.*',
 		# no OSX-specific checks
 		'-clang-analyzer-osx.*',
+		# much noise, little value
+		'-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling',
 		# no C++-specific checks
 		'-cppcoreguidelines-*',
 		# not following Google conventions
