@@ -65,12 +65,13 @@ use constant CHECKS => {
 		'-cppcoreguidelines-*',
 		# not following Google conventions
 		'-google-*',
-		# contradicts LKSG
-		'-hicpp-braces-around-statements',
-		# much noise, little value
-		'-hicpp-no-assembler',
-		# much noise, little value
-		'-hicpp-static-assert',
+		# HIC++ mostly contains aliases
+		'-hicpp-*',
+		# except the following
+		'hicpp-exception-baseclass',
+		'hicpp-multiway-paths-covered',
+		'hicpp-no-assembler',
+		'hicpp-signed-bitwise',
 		# much noise, little value
 		'-hicpp-signed-bitwise',
 		# not following LLVM conventions
@@ -120,10 +121,10 @@ use constant CHECKS => {
 		'src/uj_meta.c' => [
 			'-clang-analyzer-core.NullDereference'
 		],
-        # Long test cases are totally reasonable here.
-        'tests/impl/uJIT-tests-C/suite/test_emit_sse2.c' => [
-            '-hicpp-function-size'
-        ],
+		# The only file using inline assembler to interact with GDB.
+		'src/uj_gdbjit.c' => [
+			'-hicpp-no-assembler',
+		],
 	}
 };
 
