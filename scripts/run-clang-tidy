@@ -88,6 +88,8 @@ use constant CHECKS => {
 		'-llvm-*',
 		# not using LLVM libc
 		'-llvmlibc-*',
+		# suppressed by https://github.com/luavela/luavela/issues/56
+		'-misc-no-recursion',
 		# much noise, little value
 		'-misc-static-assert',
 		# no C++-specific checks
