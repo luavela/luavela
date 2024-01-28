@@ -129,6 +129,14 @@ use constant CHECKS => {
 		'src/uj_gdbjit.c' => [
 			'-hicpp-no-assembler',
 		],
+		# Suppressed by https://github.com/luavela/luavela/issues/52.
+		'tools/parse_profile/ujpp_demangle_lua.c' => [
+			'-bugprone-not-null-terminated-result',
+		],
+		# Suppressed by https://github.com/luavela/luavela/issues/52.
+		'src/dump/uj_dump_bc.c' => [
+			'-bugprone-not-null-terminated-result',
+		],
 		# Include CRC calculation API to avoid uJIT linking.
 		'tests/impl/uJIT-tests-C/suite/test_crc.c' => [
 			'-bugprone-suspicious-include',
