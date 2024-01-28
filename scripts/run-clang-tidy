@@ -45,6 +45,8 @@ use constant CHECKS => {
 		'-android-*',
 		# no C++-specific checks
 		'-boost-*',
+		# suppressed by https://github.com/luavela/luavela/issues/53
+		'-bugprone-branch-clone',
 		# much noise, little value
 		'-bugprone-misplaced-widening-cast',
 		# much noise, little value
