@@ -49,6 +49,8 @@ use constant CHECKS => {
 		'-bugprone-branch-clone',
 		# much noise, little value
 		'-bugprone-misplaced-widening-cast',
+		# suppressed by https://github.com/luavela/luavela/issues/54
+		'-bugprone-narrowing-conversions',
 		# much noise, little value
 		'-bugprone-reserved-identifier',
 		# false positives in our code base
