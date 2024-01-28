@@ -53,6 +53,8 @@ use constant CHECKS => {
 		'-bugprone-narrowing-conversions',
 		# much noise, little value
 		'-bugprone-reserved-identifier',
+		# suppressed by https://github.com/luavela/luavela/issues/55
+		'-bugprone-signed-char-misuse',
 		# false positives in our code base
 		'-bugprone-sizeof-expression',
 		# not following CERT guidelines
