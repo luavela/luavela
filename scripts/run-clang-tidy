@@ -153,6 +153,12 @@ use constant CHECKS => {
 			'-clang-analyzer-core.uninitialized.Assign',
 			'-clang-analyzer-core.UndefinedBinaryOperatorResult',
 		],
+		# The risk of breaking things is much higher than
+		# a potential benefit from fixing away a single warning.
+		# See more info in https://github.com/luavela/luavela/issues/59.
+		'src/jit/lj_asm.c' => [
+			'-clang-analyzer-core.uninitialized.Branch',
+		],
 		# Include CRC calculation API to avoid uJIT linking.
 		'tests/impl/uJIT-tests-C/suite/test_crc.c' => [
 			'-bugprone-suspicious-include',
