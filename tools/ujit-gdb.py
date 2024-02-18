@@ -271,7 +271,7 @@ def tagisvalid(slot):
 
 
 def get_gstate(L):
-    if type(L) != gdb.Value:
+    if not isinstance(L, gdb.Value):
         L = cast('struct lua_State *', L)
     return cast('global_State *', L['glref'])
 
@@ -336,7 +336,7 @@ def strdata(obj):
 
 
 def dump_tvalue(addr):
-    if type(addr) != gdb.Value:
+    if not isinstance(addr, gdb.Value):
         addr = cast('union TValue *', addr)
     tag = tou64(addr['value_tag'])
     tgname = tag_name(tag)
