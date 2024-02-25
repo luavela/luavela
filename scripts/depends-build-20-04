@@ -1,5 +1,5 @@
 autoconf
-clang-6.0
+clang-11
 cmake
 gcc
 gcc-8=8.4.0-*
