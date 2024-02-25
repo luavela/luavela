@@ -3,7 +3,7 @@ name: Testing
 on:
   push:
     branches:
-      - 'master'
+      - '**'
     tags:
       - '**'
   pull_request:
@@ -39,7 +39,7 @@ jobs:
         CC: [GCC, Clang]
         include:
           - OS: Linux
-            RUNNER: [ubuntu-20.04]
+            RUNNER: [ubuntu-22.04]
             TESTOPTIONS: -DUJIT_TEST_OPTIONS=-O4
           - OS: macOS
             RUNNER: [macos-11]
