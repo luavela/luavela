@@ -5,7 +5,7 @@
  */
 
 #include "test_common.h"
-#include "jit/lj_ir.c"
+#include "jit/lj_ircall.h"
 
 /* Tests that all CCallInfo with CCI_IMMUTABLE flag are Stores */
 

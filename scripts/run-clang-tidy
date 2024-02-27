@@ -21,7 +21,7 @@ use constant DEFAULTS => {
 	project => '.',
 	clang_tidy => {
 		prefix => '/usr/bin/clang-tidy',
-		versions => [ qw(6.0) ],
+		versions => [ qw(11) ],
 	},
 	tries => 3,
 };
@@ -45,6 +45,18 @@ use constant CHECKS => {
 		'-android-*',
 		# no C++-specific checks
 		'-boost-*',
+		# suppressed by https://github.com/luavela/luavela/issues/53
+		'-bugprone-branch-clone',
+		# much noise, little value
+		'-bugprone-misplaced-widening-cast',
+		# suppressed by https://github.com/luavela/luavela/issues/54
+		'-bugprone-narrowing-conversions',
+		# much noise, little value
+		'-bugprone-reserved-identifier',
+		# suppressed by https://github.com/luavela/luavela/issues/55
+		'-bugprone-signed-char-misuse',
+		# false positives in our code base
+		'-bugprone-sizeof-expression',
 		# not following CERT guidelines
 		'-cert-*',
 		# no unstable checks
@@ -57,24 +69,27 @@ use constant CHECKS => {
 		'-clang-analyzer-optin.osx.*',
 		# no OSX-specific checks
 		'-clang-analyzer-osx.*',
+		# much noise, little value
+		'-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling',
 		# no C++-specific checks
 		'-cppcoreguidelines-*',
 		# not following Google conventions
 		'-google-*',
-		# contradicts LKSG
-		'-hicpp-braces-around-statements',
-		# much noise, little value
-		'-hicpp-no-assembler',
-		# much noise, little value
-		'-hicpp-static-assert',
+		# HIC++ mostly contains aliases
+		'-hicpp-*',
+		# except the following
+		'hicpp-exception-baseclass',
+		'hicpp-multiway-paths-covered',
+		'hicpp-no-assembler',
+		'hicpp-signed-bitwise',
 		# much noise, little value
 		'-hicpp-signed-bitwise',
 		# not following LLVM conventions
 		'-llvm-*',
-		# much noise, little value
-		'-misc-misplaced-widening-cast',
-		# false positives in our code base
-		'-misc-sizeof-expression',
+		# not using LLVM libc
+		'-llvmlibc-*',
+		# suppressed by https://github.com/luavela/luavela/issues/56
+		'-misc-no-recursion',
 		# much noise, little value
 		'-misc-static-assert',
 		# no C++-specific checks
@@ -118,15 +133,70 @@ use constant CHECKS => {
 		'src/uj_meta.c' => [
 			'-clang-analyzer-core.NullDereference'
 		],
-		# An obvious false positive specific to clang-tidy 5.0.
-		# TODO: Please remove after upgrade:
-		'src/frontend/lj_bcread.c' => [
-			'-misc-redundant-expression'
+		# The only file using inline assembler to interact with GDB.
+		'src/uj_gdbjit.c' => [
+			'-hicpp-no-assembler',
 		],
-        # Long test cases are totally reasonable here.
-        'tests/impl/uJIT-tests-C/suite/test_emit_sse2.c' => [
-            '-hicpp-function-size'
-        ],
+		# Suppressed by https://github.com/luavela/luavela/issues/52.
+		'tools/parse_profile/ujpp_demangle_lua.c' => [
+			'-bugprone-not-null-terminated-result',
+		],
+		# Suppressed by https://github.com/luavela/luavela/issues/52.
+		'src/dump/uj_dump_bc.c' => [
+			'-bugprone-not-null-terminated-result',
+		],
+		# The risk of breaking things is much higher than
+		# a potential benefit from fixing away a single warning.
+		# See more info in https://github.com/luavela/luavela/issues/57
+		# and https://github.com/luavela/luavela/issues/58 respectively.
+		'src/jit/lj_record.c' => [
+			'-clang-analyzer-core.uninitialized.Assign',
+			'-clang-analyzer-core.UndefinedBinaryOperatorResult',
+		],
+		# The risk of breaking things is much higher than
+		# a potential benefit from fixing away a single warning.
+		# See more info in https://github.com/luavela/luavela/issues/59.
+		'src/jit/lj_asm.c' => [
+			'-clang-analyzer-core.uninitialized.Branch',
+		],
+		# The risk of breaking things is much higher than
+		# a potential benefit from fixing away a single warning.
+		# See more info in https://github.com/luavela/luavela/issues/60.
+		'src/jit/opt/mem.c' => [
+			'-clang-analyzer-core.NullDereference',
+		],
+		# The risk of breaking things is much higher than
+		# a potential benefit from fixing away a single warning.
+		# See more info in https://github.com/luavela/luavela/issues/60.
+		'src/lib/string.c' => [
+			'-clang-analyzer-core.NullDereference',
+		],
+		# The risk of breaking things is much higher than
+		# a potential benefit from fixing away a single warning.
+		# See more info in https://github.com/luavela/luavela/issues/60.
+		'src/lj_tab.c' => [
+			'-clang-analyzer-core.NullDereference',
+		],
+		# Include CRC calculation API to avoid uJIT linking.
+		'tests/impl/uJIT-tests-C/suite/test_crc.c' => [
+			'-bugprone-suspicious-include',
+		],
+		# Include LEB128/ULEB128 encoding API to avoid uJIT linking.
+		'tests/impl/uJIT-tests-C/suite/test_leb128.c' => [
+			'-bugprone-suspicious-include',
+		],
+		# Include random HEX file extension API to avoid uJIT linking.
+		'tests/impl/uJIT-tests-C/suite/test_random.c' => [
+			'-bugprone-suspicious-include',
+		],
+		# Include common string utils API to avoid uJIT linking.
+		'tests/impl/uJIT-tests-C/suite/test_str.c' => [
+			'-bugprone-suspicious-include',
+		],
+		# Include string scanning API to avoid uJIT linking.
+		'tests/impl/uJIT-tests-C/suite/test_strscan.c' => [
+			'-bugprone-suspicious-include',
+		],
 	}
 };
 

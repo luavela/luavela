@@ -1072,7 +1072,7 @@ static void asm_fxload(ASMState *as, IRIns *ir) {
 
 static void asm_fxstore(ASMState *as, IRIns *ir) {
   RegSet allow = RSET_GPR;
-  Reg src = RID_NONE, osrc = RID_NONE;
+  Reg src = RID_NONE;
   int32_t k = 0;
   if (ir->r == RID_SINK) { return; }
   /* The IRT_I16/IRT_U16 stores should never be simplified for constant
@@ -1081,7 +1081,7 @@ static void asm_fxstore(ASMState *as, IRIns *ir) {
   if (irt_isi16(ir->t) || irt_isu16(ir->t) || irt_isfp(ir->t) ||
       !asm_isk32(as, ir->op2, &k)) {
     RegSet allow8 = irt_isfp(ir->t) ? RSET_FPR : RSET_GPR;
-    src = osrc = ra_alloc1(as, ir->op2, allow8);
+    src = ra_alloc1(as, ir->op2, allow8);
     rset_clear(allow, src);
   }
   if (ir->o == IR_FSTORE) {
