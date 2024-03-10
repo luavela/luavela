@@ -17,7 +17,7 @@ Template for a Translation Unit (aka Module)
 
     /*
      * Any appropriate description of the module.
-     * Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
+     * Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
      * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
      *
      * Portions taken verbatim or adapted from LuaJIT.
@@ -87,7 +87,7 @@ Template for a Header File
 
     /*
      * Any appropriate description of the header.
-     * Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
+     * Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
      * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
      *
      * Portions taken verbatim or adapted from LuaJIT.
@@ -145,7 +145,7 @@ CMake Files
 .. code-block:: cmake
 
     # Purpose of the file.
-    # Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
+    # Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 Tools
 """""
@@ -157,7 +157,7 @@ Tools
     #!/usr/bin/perl -w
     #
     # This is a tool for doing blah-blah-blah
-    # Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
+    # Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 **C**
 
@@ -173,14 +173,14 @@ Tests
 .. code-block:: lua
 
     -- Description of the chunk (what it actually tests, etc.).
-    -- Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
+    -- Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 *Acceptable Default*
 
 .. code-block:: lua
 
     -- This is a part of uJIT's testing suite.
-    -- Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
+    -- Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 **Perl**
 
@@ -191,7 +191,7 @@ Tests
     #!/usr/bin/perl
     #
     # Description of the test (what it actually tests, etc.).
-    # Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
+    # Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 *Acceptable Default*
 
@@ -200,7 +200,7 @@ Tests
     #!/usr/bin/perl
     #
     # This is a part of uJIT's testing suite.
-    # Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
+    # Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 **C**
 
@@ -214,7 +214,7 @@ Follows the same rules as for the core code base. Obviously LuaJIT and PUC-Rio L
 
     /*
      * This is a part of uJIT's testing suite.
-     * Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
+     * Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
      */
 
 **Shell Runners**
@@ -226,7 +226,7 @@ Follows the same rules as for the core code base. Obviously LuaJIT and PUC-Rio L
     #!/bin/bash
     #
     # Description of the runner.
-    # Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
+    # Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 *Acceptable Default*
 
@@ -235,7 +235,7 @@ Follows the same rules as for the core code base. Obviously LuaJIT and PUC-Rio L
     #!/bin/bash
     #
     # This is a part of uJIT's testing suite.
-    # Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
+    # Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
 
 Copyright Notice Format
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -244,4 +244,4 @@ There is no explicit policy on the matter, but for the sake of cross-project con
 
 .. code-block:: none
 
-    Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
+    Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT

@@ -2,7 +2,7 @@
  * C-level trace IR dumper. Dumps IR itself as well as interleaved snapshots.
  * Port of LuaJIT's original IR dumper dump.lua with some modifications
  * and reasonable simplifications (marked with NB! throughout the code).
- * Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
  * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  */
 

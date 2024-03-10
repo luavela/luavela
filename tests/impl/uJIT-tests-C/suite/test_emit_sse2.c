@@ -1,6 +1,6 @@
 /*
  * This is a part of uJIT's testing suite.
- * Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
  * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  *
  * All cross-validation is done with https://defuse.ca/online-x86-assembler.htm
