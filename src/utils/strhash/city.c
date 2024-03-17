@@ -160,9 +160,9 @@ static uint32_t Hash32Len5to12(const char *s, size_t len)
 static uint32_t CityHash32(const char *s, size_t len)
 {
 	if (len <= 24) {
-		return len <= 12 ? (len <= 4 ? Hash32Len0to4(s, len) :
-					       Hash32Len5to12(s, len)) :
-				   Hash32Len13to24(s, len);
+		return len <= 12 ? (len <= 4 ? Hash32Len0to4(s, len)
+					     : Hash32Len5to12(s, len))
+				 : Hash32Len13to24(s, len);
 	}
 
 	/* len > 24 */

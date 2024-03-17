@@ -93,8 +93,8 @@ static void dump_progress_trace_abort(FILE *out, const jit_State *J, void *data)
 	pc = abortstate->pc;
 
 	while (!isluafunc(frame_func(frame))) {
-		pc = frame_iscont(frame) ? frame_contpc(frame) :
-					   frame_pc(frame);
+		pc = frame_iscont(frame) ? frame_contpc(frame)
+					 : frame_pc(frame);
 		pc--;
 		frame = frame_prev(frame);
 	}

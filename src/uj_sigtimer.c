@@ -42,16 +42,16 @@ static enum sigtimer_status sigtimer_install_sa(struct sigtimer *timer)
 	if (sigemptyset(&sa.sa_mask) != 0)
 		return SIGTIMER_ERR;
 
-	return sigaction(timer->opt.signo, &sa, &timer->old_sa) == 0 ?
-		       SIGTIMER_SUCCESS :
-		       SIGTIMER_ERR;
+	return sigaction(timer->opt.signo, &sa, &timer->old_sa) == 0
+		       ? SIGTIMER_SUCCESS
+		       : SIGTIMER_ERR;
 }
 
 static enum sigtimer_status sigtimer_uninstall_sa(const struct sigtimer *timer)
 {
-	return sigaction(timer->opt.signo, &timer->old_sa, NULL) == 0 ?
-		       SIGTIMER_SUCCESS :
-		       SIGTIMER_ERR;
+	return sigaction(timer->opt.signo, &timer->old_sa, NULL) == 0
+		       ? SIGTIMER_SUCCESS
+		       : SIGTIMER_ERR;
 }
 
 static enum sigtimer_status sigtimer_create(struct sigtimer *timer)
@@ -63,9 +63,9 @@ static enum sigtimer_status sigtimer_create(struct sigtimer *timer)
 	se.sigev_notify = SIGEV_THREAD_ID;
 	se._sigev_un._tid = syscall(SYS_gettid);
 
-	return timer_create(CLOCK_MONOTONIC, &se, &(timer->id)) == 0 ?
-		       SIGTIMER_SUCCESS :
-		       SIGTIMER_ERR;
+	return timer_create(CLOCK_MONOTONIC, &se, &(timer->id)) == 0
+		       ? SIGTIMER_SUCCESS
+		       : SIGTIMER_ERR;
 }
 
 /* Low-level timer removal. */
@@ -85,8 +85,8 @@ static enum sigtimer_status sigtimer_start(const struct sigtimer *timer)
 	tm.it_interval.tv_sec = tm.it_value.tv_sec = sec;
 	tm.it_interval.tv_nsec = tm.it_value.tv_nsec = nsec;
 
-	return timer_settime(timer->id, 0, &tm, NULL) == 0 ? SIGTIMER_SUCCESS :
-							     SIGTIMER_ERR;
+	return timer_settime(timer->id, 0, &tm, NULL) == 0 ? SIGTIMER_SUCCESS
+							   : SIGTIMER_ERR;
 }
 
 /* Low-level timer disarming. Currently async-signal-safe. */
@@ -95,8 +95,8 @@ static enum sigtimer_status sigtimer_stop(const struct sigtimer *timer)
 	struct itimerspec tm;
 
 	memset(&tm, 0, sizeof(struct itimerspec));
-	return timer_settime(timer->id, 0, &tm, NULL) == 0 ? SIGTIMER_SUCCESS :
-							     SIGTIMER_ERR;
+	return timer_settime(timer->id, 0, &tm, NULL) == 0 ? SIGTIMER_SUCCESS
+							   : SIGTIMER_ERR;
 }
 
 /* Public API */

@@ -67,9 +67,8 @@ TValue *uj_capi_index2adr(lua_State *L, int idx)
 			return o;
 		} else {
 			idx = LUA_GLOBALSINDEX - idx;
-			return idx <= fn->c.nupvalues ?
-				       &fn->c.upvalue[idx - 1] :
-				       niltv(L);
+			return idx <= fn->c.nupvalues ? &fn->c.upvalue[idx - 1]
+						      : niltv(L);
 		}
 	}
 }
@@ -777,8 +776,8 @@ LUA_API void *lua_upvalueid(lua_State *L, int idx, int n)
 	GCfunc *fn = funcV(uj_capi_index2adr(L, idx));
 	n--;
 	api_check(L, (uint32_t)n < fn->l.nupvalues);
-	return isluafunc(fn) ? (void *)(fn->l.uvptr[n]) :
-			       (void *)&fn->c.upvalue[n]; /* TODO: check! */
+	return isluafunc(fn) ? (void *)(fn->l.uvptr[n])
+			     : (void *)&fn->c.upvalue[n]; /* TODO: check! */
 }
 
 LUA_API void lua_upvaluejoin(lua_State *L, int idx1, int n1, int idx2, int n2)
@@ -1056,8 +1055,8 @@ LUA_API int lua_gc(lua_State *L, int what, int data)
 		g->gc.threshold = LJ_MAX_MEM;
 		break;
 	case LUA_GCRESTART:
-		g->gc.threshold = (data == -1) ? (total / 100) * g->gc.pause :
-						 total;
+		g->gc.threshold = (data == -1) ? (total / 100) * g->gc.pause
+					       : total;
 		break;
 	case LUA_GCCOLLECT:
 		lj_gc_fullgc(L);

@@ -428,13 +428,13 @@ void uj_iprof_tick(lua_State *L, enum iprof_ev_type type)
 	case IPROF_START:
 	case IPROF_CALL:
 		iprof_entity_acc(L, entity, IPROF_KEY_WALL,
-				 type == IPROF_START ?
-					 tick * (iprof->mode == IPROF_PLAIN) :
-					 -tick);
+				 type == IPROF_START
+					 ? tick * (iprof->mode == IPROF_PLAIN)
+					 : -tick);
 		iprof_entity_acc(L, entity, IPROF_KEY_LUA,
-				 type == IPROF_START ?
-					 tick * (iprof->mode == IPROF_PLAIN) :
-					 -tick);
+				 type == IPROF_START
+					 ? tick * (iprof->mode == IPROF_PLAIN)
+					 : -tick);
 
 		if (iprof->mode == IPROF_PLAIN)
 			break;

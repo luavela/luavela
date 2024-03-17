@@ -32,7 +32,7 @@ BinPackArguments: true
 BinPackParameters: true
 BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Linux
-BreakBeforeTernaryOperators: false
+BreakBeforeTernaryOperators: true
 BreakStringLiterals: false
 ColumnLimit: 80
 DerivePointerAlignment: false

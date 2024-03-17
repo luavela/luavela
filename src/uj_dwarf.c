@@ -112,9 +112,9 @@ static int dwarf_cleanup(int actions, uint64_t uexclass,
 	if (cframe != NULL) {
 		/* Reached landing pad to the user code. */
 		_Unwind_SetGR(ctx, UJ_TARGET_EHRETREG, ex);
-		_Unwind_SetIP(ctx, (uintptr_t)(uj_cframe_unwind_is_ff(cframe) ?
-						       lj_vm_unwind_ff_eh :
-						       lj_vm_unwind_c_eh));
+		_Unwind_SetIP(ctx, (uintptr_t)(uj_cframe_unwind_is_ff(cframe)
+						       ? lj_vm_unwind_ff_eh
+						       : lj_vm_unwind_c_eh));
 		return _URC_INSTALL_CONTEXT;
 	}
 

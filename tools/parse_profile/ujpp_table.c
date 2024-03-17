@@ -112,8 +112,8 @@ size_t table_calc_cfunc_len(struct parser_state *ps, size_t i)
 	const struct cfunc_cache *cache =
 		ujpp_vector_at(&ps->vec_cfunc_cache, cf->cache_id);
 
-	return cache->symbol ? strlen(cache->symbol) + SPACE_NUM :
-			       NOT_RESOLVED_SYM_LEN;
+	return cache->symbol ? strlen(cache->symbol) + SPACE_NUM
+			     : NOT_RESOLVED_SYM_LEN;
 }
 
 void ujpp_table_cfunc_length(struct parser_state *ps)
@@ -231,9 +231,9 @@ void ujpp_table_lfunc_length(struct parser_state *ps)
 		const struct lfunc_cache *lf_c =
 			ps->vec_lfunc_cache.elems[lf->cache_id];
 		size_t demangled_len = DEMANGLE_LUA_FAILED ==
-						       lf_c->demangled_sym ?
-					       0 :
-					       strlen(lf_c->demangled_sym);
+						       lf_c->demangled_sym
+					       ? 0
+					       : strlen(lf_c->demangled_sym);
 
 		len = demangled_len + strlen(lf_c->sym) +
 		      table_digits(lf_c->line) + 8;

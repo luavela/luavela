@@ -358,8 +358,8 @@ lua_State *uj_state_newstate(const struct luae_Options *opt)
 	uj_strhash_t *strhash_sealed;
 	int cpluaopen_status;
 	lua_State *datastate = opt != NULL ? opt->datastate : NULL;
-	enum luaext_HashF hashftype = opt != NULL ? opt->hashftype :
-						    LUAE_HASHF_DEFAULT;
+	enum luaext_HashF hashftype = opt != NULL ? opt->hashftype
+						  : LUAE_HASHF_DEFAULT;
 
 	uj_global_init();
 

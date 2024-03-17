@@ -68,8 +68,8 @@ static int record_handle_mobj(struct jit_State *J, struct RecordIndex *ix)
 	}
 
 	/* Handle metamethod call. */
-	func = lj_record_mm_prep(J, record_is_store(ix) ? lj_cont_nop :
-							  lj_cont_ra);
+	func = lj_record_mm_prep(J, record_is_store(ix) ? lj_cont_nop
+							: lj_cont_ra);
 	base = J->base + func;
 	tv = J->L->base + func;
 
@@ -444,9 +444,9 @@ static TRef record_idx(struct jit_State *J, struct RecordIndex *ix)
 	ix->xrefop = IR(tref_ref(ix->xref))->o;
 	ix->loadop = ix->xrefop == IR_AREF ? IR_ALOAD : IR_HLOAD;
 	/* The uj_meta_tset() inconsistency is gone, but better play safe. */
-	ix->oldval = ix->xrefop == IR_KKPTR ?
-			     (const TValue *)ir_kptr(IR(tref_ref(ix->xref))) :
-			     ix->oldv;
+	ix->oldval = ix->xrefop == IR_KKPTR
+			     ? (const TValue *)ir_kptr(IR(tref_ref(ix->xref)))
+			     : ix->oldv;
 
 	if (record_is_store(ix))
 		return record_indexed_store(J, ix);

@@ -119,8 +119,8 @@ static ptrdiff_t dump_frame_slot(FILE *out, const lua_State *L,
 	}
 
 	fprintf(out, " delta=%lu ",
-		(unsigned long)(frame_islua(slot) ? frame_deltal(slot) :
-						    frame_delta(slot)));
+		(unsigned long)(frame_islua(slot) ? frame_deltal(slot)
+						  : frame_delta(slot)));
 
 	uj_dump_func_description(out, fn, 0);
 	fprintf(out, "\n");
@@ -193,8 +193,8 @@ static void dump_value_slot(FILE *out, const lua_State *L, const TValue *slot)
 static void dump_bottom_slot(FILE *out, const lua_State *L, const TValue *slot)
 {
 	dump_print_stack_anchor(out, L, slot);
-	fprintf(out, frame_isdummy(L, slot) ? "FRAME: dummy L\n" :
-					      "FRAME: [UNKNOWN BOTTOM]\n");
+	fprintf(out, frame_isdummy(L, slot) ? "FRAME: dummy L\n"
+					    : "FRAME: [UNKNOWN BOTTOM]\n");
 }
 
 void uj_dump_stack(FILE *out, const lua_State *L)

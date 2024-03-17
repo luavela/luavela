@@ -254,8 +254,8 @@ int uj_lib_checkopt(lua_State *L, unsigned int narg, int def, const char *lst)
 	uint8_t len;
 	int i;
 
-	const GCstr *s = def >= 0 ? uj_lib_optstr(L, narg) :
-				    uj_lib_checkstr(L, narg);
+	const GCstr *s = def >= 0 ? uj_lib_optstr(L, narg)
+				  : uj_lib_checkstr(L, narg);
 
 	if (NULL == s)
 		return def;
