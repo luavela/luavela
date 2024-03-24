@@ -67,7 +67,7 @@ LJ_DATADEF const char *const dump_trace_errors[] = {
 
 /* Names of link types. ORDER LJ_TRLINK */
 LJ_DATADEF const char *const dump_trace_lt_names[] = {
-	"none",		"root",		  "loop",	"tail-recursion",
+	"none",		"root",		  "loop",	 "tail-recursion",
 	"up-recursion", "down-recursion", "interpreter", "return"};
 
 LJ_DATADEF const char *const dump_progress_state_names[] = {
