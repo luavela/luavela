@@ -12,10 +12,11 @@
 #define SLOT_VALUE_BUFFER_SIZE 40
 #define SLOT_VALUE_COPY_THRESHOLD 30
 
-enum { FRAME_LIVE, /* Live frame, chain linked
+enum {
+	FRAME_LIVE, /* Live frame, chain linked
 		     * with other frames on the stack
 		     */
-       FRAME_DEAD /* Dead frame, left between two active frames */
+	FRAME_DEAD /* Dead frame, left between two active frames */
 };
 
 static void dump_print_stack_anchor(FILE *out, const lua_State *L,

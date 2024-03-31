@@ -166,13 +166,15 @@ void LJ_NOINLINE __jit_debug_register_code(void)
 
 /* -- In-memory ELF object definitions ------------------------------------ */
 
-enum { DW_CFA_nop = 0x0,
-       DW_CFA_offset_extended = 0x5,
-       DW_CFA_def_cfa = 0xc,
-       DW_CFA_def_cfa_offset = 0xe,
-       DW_CFA_offset_extended_sf = 0x11,
-       DW_CFA_advance_loc = 0x40,
-       DW_CFA_offset = 0x80 };
+enum {
+	DW_CFA_nop = 0x0,
+	DW_CFA_offset_extended = 0x5,
+	DW_CFA_def_cfa = 0xc,
+	DW_CFA_def_cfa_offset = 0xe,
+	DW_CFA_offset_extended_sf = 0x11,
+	DW_CFA_advance_loc = 0x40,
+	DW_CFA_offset = 0x80
+};
 
 enum { DW_EH_PE_udata4 = 3, DW_EH_PE_textrel = 0x20 };
 
@@ -180,17 +182,21 @@ enum { DW_TAG_compile_unit = 0x11 };
 
 enum { DW_children_no = 0, DW_children_yes = 1 };
 
-enum { DW_AT_name = 0x03,
-       DW_AT_stmt_list = 0x10,
-       DW_AT_low_pc = 0x11,
-       DW_AT_high_pc = 0x12 };
+enum {
+	DW_AT_name = 0x03,
+	DW_AT_stmt_list = 0x10,
+	DW_AT_low_pc = 0x11,
+	DW_AT_high_pc = 0x12
+};
 
 enum { DW_FORM_addr = 0x01, DW_FORM_data4 = 0x06, DW_FORM_string = 0x08 };
 
-enum { DW_LNS_extended_op = 0,
-       DW_LNS_copy = 1,
-       DW_LNS_advance_pc = 2,
-       DW_LNS_advance_line = 3 };
+enum {
+	DW_LNS_extended_op = 0,
+	DW_LNS_copy = 1,
+	DW_LNS_advance_pc = 2,
+	DW_LNS_advance_line = 3
+};
 
 enum { DW_LNE_end_sequence = 1, DW_LNE_set_address = 2 };
 
@@ -216,16 +222,18 @@ enum {
 };
 
 /* Minimal list of sections for the in-memory ELF object. */
-enum { GDBJIT_SECT_NULL,
-       GDBJIT_SECT_text,
-       GDBJIT_SECT_eh_frame,
-       GDBJIT_SECT_shstrtab,
-       GDBJIT_SECT_strtab,
-       GDBJIT_SECT_symtab,
-       GDBJIT_SECT_debug_info,
-       GDBJIT_SECT_debug_abbrev,
-       GDBJIT_SECT_debug_line,
-       GDBJIT_SECT__MAX };
+enum {
+	GDBJIT_SECT_NULL,
+	GDBJIT_SECT_text,
+	GDBJIT_SECT_eh_frame,
+	GDBJIT_SECT_shstrtab,
+	GDBJIT_SECT_strtab,
+	GDBJIT_SECT_symtab,
+	GDBJIT_SECT_debug_info,
+	GDBJIT_SECT_debug_abbrev,
+	GDBJIT_SECT_debug_line,
+	GDBJIT_SECT__MAX
+};
 
 enum { GDBJIT_SYM_UNDEF, GDBJIT_SYM_FILE, GDBJIT_SYM_FUNC, GDBJIT_SYM__MAX };
 
