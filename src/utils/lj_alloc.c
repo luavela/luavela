@@ -65,13 +65,13 @@
 #define MFAIL                   ((void *)(MAX_SIZE_T))
 #define CMFAIL                  ((char *)(MFAIL)) /* defined for convenience */
 
-static struct alloc_stats* get_stats()
+static struct alloc_stats* get_stats(void)
 {
   static struct alloc_stats stats = {0};
   return &stats;
 }
 
-struct alloc_stats uj_alloc_stats()
+struct alloc_stats uj_alloc_stats(void)
 {
   struct alloc_stats stats = {0};
   stats.active = __sync_fetch_and_or(&(get_stats()->active), 0);

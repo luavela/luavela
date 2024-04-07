@@ -8,7 +8,7 @@
 #include <limits.h>
 #include <time.h>
 
-unsigned int random_time_seed() {
+unsigned int random_time_seed(void) {
   time_t timeval;      /* Current time. */
   unsigned char *ptr;  /* Type punned pointed into timeval. */
   unsigned int   seed; /* Generated seed. */
