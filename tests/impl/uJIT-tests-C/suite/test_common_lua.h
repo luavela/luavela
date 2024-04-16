@@ -25,7 +25,7 @@ static UJ_UNIT_AINLINE void assert_stack_size(lua_State *L, int expected_size)
 }
 
 /* Create a new Lua state and run some trivial integrity checks */
-static UJ_UNIT_AINLINE lua_State *test_lua_open()
+static UJ_UNIT_AINLINE lua_State *test_lua_open(void)
 {
 	lua_State *L = lua_open();
 

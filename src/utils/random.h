@@ -14,7 +14,7 @@
 ** http://benpfaff.org/writings/clc/random-seed.html
 ** Example usage: srandom(random_time_seed());
 */
-unsigned int random_time_seed();
+unsigned int random_time_seed(void);
 
 /* Generate a random file extension consisting of the initial '.' character
 ** and (n - 1) random lower-case hexadecimal digits. Generated result is written

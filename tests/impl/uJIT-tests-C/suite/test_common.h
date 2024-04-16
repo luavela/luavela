@@ -14,8 +14,16 @@
 #include <cmocka.h>
 
 #include <math.h>
+/*
+ * XXX: cmocka provides <assert_double_equal> helper since 1.1.6 version.
+ * Nevertheless, to support all available cmocka versions (at least while
+ * transitioning period), <assert_double_equal> helper is defined below, if
+ * none is provided by cmocka.
+ */
+#ifndef assert_double_equal
 #define assert_double_equal(x, y, p) \
 	assert_true(fabs(((double)(x)) - ((double)(y))) < (p))
+#endif
 
 #define UNUSED(x) ((void)(x))
 #define UNUSED_STATE(state) UNUSED(state)

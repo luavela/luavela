@@ -51,7 +51,7 @@ static void assert_fromnum(lua_Number n, const char *ref)
 
 __attribute__((noinline)) /* Otherwise Werror will fail the build */
 static lua_Number
-zero()
+zero(void)
 {
 	return 0.0;
 }
