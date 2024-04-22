@@ -124,8 +124,8 @@ static MCode *emit_jccs(ASMState *as, x86CC cc, const MCode *target)
 {
 	struct ctins ins = emit_ctins_init(as, SIZEOF_JCCS_OP, SIZEOF_JCCS);
 	*(uint8_t *)(ins.op) = emit_jccs_op(cc);
-	*(int8_t *)(ins.rel) = NULL != target ? emit_rel8(ins.next_pc, target) :
-						JCCS_BACKEDGE_DUMMY_TARGET;
+	*(int8_t *)(ins.rel) = NULL != target ? emit_rel8(ins.next_pc, target)
+					      : JCCS_BACKEDGE_DUMMY_TARGET;
 	emit_ctins_commit(as, &ins);
 	return ins.pc;
 }

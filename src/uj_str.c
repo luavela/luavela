@@ -312,8 +312,8 @@ static GCstr *str_cat(lua_State *L, TValue *bottom, TValue *top)
 
 	for (i = 0; i < nslots; i++) {
 		const TValue *tv = &bottom[i];
-		const size_t len = tvisstr(tv) ? strV(tv)->len :
-						 LUAI_MAXNUMBER2STR;
+		const size_t len = tvisstr(tv) ? strV(tv)->len
+					       : LUAI_MAXNUMBER2STR;
 
 		lua_assert(uj_str_is_coercible(tv));
 
