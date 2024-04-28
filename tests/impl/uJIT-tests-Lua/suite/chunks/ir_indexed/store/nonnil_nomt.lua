@@ -1,5 +1,5 @@
 -- This is a part of uJIT's testing suite.
--- Copyright (C) 2020-2023 LuaVela Authors. See Copyright Notice in COPYRIGHT
+-- Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
 -- Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 -- This test checks IR's when old value from table (without metatable) wasn't nil.
