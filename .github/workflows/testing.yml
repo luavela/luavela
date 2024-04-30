@@ -40,11 +40,11 @@ jobs:
         include:
           - OS: Linux
             RUNNER: [ubuntu-20.04]
-            TESTOPTIONS: -DUJIT_TEST_OPTIONS=-O4
+            TESTOPTS: -O4
           - OS: macOS
             RUNNER: [macos-12]
           - CC: Clang
-            TOOLCHAIN: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
+            TOOLCHAIN: cmake/toolchain/Clang.cmake
         exclude:
           # XXX: Strictly saying, macOS simply aliases `gcc' to AppleClang
           # compiler, and this exclude rule just signals that AppleClang
@@ -67,16 +67,10 @@ jobs:
       - name: setup macOS
         uses: ./.github/actions/setup-macos
         if: ${{ matrix.OS == 'macOS' }}
-      - name: configure
-        run: >
-          cmake -S . -B ${{ env.BUILDDIR }}
-          -DCMAKE_BUILD_TYPE=${{ matrix.BUILDTYPE }}
-          -DUJIT_TEST_LIB_TYPE=${{ matrix.LIBTYPE }}
-          ${{ matrix.TOOLCHAIN }}
-          ${{ matrix.TESTOPTIONS }}
-      - name: build
-        run: cmake --build . --parallel
-        working-directory: ${{ env.BUILDDIR }}
-      - name: test
-        run: cmake --build . --parallel --target tests
-        working-directory: ${{ env.BUILDDIR }}
+      - name: run tests
+        uses: ./.github/actions/run-tests
+        with:
+          cmakeflags: -DCMAKE_BUILD_TYPE=${{ matrix.BUILDTYPE }}
+          libtype: ${{ matrix.LIBTYPE }}
+          toolchain: ${{ matrix.TOOLCHAIN }}
+          testopts: ${{ matrix.TESTOPTS }}
