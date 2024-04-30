@@ -1,4 +1,4 @@
-name: Testing
+name: Testing (Linux)
 
 on:
   push:
@@ -34,43 +34,36 @@ jobs:
       fail-fast: false
       matrix:
         BUILDTYPE: [Debug, Release]
-        OS: [Linux, macOS]
+        DISTVER: [20.04]
         LIBTYPE: [shared, static]
         CC: [GCC, Clang]
         include:
-          - OS: Linux
-            RUNNER: [ubuntu-20.04]
+          - BUILDTYPE: Debug
+            CMAKEFLAGS: >-
+              -DCMAKE_BUILD_TYPE=Debug
             TESTOPTS: -O4
-          - OS: macOS
-            RUNNER: [macos-12]
+          - BUILDTYPE: Release
+            CMAKEFLAGS: >-
+              -DCMAKE_BUILD_TYPE=Release
+            TESTOPTS: -O4
           - CC: Clang
             TOOLCHAIN: cmake/toolchain/Clang.cmake
-        exclude:
-          # XXX: Strictly saying, macOS simply aliases `gcc' to AppleClang
-          # compiler, and this exclude rule just signals that AppleClang
-          # doesn't need any extra tweaks of the testing environment.
-          - OS: macOS
-            CC: Clang
-          - OS: macOS
-            LIBTYPE: shared
-    runs-on: ${{ matrix.RUNNER }}
-    name: >
-      ${{ matrix.OS }}
+    runs-on: ubuntu-${{ matrix.DISTVER }}
+    name: >-
+      Ubuntu ${{ matrix.DISTVER }}
+      /
       ${{ matrix.CC }}
       ${{ matrix.BUILDTYPE }}
       ${{ matrix.LIBTYPE }}
     steps:
-      - uses: actions/checkout@v3
-      - name: setup Linux
+      - name: Checkout uJIT
+        uses: actions/checkout@v3
+      - name: Setup Linux
         uses: ./.github/actions/setup-linux
-        if: ${{ matrix.OS == 'Linux' }}
-      - name: setup macOS
-        uses: ./.github/actions/setup-macos
-        if: ${{ matrix.OS == 'macOS' }}
-      - name: run tests
+      - name: Run tests
         uses: ./.github/actions/run-tests
         with:
-          cmakeflags: -DCMAKE_BUILD_TYPE=${{ matrix.BUILDTYPE }}
+          cmakeflags: ${{ matrix.CMAKEFLAGS }}
           libtype: ${{ matrix.LIBTYPE }}
           toolchain: ${{ matrix.TOOLCHAIN }}
           testopts: ${{ matrix.TESTOPTS }}
