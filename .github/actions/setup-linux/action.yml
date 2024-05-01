@@ -11,11 +11,13 @@ runs:
         # limit the number of parallel jobs for build/test step.
         NPROC=$(nproc)
         echo CMAKE_BUILD_PARALLEL_LEVEL=$(($NPROC + 1)) | tee -a $GITHUB_ENV
+        VERSION=$(grep -oP 'VERSION_ID="\K\d\d\.\d\d' /etc/os-release | tr . -)
+        echo UBUNTU_VERSION=$VERSION | tee -a $GITHUB_ENV
       shell: bash
     - name: Install build and test dependencies
       run: |
         sudo apt -y update
-        sudo xargs -a "./scripts/depends-build-20-04" apt install -y
-        sudo xargs -a "./scripts/depends-test-20-04" apt install -y
+        sudo xargs -a "./scripts/depends-build-$UBUNTU_VERSION" apt install -y
+        sudo xargs -a "./scripts/depends-test-$UBUNTU_VERSION" apt install -y
         pip3 install --user -r ./scripts/requirements-tests.txt
       shell: bash
