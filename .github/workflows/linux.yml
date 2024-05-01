@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        BUILDTYPE: [Debug, Release]
+        BUILDTYPE: [Debug, Minimal, Release]
         DISTVER: [20.04]
         LIBTYPE: [shared, static]
         CC: [GCC, Clang]
@@ -42,12 +42,28 @@ jobs:
             CMAKEFLAGS: >-
               -DCMAKE_BUILD_TYPE=Debug
             TESTOPTS: -O4
+          - BUILDTYPE: Minimal
+            CMAKEFLAGS: >-
+              -DCMAKE_BUILD_TYPE=Debug
+              -DUJIT_ENABLE_COVERAGE=OFF
+              -DUJIT_ENABLE_CO_TIMEOUT=OFF
+              -DUJIT_ENABLE_GDBJIT=OFF
+              -DUJIT_ENABLE_IPROF=OFF
+              -DUJIT_ENABLE_MEMPROF=OFF
+              -DUJIT_ENABLE_PROFILER=OFF
+              -DUJIT_ENABLE_THREAD_SAFETY=OFF
+              -DUJIT_HAS_FFI=OFF
+              -DUJIT_HAS_JIT=OFF
+              -DUJIT_LUA52COMPAT=OFF
           - BUILDTYPE: Release
             CMAKEFLAGS: >-
               -DCMAKE_BUILD_TYPE=Release
             TESTOPTS: -O4
           - CC: Clang
             TOOLCHAIN: cmake/toolchain/Clang.cmake
+        exclude:
+          - BUILDTYPE: Minimal
+            LIBTYPE: shared
     runs-on: ubuntu-${{ matrix.DISTVER }}
     name: >-
       Ubuntu ${{ matrix.DISTVER }}
