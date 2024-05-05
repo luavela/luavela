@@ -42,7 +42,7 @@ jobs:
             RUNNER: [ubuntu-20.04]
             TESTOPTIONS: -DUJIT_TEST_OPTIONS=-O4
           - OS: macOS
-            RUNNER: [macos-11]
+            RUNNER: [macos-12]
           - CC: Clang
             TOOLCHAIN: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/Clang.cmake
         exclude:
