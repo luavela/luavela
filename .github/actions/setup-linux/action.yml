@@ -17,7 +17,7 @@ runs:
     - name: Install build and test dependencies
       run: |
         sudo apt -y update
-        sudo xargs -a "./scripts/depends-build-$UBUNTU_VERSION" apt install -y
-        sudo xargs -a "./scripts/depends-test-$UBUNTU_VERSION" apt install -y
-        pip3 install --user -r ./scripts/requirements-tests.txt
+        sudo xargs -a "./.github/bootstrap/build-depends-$UBUNTU_VERSION" apt install -y
+        sudo xargs -a "./.github/bootstrap/test-depends-$UBUNTU_VERSION" apt install -y
+        pip3 install --user -r ./.github/bootstrap/test-requirements.txt
       shell: bash
