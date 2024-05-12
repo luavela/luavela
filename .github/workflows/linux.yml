@@ -1,0 +1,89 @@
+# GitHub CI configuration file for LuaVela.
+# Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+
+name: Testing (Linux)
+
+on:
+  push:
+    branches:
+      - 'master'
+    tags:
+      - '**'
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+  workflow_dispatch:
+
+concurrency:
+  # Update of a developer branch cancels the previously scheduled workflow run
+  # for this branch. However, the 'master' branch and tag workflow runs are
+  # never canceled.
+  #
+  # We use the following hack: define the concurrency group as 'workflow run ID'
+  # + 'workflow run attempt' because it is a unique combination for any run. So
+  # it effectively discards grouping.
+  #
+  # XXX: we cannot use `github.sha` as a unique identifier because pushing a tag
+  # may cancel a run that works on a branch push event.
+  group: ${{ (
+    github.ref == 'refs/heads/master' ||
+    startsWith(github.ref, 'refs/tags/')) &&
+    format('{0}-{1}', github.run_id, github.run_attempt) ||
+    format('{0}-{1}', github.workflow, github.ref) }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        BUILDTYPE: [Debug, Minimal, Release]
+        DISTVER: [20.04]
+        LIBTYPE: [shared, static]
+        CC: [GCC, Clang]
+        include:
+          - BUILDTYPE: Debug
+            CMAKEFLAGS: >-
+              -DCMAKE_BUILD_TYPE=Debug
+            TESTOPTS: -O4
+          - BUILDTYPE: Minimal
+            CMAKEFLAGS: >-
+              -DCMAKE_BUILD_TYPE=Debug
+              -DUJIT_ENABLE_COVERAGE=OFF
+              -DUJIT_ENABLE_CO_TIMEOUT=OFF
+              -DUJIT_ENABLE_GDBJIT=OFF
+              -DUJIT_ENABLE_IPROF=OFF
+              -DUJIT_ENABLE_MEMPROF=OFF
+              -DUJIT_ENABLE_PROFILER=OFF
+              -DUJIT_ENABLE_THREAD_SAFETY=OFF
+              -DUJIT_HAS_FFI=OFF
+              -DUJIT_HAS_JIT=OFF
+              -DUJIT_LUA52COMPAT=OFF
+          - BUILDTYPE: Release
+            CMAKEFLAGS: >-
+              -DCMAKE_BUILD_TYPE=Release
+            TESTOPTS: -O4
+          - CC: Clang
+            TOOLCHAIN: cmake/toolchain/Clang.cmake
+        exclude:
+          - BUILDTYPE: Minimal
+            LIBTYPE: shared
+    runs-on: ubuntu-${{ matrix.DISTVER }}
+    name: >-
+      Ubuntu ${{ matrix.DISTVER }}
+      /
+      ${{ matrix.CC }}
+      ${{ matrix.BUILDTYPE }}
+      ${{ matrix.LIBTYPE }}
+    steps:
+      - name: Checkout uJIT
+        uses: actions/checkout@v3
+      - name: Setup Linux
+        uses: ./.github/actions/setup-linux
+      - name: Run tests
+        uses: ./.github/actions/run-tests
+        with:
+          cmakeflags: ${{ matrix.CMAKEFLAGS }}
+          libtype: ${{ matrix.LIBTYPE }}
+          toolchain: ${{ matrix.TOOLCHAIN }}
+          testopts: ${{ matrix.TESTOPTS }}

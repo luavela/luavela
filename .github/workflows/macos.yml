@@ -2,7 +2,7 @@
 # Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
 # Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
-name: Lint
+name: Testing (macOS)
 
 on:
   push:
@@ -33,28 +33,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  linters:
+  test:
     strategy:
       fail-fast: false
       matrix:
-        LINTER: [clang_tidy, clang_format, luacheck, flake8]
+        BUILDTYPE: [Debug, Release]
+        DISTVER: [12]
         include:
-          - LINTER: clang_tidy
-            NAME: Clang Tidy
-          - LINTER: clang_format
-            NAME: Clang Format
-          - LINTER: luacheck
-            NAME: Luacheck
-          - LINTER: flake8
-            NAME: Flake8
-    runs-on: ubuntu-20.04
-    name: ${{ matrix.NAME }}
+          - BUILDTYPE: Debug
+            CMAKEFLAGS: >-
+              -DCMAKE_BUILD_TYPE=Debug
+          - BUILDTYPE: Release
+            CMAKEFLAGS: >-
+              -DCMAKE_BUILD_TYPE=Release
+    runs-on: macos-${{ matrix.DISTVER }}
+    name: >-
+      macOS ${{ matrix.DISTVER }}
+      /
+      AppleClang
+      ${{ matrix.BUILDTYPE }}
+      static
     steps:
-      - uses: actions/checkout@v3
-      - name: setup Linux
-        uses: ./.github/actions/setup-linux
-      - name: configure
-        run: cmake -S . -B ${{ env.BUILDDIR }}
-      - name: ${{ matrix.NAME }}
-        run: cmake --build . --parallel --target ${{ matrix.LINTER }}
-        working-directory: ${{ env.BUILDDIR }}
+      - name: Checkout uJIT
+        uses: actions/checkout@v3
+      - name: Setup macOS
+        uses: ./.github/actions/setup-macos
+      - name: Run tests
+        uses: ./.github/actions/run-tests
+        with:
+          cmakeflags: ${{ matrix.CMAKEFLAGS }}

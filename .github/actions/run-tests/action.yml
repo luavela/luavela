@@ -1,0 +1,45 @@
+# GitHub CI configuration file for LuaVela.
+# Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
+
+name: LuaVela Testing
+description: Run LuaVela testing routine with the given flavor
+
+inputs:
+  cmakeflags:
+    type: string
+    required: false
+  libtype:
+    type: string
+    required: false
+    default: 'static'
+  toolchain:
+    type: string
+    required: false
+  testopts:
+    type: string
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: configure
+      run: >-
+        cmake -S . -B ${{ env.BUILDDIR }}
+        ${{ inputs.cmakeflags }}
+        -DCMAKE_TOOLCHAIN_FILE=${{ inputs.toolchain }}
+        -DUJIT_TEST_LIB_TYPE=${{ inputs.libtype }}
+        -DUJIT_TEST_OPTIONS=${{ inputs.testopts }}
+      shell: bash
+    - name: build
+      run: cmake --build . --parallel
+      shell: bash
+      working-directory: ${{ env.BUILDDIR }}
+    - name: smoke
+      run: cmake --build . --parallel --target tests_smoke
+      shell: bash
+      working-directory: ${{ env.BUILDDIR }}
+    - name: test
+      run: cmake --build . --parallel --target tests
+      shell: bash
+      working-directory: ${{ env.BUILDDIR }}
