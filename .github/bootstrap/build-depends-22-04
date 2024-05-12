@@ -1,0 +1,9 @@
+autoconf
+clang-11
+cmake
+gcc
+gcc-12=12.3.0-*
+libc6-dev
+libstdc++-12-dev
+libstdc++6
+libtool
