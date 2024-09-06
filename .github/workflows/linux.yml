@@ -42,6 +42,12 @@ jobs:
         LIBTYPE: [shared, static]
         CC: [GCC, Clang]
         include:
+          - DISTVER: 20.04
+            CC: GCC
+            CCVER: [9, 10]
+          - DISTVER: 22.04
+            CC: GCC
+            CCVER: [11, 12]
           - BUILDTYPE: Debug
             CMAKEFLAGS: >-
               -DCMAKE_BUILD_TYPE=Debug
@@ -73,6 +79,7 @@ jobs:
       Ubuntu ${{ matrix.DISTVER }}
       /
       ${{ matrix.CC }}
+      ${{ matrix.CCVER }}
       ${{ matrix.BUILDTYPE }}
       ${{ matrix.LIBTYPE }}
     steps:
