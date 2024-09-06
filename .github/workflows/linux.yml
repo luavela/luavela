@@ -7,7 +7,7 @@ name: Testing (Linux)
 on:
   push:
     branches:
-      - 'master'
+      - '**'
     tags:
       - '**'
   pull_request:

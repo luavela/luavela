@@ -7,7 +7,7 @@ name: Testing (macOS)
 on:
   push:
     branches:
-      - 'master'
+      - '**'
     tags:
       - '**'
   pull_request:
