@@ -301,6 +301,15 @@ $tester->run('rindex/tailcall.lua', args => '-Ohotloop=3 -Ohotexit=2 -p-')
                       0027.+>.+p32.RETF\s
                       .+SNAP.+\#1\s
                       .+TRACE.6.mcode.+/xs)
+  ->stdout_matches(qr/.+TRACE.7.IR.+\s
+                      0025.rax.+p64.CALLL.+lj_tab_rawrindex_jit.+\(0024\)\s
+                      0026.+>.+p64.NE.+0025.+\[NULL\]\s
+                      0027.+>.+fal.TVLOAD.0025\s
+                      .+LOOP.+\s
+                      0034.rax.+p64.CALLL.+lj_tab_rawrindex_jit.+\(0033\)\s
+                      0035.+>.+p64.NE.+0034.+\[NULL\]\s
+                      0036.+>.+fal.TVLOAD.0034\s
+                      .+TRACE.7.mcode.+/xs)
 ;
 
 exit;

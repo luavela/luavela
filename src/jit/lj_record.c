@@ -1812,6 +1812,9 @@ void lj_record_ins(jit_State *J)
         if (!tvistruecond(&J2G(J)->tmptv2))
           lj_trace_err(J, LJ_TRERR_GFAIL);
 
+        if (bc_op(ins) == BC_HOTCNT)
+          ins = *(J->pc - 2);
+
         /*
          * In case of tail call, ins will point to CALL from caller function,
          * not to the original CALLT/CALLMT made in callee.

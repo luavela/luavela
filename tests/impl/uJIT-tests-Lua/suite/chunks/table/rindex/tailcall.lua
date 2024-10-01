@@ -53,3 +53,17 @@ do --- rindex return value check must not be broken
 	bar(tab)
 	bar(tab) -- should exit normally
 end
+
+do --- ensure correct HOTCNT handling (i.e. applying LJ_POST_FFSPECRET while J->pc-1 points to HOTCNT)
+	local function foo(tab)
+		return ujit.table.rindex(tab, "k1", "k2")
+	end
+
+	local function bar(tab)
+		for _ = 1, 5 do
+			foo(tab)
+		end
+	end
+
+	bar({k1 = {k2 = false}})
+end
