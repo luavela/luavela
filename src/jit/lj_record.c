@@ -1801,25 +1801,31 @@ void lj_record_ins(jit_State *J)
       {
         /*
          * Fix-up for fast functions that do not have a "fixed" return type.
-         * By convention, any of returned values set to NULL is a signal for a
-         * side exit. Current implementation handles only cases when exactly one
-         * value is returned -- generalize on demand.
+         * Current implementation handles only cases when exactly one value
+         * is returned -- generalize on demand.
          */
         BCIns ins = *(J->pc - 1);
         BCReg s;
         const TValue *tv = J->L->base;
+        const uint8_t is_tailcall = IR(J->cur.nins - 1)->o == IR_RETF;
 
         if (!tvistruecond(&J2G(J)->tmptv2))
           lj_trace_err(J, LJ_TRERR_GFAIL);
 
-        lua_assert(bc_op(ins) == BC_CALL ||
-                   bc_op(ins) == BC_CALLT ||
-                   bc_op(ins) == BC_CALLM ||
-                   bc_op(ins) == BC_CALLMT);
+        /*
+         * In case of tail call, ins will point to CALL from caller function,
+         * not to the original CALLT/CALLMT made in callee.
+         */
+        lua_assert(bc_op(ins) == BC_CALL || bc_op(ins) == BC_CALLM);
 
         s = bc_a(ins);
-        emitir(IRTG(IR_NE, IRT_PTR), J->base[s], lj_ir_kkptr(J, NULL));
-        J->base[s] = emitir(IRTG(IR_TVLOAD, itype2irt(&tv[s])), J->base[s], 0);
+
+        IRRef ref_tvload = J->cur.nins - is_tailcall - 1;
+        IRIns *ins_tvload = IR(ref_tvload);
+        lua_assert(ins_tvload->o == IR_TVLOAD);
+        ins_tvload->t.irt = IRT_GUARD | itype2irt(&tv[s]);
+
+        J->base[s] = TREF(ref_tvload, ins_tvload->t.irt);
       }
       /* fallthrough */
     case LJ_POST_FFRETRY:  /* Suppress recording of retried fast function. */

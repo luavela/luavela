@@ -285,4 +285,22 @@ $tester->run('rindex/no-recording.lua', args => '-p-')
   ->stdout_has('asynchronous abort')
 ;
 
+$tester->run('rindex/tailcall.lua', args => '-Ohotloop=3 -Ohotexit=2 -p-')
+  ->exit_ok()
+  ->stdout_matches(qr/.+TRACE.3.IR.+\s
+                      0024.rax.+p64.CALLL.+lj_tab_rawrindex_jit.+\(0023\)\s
+                      0025.+>.+p64.NE.+0024.+\[NULL\]\s
+                      0026.+rax.+>.+str.TVLOAD.0024\s
+                      0027.+>.+p32.RETF\s
+                      .+SNAP.+\#1\s
+                      .+TRACE.3.mcode.+/xs)
+  ->stdout_matches(qr/.+TRACE.6.IR.+\s
+                      0024.rax.+p64.CALLL.+lj_tab_rawrindex_jit.+\(0023\)\s
+                      0025.+>.+p64.NE.+0024.+\[NULL\]\s
+                      0026.+>.+tab.TVLOAD.0024\s
+                      0027.+>.+p32.RETF\s
+                      .+SNAP.+\#1\s
+                      .+TRACE.6.mcode.+/xs)
+;
+
 exit;
