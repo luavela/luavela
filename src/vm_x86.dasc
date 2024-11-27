@@ -2709,7 +2709,7 @@ static void build_ins(BuildCtx *ctx, BCOp op, int defop)
       |  // Same types and not a primitive type. Compare GCobj or pvalue.
       |  i2gcr GCOBJ:RAa, BASE, RAa // RA := GCobj*
       |  i2gcr GCOBJ:RDa, BASE, RDa // RD := GCobj*
-      |  cmp RA, RD
+      |  cmp RAa, RDa
       |  je <1                          // Same GCobjs or pvalues?
       |  cmp RB, LJ_TISTABUD
       |  ja <2                          // Different objects and not table/ud?
