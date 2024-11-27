@@ -1335,6 +1335,16 @@ static void recff_ujit_table_rindex(jit_State *J, RecordFFData *rd)
     tr = emitir(IRT(IR_TVARGF, IRT_PTR), tr, J->maxslot);
 
     J->base[0] = lj_ir_call(J, IRCALL_lj_tab_rawrindex_jit, tr);
+    /*
+     * By convention, any of returned values set to NULL is a signal
+     * for a side exit.
+     */
+    emitir(IRTG(IR_NE, IRT_PTR), J->base[0], lj_ir_kkptr(J, NULL));
+    /*
+     * TVLOAD is emitted with temporary NIL type, will be fixed
+     * later - see LJ_POST_FFSPECRET implementation.
+     */
+    emitir(IRTG(IR_TVLOAD, IRT_NIL), J->base[0], 0);
     J->postproc = LJ_POST_FFSPECRET;
   } else {
     recff_nyiu(J);
