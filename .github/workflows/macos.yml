@@ -38,7 +38,7 @@ jobs:
       fail-fast: false
       matrix:
         BUILDTYPE: [Debug, Release]
-        DISTVER: [12]
+        DISTVER: [13]
         include:
           - BUILDTYPE: Debug
             CMAKEFLAGS: >-
@@ -62,3 +62,4 @@ jobs:
         uses: ./.github/actions/run-tests
         with:
           cmakeflags: ${{ matrix.CMAKEFLAGS }}
+          toolchain: cmake/toolchain/MacOS.cmake
