@@ -1,6 +1,6 @@
 /*
  * Interfaces for dumping loaded shared objects info.
- * Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2020-2025 LuaVela Authors. See Copyright Notice in COPYRIGHT
  * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  */
 

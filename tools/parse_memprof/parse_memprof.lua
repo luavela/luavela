@@ -1,7 +1,7 @@
 -- Parser of uJIT's memprof binary stream.
 -- The format spec can be found in src/profile/uj_memprof.c.
 --
--- Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
+-- Copyright (C) 2020-2025 LuaVela Authors. See Copyright Notice in COPYRIGHT
 -- Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 local bit    = require 'bit'
