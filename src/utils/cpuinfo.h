@@ -2,7 +2,7 @@
  * This module allows to access processor identification and feature
  * information as exposed by CPUID instruction and described in "Intel(r)
  * 64 and IA-32 Architectures Software Developer's Manual".
- * Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
+ * Copyright (C) 2020-2025 LuaVela Authors. See Copyright Notice in COPYRIGHT
  * Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
  */
 

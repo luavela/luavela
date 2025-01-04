@@ -2,7 +2,7 @@
 -- Lua script to generate a customized, minified version of Lua.
 -- The resulting 'minilua' is used for the build process of uJIT.
 ----------------------------------------------------------------------------
--- Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
+-- Copyright (C) 2020-2025 LuaVela Authors. See Copyright Notice in COPYRIGHT
 -- Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 -- Portions taken verbatim or adapted from LuaJIT.
 -- Copyright (C) 2005-2017 Mike Pall. All rights reserved.
