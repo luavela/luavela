@@ -594,7 +594,8 @@ TValue* lj_tab_newkey(lua_State *L, GCtab *t, const TValue *key) {
       n = freenode;
     }
   }
-  copyTV(L, &n->key, key);
+  /* XXX: Do not use copyTV here: key may be dead (e.g. while rehashing). */
+  n->key = *key;
   if (LJ_UNLIKELY(tvismzero(&n->key))) { setrawV(&n->key, 0); }
   lj_gc_anybarriert(L, t);
   lua_assert(tvisnil(&n->val));
