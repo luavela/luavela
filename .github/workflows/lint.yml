@@ -47,7 +47,7 @@ jobs:
             NAME: Luacheck
           - LINTER: flake8
             NAME: Flake8
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     name: ${{ matrix.NAME }}
     steps:
       - uses: actions/checkout@v3
