@@ -8,7 +8,7 @@
 # Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 # --- Initial setup ------------------------------------------------------------
-cmake_minimum_required(VERSION 3.3.2)
+cmake_minimum_required(VERSION 3.5)
 project(UJIT C)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
