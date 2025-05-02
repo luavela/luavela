@@ -23,7 +23,6 @@ function(add_clang_tidy_check TARGET_NAME)
   set(singleValues)
   set(multiValues FILES DEPENDENCIES)
 
-  include(CMakeParseArguments) # if we update to CMake >= 3.5, can remove this line
   cmake_parse_arguments(${prefix}
                         "${noValues}"
                         "${singleValues}"
