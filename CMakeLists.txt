@@ -60,10 +60,8 @@ set_property(CACHE UJIT_TEST_LIB_TYPE PROPERTY STRINGS ${UJIT_TEST_LIB_TYPE_VALU
 message(STATUS "UJIT_TEST_LIB_TYPE='${UJIT_TEST_LIB_TYPE}'")
 
 # Check that UJIT_TEST_LIB_TYPE value is correct
-# In CMake 3.5 we'll be able to use IN_LIST here
-list(FIND UJIT_TEST_LIB_TYPE_VALUES ${UJIT_TEST_LIB_TYPE} TEST_LIB_TYPE_INDEX)
-if(TEST_LIB_TYPE_INDEX EQUAL -1)
-  message(FATAL_ERROR "UJIT_TEST_LIB_TYPE must be \"static\" or \"shared\"")
+if(NOT UJIT_TEST_LIB_TYPE IN_LIST UJIT_TEST_LIB_TYPE_VALUES)
+  message(FATAL_ERROR "UJIT_TEST_LIB_TYPE must be one of the following: ${UJIT_TEST_LIB_TYPE_VALUES}.")
 endif()
 
 # Name of the CLI binary to be used in tests:
