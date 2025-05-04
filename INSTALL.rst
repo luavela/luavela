@@ -5,25 +5,24 @@ Prerequisites
 -------------
 
 As of current implementation, LuaVela can be built and run on various x64 Linux
-distros and macOS 10.13+. Please note, that 32-bit environment is not supported
-and it will not be built correctly.
+distros and macOS 13. Please note, that 32-bit environment is not supported and
+it will not be built correctly.
 
-The build is performed by CMake of version 3.3.2 or higher and was tested with
+The build is performed by CMake of version 3.5 or higher and was tested with
 following compilers:
 
-  * GCC 4.6.3 (Ubuntu 14.04)
-  * GCC 4.8.4 (Ubuntu 14.04)
-  * GCC 7.3.0 (Ubuntu 18.04)
-  * GCC 7.4.0 (Ubuntu 18.04)
-  * GCC 8.3.0 (Ubuntu 18.04)
-  * GCC 8.4.0 (Ubuntu 18.04)
-  * GCC 8.4.0 (Ubuntu 20.04)
-  * Clang 3.8 (Ubuntu 14.04)
-  * Clang 3.9 (Ubuntu 14.04)
-  * Clang 6.0 (Ubuntu 18.04)
-  * AppleClang 10.0.0 (macOS 10.13)
-  * AppleClang 10.0.1 (macOS 10.14)
-  * AppleClang 11.0.0 (macOS 10.15)
+  * GCC 9.5.0 (Ubuntu 22.04)
+  * GCC 10.5.0 (Ubuntu 22.04)
+  * GCC 11.4.0 (Ubuntu 22.04) [#ci]_
+  * GCC 12.3.0 (Ubuntu 22.04)
+  * Clang 11.1.0 (Ubuntu 22.04) [#ci]_
+  * Clang 12.0.1 (Ubuntu 22.04)
+  * Clang 13.0.1 (Ubuntu 22.04)
+  * Clang 14.0.0 (Ubuntu 22.04)
+  * Clang 15.0.7 (Ubuntu 22.04)
+  * AppleClang 15.0.0 (macOS 13.7.5) [#ci]_
+
+  .. [#ci] Used for regular testing in GitHub Actions.
 
 The build of core depends on following libraries:
 
@@ -36,8 +35,7 @@ Additionally, the build of tools depends on following libraries:
 
   * libstdc++    (used by ujit-parse-profile only for demangling C++ symbols)
 
-If you are using Ubuntu 18.04 or Ubuntu 14.04, all dependencies
-should be available from scratch.
+If you are using Ubuntu 22.04, all dependencies are available from scratch.
 
 Given the scarce list of dependencies, building and running on other Ubuntu x64
 versions (or other Linux x64 distributions) should work fine as well.
@@ -45,10 +43,10 @@ versions (or other Linux x64 distributions) should work fine as well.
 For building on macOS you will additionally need Command Line Tools.
 
 To get a better grasp of what software you'll need for building and testing,
-please check with the dependency lists for Ubuntu 18.04:
+please check with the dependency lists for Ubuntu 22.04:
 
-  * scripts/depends-build-18-04
-  * scripts/depends-test-18-04
+  * .github/bootstrap/build-depends-22-04
+  * .github/bootstrap/test-depends-22-04
 
 Note: autoconf and libtool are needed only for building optional 3rd party
 dependencies, which are not built by default.
