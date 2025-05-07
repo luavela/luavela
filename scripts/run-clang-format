@@ -25,7 +25,7 @@ use constant {
 		verbose => 0,
 		clang_format => {
 			prefix => '/usr/bin/clang-format',
-			versions => [ qw(11) ],
+			versions => [ qw(15) ],
 		},
 	},
 	EXCLUDE => {
