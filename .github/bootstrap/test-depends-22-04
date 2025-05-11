@@ -1,5 +1,5 @@
 bc
-clang-format-11
+clang-format-15
 clang-tidy-11
 gdb
 graphviz
