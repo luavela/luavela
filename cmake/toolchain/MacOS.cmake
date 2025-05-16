@@ -2,7 +2,7 @@
 #
 # $ cmake -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/MacOS.cmake ...other options...
 #
-# Copyright (C) 2020-2024 LuaVela Authors. See Copyright Notice in COPYRIGHT
+# Copyright (C) 2020-2025 LuaVela Authors. See Copyright Notice in COPYRIGHT
 # Copyright (C) 2015-2020 IPONWEB Ltd. See Copyright Notice in COPYRIGHT
 
 # XXX: Clang 15 changes the behaviour of -Wnull-pointer-arithmetics to control
