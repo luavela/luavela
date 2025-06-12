@@ -1,12 +1,13 @@
 README for LuaVela (codename uJIT)
 ----------------------------------
 
-.. |testing-badge| image:: https://github.com/luavela/luavela/actions/workflows/testing.yml/badge.svg
+.. |linux-badge| image:: https://github.com/luavela/luavela/actions/workflows/linux.yml/badge.svg
+.. |macos-badge| image:: https://github.com/luavela/luavela/actions/workflows/macos.yml/badge.svg
 .. |lint-badge| image:: https://github.com/luavela/luavela/actions/workflows/lint.yml/badge.svg
 .. |docs-badge| image:: https://readthedocs.org/projects/ujit/badge/?version=latest
                 :target: https://ujit.readthedocs.io/en/latest/?badge=latest
 
-|testing-badge| |lint-badge| |docs-badge|
+|linux-badge| |macos-badge| |lint-badge| |docs-badge|
 
 LuaVela is an interpreter and a Just-In-Time (JIT) compiler for the Lua
 programming language.
