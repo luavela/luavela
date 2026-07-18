@@ -1,5 +1,5 @@
 autoconf
-clang-11
+clang-15
 cmake
 gcc
 gcc-12=12.3.0-*
