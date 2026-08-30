@@ -39,5 +39,6 @@ add_custom_command(
       SUITE_DIR=${SUITE_DIR}
       SUITE_OUT_DIR=${SUITE_OUT_DIR}
       TEST_FILES="${TEST_FILES}"
+      COMPILER=${CMAKE_C_COMPILER}
     ${SUITE_RUNNER}
 )

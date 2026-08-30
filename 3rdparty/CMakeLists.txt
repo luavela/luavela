@@ -30,6 +30,10 @@ set(UDIS86_SOURCES
 set_source_files_properties(${UDIS86_DIR}/libudis86/decode.c
   PROPERTIES COMPILE_FLAGS -Wno-implicit-fallthrough)
 
+# Warnings are generated for the ARM64 build:
+set_source_files_properties(${UDIS86_DIR}/libudis86/syn.c
+  PROPERTIES COMPILE_FLAGS -Wno-error=format)
+
 # Pretend we have run autoconf for real:
 set_source_files_properties(${UDIS86_DIR}/libudis86/udis86.c
   PROPERTIES COMPILE_DEFINITIONS HAVE_STRING_H)

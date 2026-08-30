@@ -11,6 +11,8 @@
 #include "uj_throw.h"
 #include "uj_errmsg.h"
 #include "uj_cframe.h"
+#include "uj_vm.h"
+
 #ifndef NDEBUG
 #include "uj_vmstate.h"
 #endif /* !NDEBUG  */
@@ -96,6 +98,8 @@ static int dwarf_cleanup(int actions, uint64_t uexclass,
 			 const void *cframe)
 {
 	int ex = dwarf_dispatch_uexclass(uexclass, LUA_ERRRUN);
+	int in_c_interp = ((struct vm_frame *)cframe)->c_interp_marker ==
+			  C_INTERPRETER_MAGIC_NUM;
 
 	/*
 	 * Handler frame that was detected during the search phase is reached
@@ -112,9 +116,24 @@ static int dwarf_cleanup(int actions, uint64_t uexclass,
 	if (cframe != NULL) {
 		/* Reached landing pad to the user code. */
 		_Unwind_SetGR(ctx, UJ_TARGET_EHRETREG, ex);
-		_Unwind_SetIP(ctx, (uintptr_t)(uj_cframe_unwind_is_ff(cframe)
-						       ? lj_vm_unwind_ff_eh
-						       : lj_vm_unwind_c_eh));
+
+		if (in_c_interp) {
+			_Unwind_SetIP(
+				ctx,
+				(uintptr_t)(uj_cframe_unwind_is_ff(cframe)
+						    ? uj_vm_ff_landing_pad
+						    : uj_vm_c_landing_pad));
+		} else {
+#ifdef UJIT_CINTERP
+			abort();
+#else
+			_Unwind_SetIP(ctx,
+				      (uintptr_t)(uj_cframe_unwind_is_ff(cframe)
+							  ? lj_vm_unwind_ff_eh
+							  : lj_vm_unwind_c_eh));
+#endif
+		}
+
 		return _URC_INSTALL_CONTEXT;
 	}
 
@@ -125,7 +144,12 @@ static int dwarf_cleanup(int actions, uint64_t uexclass,
 		 * Real fix: http://gcc.gnu.org/viewcvs/trunk/gcc/unwind-dw2.c?r1=121165&r2=124837&pathrev=153877&diff_format=h
 		 */
 		_Unwind_SetGR(ctx, UJ_TARGET_EHRETREG, ex);
+#ifdef UJIT_CINTERP
+		/* lj_vm_unwind_rethrow is not implemented in C interpreter. */
+		abort();
+#else
 		_Unwind_SetIP(ctx, (uintptr_t)lj_vm_unwind_rethrow);
+#endif
 		return _URC_INSTALL_CONTEXT;
 	}
 

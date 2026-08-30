@@ -17,8 +17,13 @@
 static void mem_err(lua_State *L)
 {
 	/* Don't touch the stack during lua_open. */
-	if (uj_state_has_event(L, EXTEV_VM_INIT))
+	if (uj_state_has_event(L, EXTEV_VM_INIT)) {
+#ifdef UJIT_CINTERP
+		abort();
+#else
 		lj_vm_unwind_c(L->cframe, LUA_ERRMEM);
+#endif
+	}
 
 	uj_state_stack_sync_top(L);
 	setstrV(L, L->top++, uj_errmsg_str(L, UJ_ERR_ERRMEM));

@@ -22,11 +22,19 @@ local function default_tags()
     tags["goto"] = true
   end
 
+  local is_cinterp = (os.getenv("UJIT_CINTERP") == "ON")
   -- Libraries
   for _, lib in ipairs{"bit", "ffi", "jit.profile", "table.new"} do
+    -- NYI: FFI support in C interpreter
+    if is_cinterp and (lib == "ffi") then
+      io_write("UJIT_CINTERP: skip FFI\n")
+      goto continue
+    end
+
     if pcall(require, lib) then
       tags[lib] = true
     end
+  ::continue::
   end
 
   -- LuaJIT-specific

@@ -420,6 +420,7 @@ static int dojitcmd(lua_State *L, const char *cmd) {
   return runcmdopt(L, opt ? opt + 1 : opt);
 }
 
+#ifndef UJIT_DISABLE_JIT
 /* Optimization flags. */
 static int dojitopt(lua_State *L, const char *opt) {
   lua_getfield(L, LUA_REGISTRYINDEX, "_LOADED");
@@ -429,6 +430,7 @@ static int dojitopt(lua_State *L, const char *opt) {
   lua_remove  (L, -2);
   return runcmdopt(L, opt);
 }
+#endif
 
 /* check that argument has no extra characters at the end */
 #define notail(x)       {if ((x)[2] != '\0') { return STATUS_CLI_INVALID; }}
@@ -667,9 +669,11 @@ static int runargs(lua_State *L, char **argv, int n, int flags) {
       break;
     }
     case 'O': { /* uJIT extension */
+#ifndef UJIT_DISABLE_JIT
       if (dojitopt(L, argv[i] + 2)) {
         return STATUS_ERROR;
       }
+#endif
       break;
     }
     case 'X': { /* uJIT extension, already processed . */

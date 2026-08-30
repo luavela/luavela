@@ -1,0 +1,8 @@
+autoconf
+clang-20
+cmake
+gcc-14
+libc6-dev
+libstdc++-14-dev
+libstdc++6
+libtool

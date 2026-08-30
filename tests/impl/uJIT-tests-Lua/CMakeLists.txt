@@ -28,5 +28,6 @@ add_custom_command(
       LUA_IMPL_OPTIONS=${LUA_IMPL_OPTIONS}
       SUITE_DIR=${SUITE_DIR}
       SUITE_OUT_DIR=${SUITE_OUT_DIR}
+      UJIT_CINTERP=${UJIT_CINTERP}
     ${SUITE_RUNNER}
 )

@@ -1016,6 +1016,7 @@ LUA_API int lua_yield(lua_State *L, int nresults)
 		L->status = LUA_YIELD;
 		return -1;
 	} else { /* Yield from hook: add a pseudo-frame. */
+#ifndef UJIT_CINTERP
 		TValue *top = L->top;
 		int64_t frame_size;
 		hook_leave(g);
@@ -1026,6 +1027,10 @@ LUA_API int lua_yield(lua_State *L, int nresults)
 		frame_set_dummy(L, top + 2, frame_size + FRAME_CONT);
 		L->top = L->base = top + 3;
 		uj_throw(L, LUA_YIELD);
+#else
+		/* Not implemented in the C interpreter and not covered by tests */
+		abort();
+#endif
 	}
 }
 

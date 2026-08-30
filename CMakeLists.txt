@@ -28,6 +28,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(SetVersion)
 include(ClangTidy)
+include(CheckEnvironment)
 
 #
 # Variables to be exported to child scopes:
@@ -36,6 +37,20 @@ include(ClangTidy)
 set(UJIT_SRC_DIR         "${PROJECT_SOURCE_DIR}/src")
 set(UJIT_BINARY_DIR      "${PROJECT_BINARY_DIR}/src")
 
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|ARM64|arm64)$")
+  set(IS_ARM64 TRUE)
+  set(UJIT_CINTERP_DEFAULT ON)
+else()
+  set(IS_ARM64 FALSE)
+  set(UJIT_CINTERP_DEFAULT OFF)
+endif()
+
+# C interpreter needs hand-written assembly entry points and landing pads
+# (uj_vm_x86_wrappers.S, uj_vm_arm_wrappers.S) which are written for the ELF
+# toolchain only and do not assemble on macOS.
+if(APPLE)
+  set(UJIT_CINTERP_DEFAULT OFF)
+endif()
 
 # Names of the CLI binaries
 set(UJIT_CLI_NAME_STATIC "ujit")
@@ -153,12 +168,30 @@ endif()
 ## Auxilary flags for main targets (libraries, binaries, unit tests)
 set(TARGET_C_FLAGS "-D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -U_FORTIFY_SOURCE")
 
-option(UJIT_HAS_JIT "JIT support" ON)
+option(UJIT_CINTERP "Build with C interpreter only" ${UJIT_CINTERP_DEFAULT})
+
+if(APPLE AND UJIT_CINTERP)
+  message(FATAL_ERROR "C interpreter is not supported on macOS")
+endif()
+
+if(IS_ARM64 AND NOT UJIT_CINTERP)
+  message(FATAL_ERROR "ARM build allowed only when UJIT_CINTERP is ON")
+endif()
+
+if(UJIT_CINTERP)
+  set(TARGET_C_FLAGS "${TARGET_C_FLAGS} -DUJIT_CINTERP")
+  set(UJIT_HAS_JIT OFF)
+  set(UJIT_HAS_FFI OFF)
+  message(STATUS "UJIT_CINTERP=ON")
+else()
+  option(UJIT_HAS_JIT "JIT support" ON)
+  option(UJIT_HAS_FFI "FFI support" ON)
+endif()
+
 if(NOT UJIT_HAS_JIT)
   set(TARGET_C_FLAGS "${TARGET_C_FLAGS} -DUJIT_DISABLE_JIT")
 endif()
 
-option(UJIT_HAS_FFI "FFI support" ON)
 if(NOT UJIT_HAS_FFI)
   set(TARGET_C_FLAGS "${TARGET_C_FLAGS} -DUJIT_DISABLE_FFI")
 endif()
@@ -312,6 +345,7 @@ add_dependencies(luacheck ujit lfs)
 
 set(PYTHON_SCRIPTS
   tools/ujit-gdb.py
+  scripts/cinterp_tailcalls_verifier.py
 )
 
 add_custom_target(flake8
@@ -332,10 +366,14 @@ add_dependencies(tests_full
   flake8
   clang_format
   luacheck
-  clang_tidy
   tests_smoke
   tests
 )
+
+# Clang-tidy fails when uJIT is compiled without JIT.
+if(NOT UJIT_CINTERP)
+  add_dependencies(tests_full clang_tidy)
+endif()
 
 # --- Packaging ----------------------------------------------------------------
 

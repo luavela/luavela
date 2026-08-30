@@ -47,14 +47,14 @@ jobs:
             NAME: Luacheck
           - LINTER: flake8
             NAME: Flake8
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     name: ${{ matrix.NAME }}
     steps:
       - uses: actions/checkout@v3
       - name: setup Linux
         uses: ./.github/actions/setup-linux
       - name: configure
-        run: cmake -S . -B ${{ env.BUILDDIR }}
+        run: cmake -S . -B ${{ env.BUILDDIR }} -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain/GCC.cmake
       - name: ${{ matrix.NAME }}
         run: cmake --build . --parallel --target ${{ matrix.LINTER }}
         working-directory: ${{ env.BUILDDIR }}

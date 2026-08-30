@@ -236,7 +236,7 @@ static FILE *dump_bc_open_chunk(const GCproto *pt)
 /* Skip to a new line in a file (can reach EOF if on the last line) */
 static void dump_bc_skip_to_new_line(struct source_dumper_state *sds)
 {
-	char c;
+	int c;
 
 	do {
 		c = fgetc(sds->file);

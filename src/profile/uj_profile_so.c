@@ -26,7 +26,14 @@ static void profile_so_add(const char *name, ElfW(Addr) addr,
 		return;
 
 	so->base = (uintptr_t)addr;
+#ifndef __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+#endif
 	strncpy(so->path, name, SO_MAX_PATH_LENGTH - 1);
+#ifndef __clang__
+#pragma GCC diagnostic pop
+#endif
 	so->path[SO_MAX_PATH_LENGTH - 1] = '\0';
 }
 
@@ -137,6 +144,10 @@ void uj_profile_so_free(struct profiler_state *ps)
 
 void uj_profile_so_get_rip(struct profiler_state *ps, const void *ctx)
 {
+#if __x86_64__
 	ps->context.rip =
 		(uint64_t)((ucontext_t *)ctx)->uc_mcontext.gregs[REG_RIP];
+#else
+	ps->context.rip = (uint64_t)((ucontext_t *)ctx)->uc_mcontext.pc;
+#endif
 }

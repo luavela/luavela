@@ -12,7 +12,13 @@ use strict;
 use lib '../../tests/impl/uJIT-tests-Lua/suite/lib';
 
 use UJit::Test;
+use Test::More;
 use Cwd;
+
+if ($ENV{'UJIT_CINTERP'} && $ENV{'UJIT_CINTERP'} eq 'ON') {
+    plan skip_all => 'Might crash';
+}
+
 
 # Let's generate a tiny fake stream for each case and try to parse them.
 sub run_case

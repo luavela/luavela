@@ -12,7 +12,12 @@ use strict;
 use lib '../../tests/impl/uJIT-tests-Lua/suite/lib';
 
 use UJit::Test;
+use Test::More;
 use Cwd;
+
+if ($ENV{'UJIT_CINTERP'} && $ENV{'UJIT_CINTERP'} eq 'ON') {
+    plan skip_all => 'Might crash';
+}
 
 my $cwd        = Cwd::cwd();
 my $tools_dir  = $ENV{TOOLS_BIN_DIR} // "$cwd/..";

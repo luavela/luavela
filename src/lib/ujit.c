@@ -896,6 +896,15 @@ LJLIB_CF(ujit_debug_gettableinfo)
 	return 1;
 }
 
+#include "uj_vm.h"
+/* local ... = ujit.debug.cinterpcall(func, ...) */
+LJLIB_CF(ujit_debug_cinterpcall)
+{
+	/* LUA_MULTRET+1 means all results must be returned */
+	uj_vm_call(L, L->base + 1, LUA_MULTRET + 1);
+	return (int)(L->top - L->base);
+}
+
 #include "lj_libdef.h"
 
 /* ----- ujit.string module ------------------------------------------------- */

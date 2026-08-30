@@ -60,6 +60,19 @@ if(UJIT_ENABLE_VTUNEJIT)
   list(APPEND SOURCES_RUNTIME uj_vtunejit.c)
 endif()
 
+if(NOT APPLE)
+  list(APPEND SOURCES_RUNTIME uj_vm.c)
+  # C interpreter is built with O3 (even in debug mode) to help compiler
+  # perform tail-call optimizations (note that there is no absolute guarantee
+  # that all cases will be tail-called, so compiled code must be verified
+  # manually).
+  # For debug purposes replace -O3 with -O0 or with -O1 -foptimize-sibling-calls.
+  set_source_files_properties(uj_vm.c PROPERTIES COMPILE_FLAGS
+    "-O3 -fcf-protection=none -fno-stack-protector")
+else()
+  list(APPEND SOURCES_RUNTIME uj_vm_stub.c)
+endif()
+
 make_source_list(SOURCES_FRONTEND # Lua frontend
   SOURCES
     frontend/lj_lex.c
@@ -177,7 +190,11 @@ make_source_list(SOURCES_UTILS
     utils/strhash/murmur3.c
 )
 
-set_source_files_properties(utils/strhash/city.c PROPERTIES COMPILE_FLAGS "-O3 -msse4.2 -std=c99")
+if(IS_ARM64)
+  set_source_files_properties(utils/strhash/city.c PROPERTIES COMPILE_FLAGS "-O3 -std=c99")
+else()
+  set_source_files_properties(utils/strhash/city.c PROPERTIES COMPILE_FLAGS "-O3 -msse4.2 -std=c99")
+endif()
 
 if (UJIT_ALLOCATOR STREQUAL "jemalloc")
   set (SOURCES_UTILS_ALLOCATOR utils/jemalloc.c)
@@ -337,12 +354,24 @@ add_custom_target (
 
 # --- Generate core and VM object files ---------------------------------------
 
-## Virtual machine
-add_library (vm_static OBJECT lj_vm.s)
-add_library (vm_shared OBJECT lj_vm.s)
+## C interpreter VM entry functions and landing pads
+if(NOT APPLE)
+  if(IS_ARM64)
+    add_library(cinterp_asm_wrappers OBJECT uj_vm_arm_wrappers.S)
+  else()
+    add_library(cinterp_asm_wrappers OBJECT uj_vm_x86_wrappers.S)
+  endif()
+  set_target_properties(cinterp_asm_wrappers PROPERTIES COMPILE_FLAGS "${TARGET_VM_FLAGS}")
+endif()
 
-set_property (TARGET vm_shared APPEND PROPERTY POSITION_INDEPENDENT_CODE ON)
-set_property (TARGET vm_static vm_shared APPEND PROPERTY COMPILE_FLAGS "${TARGET_VM_FLAGS}")
+## Virtual machine
+if (NOT UJIT_CINTERP)
+  add_library (vm_static OBJECT lj_vm.s)
+  add_library (vm_shared OBJECT lj_vm.s)
+
+  set_property (TARGET vm_shared APPEND PROPERTY POSITION_INDEPENDENT_CODE ON)
+  set_property (TARGET vm_static vm_shared APPEND PROPERTY COMPILE_FLAGS "${TARGET_VM_FLAGS}")
+endif()
 
 ## Platform core
 add_library (core_static OBJECT ${SOURCES_CORE})
@@ -370,16 +399,24 @@ endif()
 set (LIB_NAME ujit)
 
 set (LIB_OBJECTS_STATIC
-  $<TARGET_OBJECTS:vm_static>
   $<TARGET_OBJECTS:core_static>
   $<TARGET_OBJECTS:libudis86_static>
 )
 
 set (LIB_OBJECTS_SHARED
-  $<TARGET_OBJECTS:vm_shared>
   $<TARGET_OBJECTS:core_shared>
   $<TARGET_OBJECTS:libudis86_shared>
 )
+
+if (NOT APPLE)
+  list (APPEND LIB_OBJECTS_STATIC $<TARGET_OBJECTS:cinterp_asm_wrappers>)
+  list (APPEND LIB_OBJECTS_SHARED $<TARGET_OBJECTS:cinterp_asm_wrappers>)
+endif()
+
+if (NOT UJIT_CINTERP)
+  list (APPEND LIB_OBJECTS_STATIC $<TARGET_OBJECTS:vm_static>)
+  list (APPEND LIB_OBJECTS_SHARED $<TARGET_OBJECTS:vm_shared>)
+endif()
 
 if(UJIT_ALLOCATOR STREQUAL "jemalloc")
   list(APPEND LIB_OBJECTS_STATIC $<TARGET_OBJECTS:jemalloc_static>)
@@ -443,6 +480,11 @@ set_target_properties (ujit_static PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
   OUTPUT_NAME ${UJIT_CLI_NAME_STATIC}
 )
+
+if (NOT APPLE)
+  set_target_properties (ujit_static PROPERTIES LINK_FLAGS "-Wl,-export-dynamic")
+endif()
+
 target_include_directories(ujit_static PRIVATE
   ${CMAKE_CURRENT_BINARY_DIR}
 )

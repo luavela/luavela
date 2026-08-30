@@ -11,6 +11,7 @@
 #define _UJ_HOOK_H
 
 #include "lj_vm.h"
+#include "uj_vm.h"
 
 #if LJ_HASFFI && !defined(_BUILDVM_H)
 /* Save/restore errno and GetLastError() around hooks, exits and recording. */
@@ -40,5 +41,6 @@ static LJ_AINLINE void errno_restore(int old_errno)
 /* Instruction dispatch callback for hooks or when recording. */
 void uj_hook_ins(struct lua_State *L, const BCIns *pc);
 ASMFunction uj_hook_call(struct lua_State *L, const BCIns *pc);
+CInterpFunction uj_hook_call_cinterp(struct lua_State *L, const BCIns *pc);
 
 #endif /* !_UJ_HOOK_H */

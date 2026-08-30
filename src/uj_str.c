@@ -219,12 +219,12 @@ GCstr *uj_str_fromnumber(lua_State *L, lua_Number n)
 
 /* -- String formatting --------------------------------------------------- */
 
-static void str_handle_specifier(struct sbuf *sb, char specifier, va_list argp)
+static void str_handle_specifier(struct sbuf *sb, char specifier, va_list *argp)
 {
 	/* This function only handles %s, %c, %d, %f and %p specifiers. */
 	switch (specifier) {
 	case 's': {
-		const char *s = va_arg(argp, char *);
+		const char *s = va_arg(*argp, char *);
 
 		if (s == NULL)
 			s = "(null)";
@@ -232,16 +232,16 @@ static void str_handle_specifier(struct sbuf *sb, char specifier, va_list argp)
 		break;
 	}
 	case 'c':
-		uj_sbuf_push_char(sb, (char)va_arg(argp, int));
+		uj_sbuf_push_char(sb, (char)va_arg(*argp, int));
 		break;
 	case 'd':
-		uj_sbuf_push_int(sb, va_arg(argp, int32_t));
+		uj_sbuf_push_int(sb, va_arg(*argp, int32_t));
 		break;
 	case 'f':
-		uj_sbuf_push_num(sb, va_arg(argp, LUAI_UACNUMBER));
+		uj_sbuf_push_num(sb, va_arg(*argp, LUAI_UACNUMBER));
 		break;
 	case 'p':
-		uj_sbuf_push_ptr(sb, va_arg(argp, void *));
+		uj_sbuf_push_ptr(sb, va_arg(*argp, void *));
 		break;
 	case '%':
 		uj_sbuf_push_char(sb, '%');
@@ -257,7 +257,17 @@ static void str_handle_specifier(struct sbuf *sb, char specifier, va_list argp)
 const char *uj_str_pushvf(lua_State *L, const char *fmt, va_list argp)
 {
 	struct sbuf *sb = uj_sbuf_reset_tmp(L);
+	va_list argp_copy;
 
+	/*
+	 * va_list is implementation-defined and has different behavior depending on a platform.
+	 * On x86_64, va_list passed by value works like a pointer, while on ARM64 it's a structure
+	 * (whose content will be copied).
+	 * So str_handle_specifier on x86_64 is able to iterate over all arguments, while on ARM64
+	 * it will always return first arg. Here is a little work-around - create a copy of va_list
+	 * (should be safer) and explicitly pass it by pointer.
+	 */
+	va_copy(argp_copy, argp);
 	uj_sbuf_reserve(sb, strlen(fmt));
 	for (;;) {
 		const char *e = strchr(fmt, '%');
@@ -265,9 +275,10 @@ const char *uj_str_pushvf(lua_State *L, const char *fmt, va_list argp)
 		if (e == NULL)
 			break;
 		uj_sbuf_push_block(sb, fmt, (size_t)(e - fmt));
-		str_handle_specifier(sb, e[1], argp);
+		str_handle_specifier(sb, e[1], &argp_copy);
 		fmt = e + 2;
 	}
+	va_end(argp_copy);
 	uj_sbuf_push_cstr(sb, fmt);
 	setstrV(L, L->top, uj_str_frombuf(L, sb));
 	uj_state_stack_incr_top(L);

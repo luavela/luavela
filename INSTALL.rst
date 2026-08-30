@@ -5,21 +5,25 @@ Prerequisites
 -------------
 
 As of current implementation, LuaVela can be built and run on various x64 Linux
-distros and macOS 13. Please note, that 32-bit environment is not supported and
-it will not be built correctly.
+distros, on ARM64 Linux (see UJIT_CINTERP below) and on x64 macOS 15. Please
+note, that 32-bit environment is not supported and it will not be built
+correctly.
 
 The build is performed by CMake of version 3.5 or higher and was tested with
 following compilers:
 
   * GCC 9.5.0 (Ubuntu 22.04)
   * GCC 10.5.0 (Ubuntu 22.04)
-  * GCC 11.4.0 (Ubuntu 22.04) [#ci]_
+  * GCC 11.4.0 (Ubuntu 22.04)
   * GCC 12.3.0 (Ubuntu 22.04)
-  * Clang 11.1.0 (Ubuntu 22.04) [#ci]_
+  * GCC 13.3.0 (Ubuntu 24.04)
+  * GCC 14.2.0 (Ubuntu 24.04) [#ci]_
+  * Clang 11.1.0 (Ubuntu 22.04)
   * Clang 12.0.1 (Ubuntu 22.04)
   * Clang 13.0.1 (Ubuntu 22.04)
   * Clang 14.0.0 (Ubuntu 22.04)
   * Clang 15.0.7 (Ubuntu 22.04)
+  * Clang 20.1.2 (Ubuntu 24.04) [#ci]_
   * AppleClang 15.0.0 (macOS 13.7.5) [#ci]_
 
   .. [#ci] Used for regular testing in GitHub Actions.
@@ -35,7 +39,7 @@ Additionally, the build of tools depends on following libraries:
 
   * libstdc++    (used by ujit-parse-profile only for demangling C++ symbols)
 
-If you are using Ubuntu 22.04, all dependencies are available from scratch.
+If you are using Ubuntu 24.04, all dependencies are available from scratch.
 
 Given the scarce list of dependencies, building and running on other Ubuntu x64
 versions (or other Linux x64 distributions) should work fine as well.
@@ -43,10 +47,10 @@ versions (or other Linux x64 distributions) should work fine as well.
 For building on macOS you will additionally need Command Line Tools.
 
 To get a better grasp of what software you'll need for building and testing,
-please check with the dependency lists for Ubuntu 22.04:
+please check with the dependency lists for Ubuntu 24.04:
 
-  * .github/bootstrap/build-depends-22-04
-  * .github/bootstrap/test-depends-22-04
+  * .github/bootstrap/build-depends-24-04
+  * .github/bootstrap/test-depends-24-04
 
 Note: autoconf and libtool are needed only for building optional 3rd party
 dependencies, which are not built by default.
@@ -214,6 +218,16 @@ Enables protection of memory pages with enabled machine code, so that none of
 them are writable and executable at the same time. Disable only if the page
 protection twiddling becomes a bottleneck. Protection is "ON" by default.
 Use "OFF" value at your own risk. See src/jit/lj_mcode.c for more details.
+
+UJIT_CINTERP
+^^^^^^^^^^^^
+
+Builds bytecode interpreter written in C instead of the DynASM one.
+"OFF" by default on x64, "ON" by default on ARM64.
+
+C interpreter is the only interpreter available on ARM64, so an ARM64 build
+fails unless this flag is "ON". Setting this flag to "ON" forces UJIT_HAS_JIT
+and UJIT_HAS_FFI to "OFF".
 
 Testing
 -------

@@ -38,9 +38,11 @@ jobs:
       fail-fast: false
       matrix:
         BUILDTYPE: [Debug, Minimal, Release]
-        DISTVER: [22.04]
+        DISTVER: [24.04]
+        ARCH: [x86_64, arm64]
         LIBTYPE: [shared, static]
         CC: [GCC, Clang]
+        INTERPRETER: [dynasm, cinterp]
         include:
           - BUILDTYPE: Debug
             CMAKEFLAGS: >-
@@ -63,18 +65,29 @@ jobs:
             CMAKEFLAGS: >-
               -DCMAKE_BUILD_TYPE=Release
             TESTOPTS: -O4
+          - CC: GCC
+            TOOLCHAIN: cmake/toolchain/GCC.cmake
           - CC: Clang
             TOOLCHAIN: cmake/toolchain/Clang.cmake
+          - INTERPRETER: cinterp
+            CINTERPFLAGS: -DUJIT_CINTERP=ON
+          - ARCH: x86_64
+            RUNNER_ARCH_SUFFIX: ''
+          - ARCH: arm64
+            RUNNER_ARCH_SUFFIX: '-arm'
         exclude:
           - BUILDTYPE: Minimal
             LIBTYPE: shared
-    runs-on: ubuntu-${{ matrix.DISTVER }}
+          - ARCH: arm64
+            INTERPRETER: dynasm
+    runs-on: ubuntu-${{ matrix.DISTVER }}${{ matrix.RUNNER_ARCH_SUFFIX }}
     name: >-
-      Ubuntu ${{ matrix.DISTVER }}
+      Ubuntu ${{ matrix.DISTVER }} ${{ matrix.ARCH }}
       /
       ${{ matrix.CC }}
       ${{ matrix.BUILDTYPE }}
       ${{ matrix.LIBTYPE }}
+      ${{ matrix.INTERPRETER }}
     steps:
       - name: Checkout uJIT
         uses: actions/checkout@v3
@@ -83,7 +96,7 @@ jobs:
       - name: Run tests
         uses: ./.github/actions/run-tests
         with:
-          cmakeflags: ${{ matrix.CMAKEFLAGS }}
+          cmakeflags: ${{ matrix.CMAKEFLAGS }} ${{ matrix.CINTERPFLAGS }}
           libtype: ${{ matrix.LIBTYPE }}
           toolchain: ${{ matrix.TOOLCHAIN }}
           testopts: ${{ matrix.TESTOPTS }}

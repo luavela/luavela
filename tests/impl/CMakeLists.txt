@@ -10,3 +10,8 @@ if (UJIT_HAS_JIT AND UJIT_HAS_FFI AND UJIT_LUA52COMPAT)
   add_subdirectory(uJIT-tests-C)
   add_subdirectory(uJIT-tests-Lua)
 endif()
+
+if (UJIT_CINTERP)
+  add_subdirectory(uJIT-tests-C)
+  add_subdirectory(uJIT-tests-Lua)
+endif()

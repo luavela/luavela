@@ -10,6 +10,11 @@ use strict;
 use lib './lib';
 
 use UJit::Test;
+use Test::More;
+
+if ($ENV{'UJIT_CINTERP'} && $ENV{'UJIT_CINTERP'} eq 'ON') {
+    plan skip_all => 'Relies on FFI support';
+}
 
 sub _run_tests_group {
     my ($extlib_func_name, $tester, @tests) = @_;

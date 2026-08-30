@@ -1,9 +1,9 @@
 bc
-clang-format-15
-clang-tidy-11
+clang-format-20
+clang-tidy-20
 gdb
 graphviz
-libcmocka-dev=1.1.5-2
+libcmocka-dev=1.1.7-3
 libdigest-crc-perl
 libfile-find-rule-perl
 liblist-allutils-perl

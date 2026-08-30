@@ -23,7 +23,7 @@
 #define REC_MM 0 /* JIT is prepared to record metamethod. */
 #define REC_MO 1 /* Mobj isn't a function, continue lookup. */
 
-#define TREF_CONTINUE_REC ((TRef)-1) /* Special return code. */
+#define TREF_CONTINUE_REC ((TRef) - 1) /* Special return code. */
 
 /* Some local macros to save typing. Undef'd at the end. */
 #define IR(ref) (&J->cur.ir[(ref)])

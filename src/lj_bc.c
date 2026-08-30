@@ -28,6 +28,7 @@ ASMDEF(FFENUM)
 ** lj_dispatch.c
 */
 LJ_DATADEF const ASMFunction lj_bc_ptr[] = {
+#ifndef UJIT_CINTERP
   /* Executors for 'real' bytecode instructions.  */
   #define BCENUM(name, ma, mb, mc, mt) (ASMFunction)lj_BC_##name,
   BCDEF(BCENUM)
@@ -37,7 +38,7 @@ LJ_DATADEF const ASMFunction lj_bc_ptr[] = {
   #define FFENUM(name) (ASMFunction)lj_ff_##name,
   ASMDEF(FFENUM)
   #undef FFENUM
-
+#endif
   NULL
 };
 
@@ -53,6 +54,5 @@ LJ_DATADEF const uint16_t lj_bc_mode[] = {
   #define FFENUM(name) BCMODE_FF,
   ASMDEF(FFENUM)
   #undef FFENUM
-
   0
 };

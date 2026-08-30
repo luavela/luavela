@@ -21,7 +21,7 @@ use constant DEFAULTS => {
 	project => '.',
 	clang_tidy => {
 		prefix => '/usr/bin/clang-tidy',
-		versions => [ qw(11) ],
+		versions => [ qw(20) ],
 	},
 	tries => 3,
 };
@@ -41,6 +41,10 @@ use constant CHECKS => {
 		# 5.0+:
 		# Everything is enabled except:
 		'*',
+		# much noise, little value
+		'-altera-id-dependent-backward-branch',
+		'-altera-struct-pack-align',
+		'-altera-unroll-loops',
 		# no Android-specific checks
 		'-android-*',
 		# no C++-specific checks
@@ -57,12 +61,30 @@ use constant CHECKS => {
 		'-bugprone-signed-char-misuse',
 		# false positives in our code base
 		'-bugprone-sizeof-expression',
+		# much noise, little value
+		'-bugprone-multi-level-implicit-pointer-conversion',
+		'-bugprone-suspicious-realloc-usage',
+		'-bugprone-casting-through-void',
+		'-bugprone-implicit-widening-of-multiplication-result',
+		'-bugprone-easily-swappable-parameters',
+		'-bugprone-switch-missing-default-case',
+		'-bugprone-assignment-in-if-condition',
+		'-bugprone-inc-dec-in-conditions',
 		# not following CERT guidelines
 		'-cert-*',
 		# no unstable checks
 		'-clang-analyzer-alpha.*',
+		# subjects for further investigation
+		'-clang-analyzer-core.BitwiseShift',
+		'-clang-analyzer-core.NullDereference',
+		'-clang-analyzer-core.UndefinedBinaryOperatorResult',
+		'-clang-analyzer-core.uninitialized.Assign',
+		'-clang-analyzer-core.uninitialized.Branch',
 		# no C++-specific checks
 		'-clang-analyzer-cplusplus.*',
+		# subjects for further investigation
+		'-clang-analyzer-deadcode.DeadStores',
+		'-clang-analyzer-optin.core.EnumCastOutOfRange',
 		# no MPI-specific checks
 		'-clang-analyzer-optin.mpi.*',
 		# no OSX-specific checks
@@ -71,6 +93,12 @@ use constant CHECKS => {
 		'-clang-analyzer-osx.*',
 		# much noise, little value
 		'-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling',
+		'-clang-analyzer-security.PointerSub',
+		'-clang-analyzer-unix.StdCLibraryFunctions',
+		'-clang-diagnostic-null-character',
+		'-clang-diagnostic-newline-eof',
+		# irrelevant
+		'-concurrency-mt-unsafe',
 		# no C++-specific checks
 		'-cppcoreguidelines-*',
 		# not following Google conventions
@@ -92,8 +120,15 @@ use constant CHECKS => {
 		'-misc-no-recursion',
 		# much noise, little value
 		'-misc-static-assert',
+		'-misc-header-include-cycle',
+		# much noise, little value
+		'-misc-include-cleaner',
+		'-misc-misplaced-widening-cast',
+		'-misc-sizeof-expression',
 		# no C++-specific checks
 		'-modernize-*',
+		# much noise, little value
+		'-performance-no-int-to-ptr',
 		# we use LKSG
 		'-readability-*',
 	],
@@ -177,6 +212,27 @@ use constant CHECKS => {
 		'src/lj_tab.c' => [
 			'-clang-analyzer-core.NullDereference',
 		],
+		# Looks like false positive.
+		'tools/parse_profile/ujpp_read.c' => [
+			'-clang-analyzer-core.NonNullParamChecker'
+		],
+		# Most of bytecodes and helper functions use a universal signature
+		# and do not utilize every argument. Revise in future.
+		'src/uj_vm.c' => [
+			'-misc-unused-parameters'
+		],
+		# Let's leave it as is since the fix can break something.
+		'src/utils/lj_alloc.c' => [
+			'-clang-diagnostic-gnu-null-pointer-arithmetic'
+		],
+		# Combined PROT_WRITE and PROT_EXEC flags are valid.
+		'src/jit/lj_mcode.c' => [
+			'-clang-analyzer-security.MmapWriteExec'
+		],
+		# Looks like a false positive.
+		'src/jit/lj_record.c' => [
+			'-clang-analyzer-core.CallAndMessage'
+		],
 		# Include CRC calculation API to avoid uJIT linking.
 		'tests/impl/uJIT-tests-C/suite/test_crc.c' => [
 			'-bugprone-suspicious-include',
@@ -197,6 +253,19 @@ use constant CHECKS => {
 		'tests/impl/uJIT-tests-C/suite/test_strscan.c' => [
 			'-bugprone-suspicious-include',
 		],
+		# Long test cases are totally reasonable here.
+		'tests/impl/uJIT-tests-C/suite/test_emit_sse2.c' => [
+			'-hicpp-function-size'
+		],
+		# Let's leave it as is.
+		'tests/impl/uJIT-tests-C/suite/test_bottom_dummy.c' => [
+			'-clang-analyzer-core.NonNullParamChecker',
+			'-misc-redundant-expression'
+		],
+		# Let's leave it as is.
+		'tests/impl/uJIT-tests-C/suite/test_cstr.c' => [
+			'-misc-redundant-expression'
+ 		]
 	}
 };
 

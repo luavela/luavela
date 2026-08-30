@@ -20,8 +20,9 @@ assert(type(ujit.coverage.stop) == "function")
 assert(type(ujit.coverage.unpause) == "function")
 
 -- ujit.debug
-assert(table_size(ujit.debug) == 1)
+assert(table_size(ujit.debug) == 2)
 assert(type(ujit.debug.gettableinfo) == "function")
+assert(type(ujit.debug.cinterpcall) == "function")
 
 -- ujit.dump
 assert(table_size(ujit.dump) == 7)
